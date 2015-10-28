@@ -1,0 +1,41 @@
+Design decisions for ARKcat:
+
+licensing:
+	I don't know how to approach this. We know we want it to be as non-restrictive as possible.
+
+
+datasets:
+	20 newsgroups?
+
+
+libraries (this overlaps a bit with language):
+	theano, scikit learn are in python.
+	what functionality do we want?
+
+
+language:
+	Python or Java are the top two contenders. We can list the relative merits here.
+
+	Python:
+		Theano (nn stuff)
+		scikit learn (linear modles, cross validation, typical hyperparams)
+	Java:
+		supports better software design principles
+
+
+Should we require train / dev split, or should we also include the ability to do cross validation? (ancient paper from artur dubrawski and jeff schneider shows a nice tradeoff between accuracy of evaluations vs number of evaluations [high number of repitions of cross validation leads to low-variance estimates of error, but takes time that could be spent getting more estimates, which helps when estimating the error function]. Paper: Memory based stochastic optimization for validation and turing of function approximators)
+       Perhaps we should start with requiring tran / dev, then consider cross validation for those that don't have dev. 
+
+
+Models our system should train:
+       RNNs
+       LSTMs?
+       logistic regression
+       SVMs?
+       
+
+Hyperparams:
+	L1, L2, elastic net regularization 
+	number of hidden units in RNNs
+	
+	     
