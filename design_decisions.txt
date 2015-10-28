@@ -6,7 +6,9 @@ licensing:
 
 datasets:
 	20 newsgroups?
-
+	should probably be in json format
+	we can put the location of the datasets here:
+	
 
 libraries (this overlaps a bit with language):
 	theano, scikit learn are in python.
