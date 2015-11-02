@@ -2,9 +2,12 @@ Design decisions for ARKcat:
 
 licensing:
 	I don't know how to approach this. We know we want it to be as non-restrictive as possible.
+	apache - the important part is that companies can use it
 
 
 datasets:
+	focus: redistribution issues. 
+	should always use the standard version of the dataset - i.e. the bills dataset from tai. official version is on webpage.
 	20 newsgroups?
 	should probably be in json format
 	we can put the location of the datasets here:
