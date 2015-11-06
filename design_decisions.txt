@@ -3,6 +3,8 @@ Design decisions for ARKcat:
 licensing:
 	I don't know how to approach this. We know we want it to be as non-restrictive as possible.
 	apache - the important part is that companies can use it
+	if we have dependencies in python, something like pip will automatically download them.
+	check out the licensec for scikit learn and our RNN package
 
 
 datasets:
@@ -14,18 +16,15 @@ datasets:
 	
 
 libraries (this overlaps a bit with language):
+	theano: deeplearning.net
 	theano, scikit learn are in python.
 	what functionality do we want?
 
 
 language:
-	Python or Java are the top two contenders. We can list the relative merits here.
-
 	Python:
 		Theano (nn stuff)
 		scikit learn (linear modles, cross validation, typical hyperparams)
-	Java:
-		supports better software design principles
 
 
 Should we require train / dev split, or should we also include the ability to do cross validation? (ancient paper from artur dubrawski and jeff schneider shows a nice tradeoff between accuracy of evaluations vs number of evaluations [high number of repitions of cross validation leads to low-variance estimates of error, but takes time that could be spent getting more estimates, which helps when estimating the error function]. Paper: Memory based stochastic optimization for validation and turing of function approximators)
@@ -40,7 +39,12 @@ Models our system should train:
        
 
 Hyperparams:
-	L1, L2, elastic net regularization 
+	L1, L2, elastic net regularization
 	number of hidden units in RNNs
+
+
+ideas: 
+	having a distance metric between datasets would allow us to choose datasets that are close to one another for warm starting. 
+	from the beginning: have multi-label support. each example can have more than one label
 	
 	     
