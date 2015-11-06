@@ -3,6 +3,7 @@ Design decisions for ARKcat:
 licensing:
 	I don't know how to approach this. We know we want it to be as non-restrictive as possible.
 	apache - the important part is that companies can use it
+	This seems overly complicated, but it looks to me like we can use any of the standard open source licenses (MIT/BSD, Apache2.0, GPL3): http://dodcio.defense.gov/OpenSourceSoftwareFAQ.aspx
 
 
 datasets:
@@ -29,7 +30,14 @@ language:
 
 
 Should we require train / dev split, or should we also include the ability to do cross validation? (ancient paper from artur dubrawski and jeff schneider shows a nice tradeoff between accuracy of evaluations vs number of evaluations [high number of repitions of cross validation leads to low-variance estimates of error, but takes time that could be spent getting more estimates, which helps when estimating the error function]. Paper: Memory based stochastic optimization for validation and turing of function approximators)
-       Perhaps we should start with requiring tran / dev, then consider cross validation for those that don't have dev. 
+       Perhaps we should start with requiring train / dev, then consider cross validation for those that don't have dev. 
+       Additionally: should allow user to input a desired train / dev / test split, or generate one automatically
+
+Featurization:
+       Should be able to calculate features as necessary at test time
+       In general, should ignore the existence of test data when deciding upon features
+       But, should allow users to (optionally) make use of unlabeled data for this (possibly including test data)
+       Need to think of a good way to speak about features (both in words and in code)
 
 
 Models our system should train:
