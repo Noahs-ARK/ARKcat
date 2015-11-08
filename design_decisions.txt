@@ -25,6 +25,7 @@ language:
 	Python:
 		Theano (nn stuff)
 		scikit learn (linear modles, cross validation, typical hyperparams)
+		Python 2.7 or 3.4 ?
 	Java:
 		supports better software design principles
 
