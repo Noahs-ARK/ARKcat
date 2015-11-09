@@ -18,12 +18,19 @@ datasets:
 libraries (this overlaps a bit with language):
 	theano: deeplearning.net
 	theano, scikit learn are in python.
-	google's new deep learning library?
+	google's new deep learning library? http://googleresearch.blogspot.com/2015/11/tensorflow-googles-latest-machine_9.html
 	what functionality do we want?
 
 
 Train / dev / test:
 	We should start by requiring train / dev / test, then implement cross validation. 
+
+
+Featurization:
+       Should be able to calculate features as necessary at test time
+       In general, should ignore the existence of test data when deciding upon features
+       But, should allow users to (optionally) make use of unlabeled data for this (possibly including test data)
+       Need to think of a good way to speak about features (both in words and in code)
 
 
 Models our system should train:
