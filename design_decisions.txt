@@ -5,46 +5,40 @@ licensing:
 	apache - the important part is that companies can use it
 	if we have dependencies in python, something like pip will automatically download them.
 	check out the licensec for scikit learn and our RNN package
+	This seems overly complicated, but it looks to me like we can use any of the standard open source licenses (MIT/BSD, Apache2.0, GPL3): http://dodcio.defense.gov/OpenSourceSoftwareFAQ.aspx
 
 
 datasets:
 	focus: redistribution issues. 
 	should always use the standard version of the dataset - i.e. the bills dataset from tai. official version is on webpage.
-	20 newsgroups?
 	should probably be in json format
-	we can put the location of the datasets here:
+	we can put the datasets here on cab: /cab1/corpora/bayes_opt (just remember to set the permissions to read / write for everyone with chmod +777)
 	
 
 libraries (this overlaps a bit with language):
 	theano: deeplearning.net
 	theano, scikit learn are in python.
+	google's new deep learning library?
 	what functionality do we want?
 
 
-language:
-	Python:
-		Theano (nn stuff)
-		scikit learn (linear modles, cross validation, typical hyperparams)
-
-
-Should we require train / dev split, or should we also include the ability to do cross validation? (ancient paper from artur dubrawski and jeff schneider shows a nice tradeoff between accuracy of evaluations vs number of evaluations [high number of repitions of cross validation leads to low-variance estimates of error, but takes time that could be spent getting more estimates, which helps when estimating the error function]. Paper: Memory based stochastic optimization for validation and turing of function approximators)
-       Perhaps we should start with requiring tran / dev, then consider cross validation for those that don't have dev. 
+Train / dev / test:
+	We should start by requiring train / dev / test, then implement cross validation. 
 
 
 Models our system should train:
-       RNNs
-       LSTMs?
-       logistic regression
-       SVMs?
+	logistic regression
+	RNN
+	future inclusions:
+		LSTMs,SVMs
        
 
 Hyperparams:
-	L1, L2, elastic net regularization
+	will fall out when we choose models
+	L1, L2, elastic net 
 	number of hidden units in RNNs
 
 
 ideas: 
 	having a distance metric between datasets would allow us to choose datasets that are close to one another for warm starting. 
 	from the beginning: have multi-label support. each example can have more than one label
-	
-	     
