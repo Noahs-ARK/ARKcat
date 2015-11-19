@@ -1,0 +1,1 @@
+/home/jessed/.local/bin/python2.7 run.py /home/jessed/ARKcat/example_data/text.json /home/jessed/ARKcat/example_data/labels.csv /home/jessed/ARKcat/output/features /home/jessed/ARKcat/output
