@@ -1,6 +1,7 @@
 import os
 import codecs
 import datetime
+import cPickle as pickle
 from optparse import OptionParser
 
 from hyperopt import fmin, tpe, hp, Trials, space_eval
@@ -77,8 +78,27 @@ def call_experiment(args):
     with codecs.open(log_filename, 'a') as output_file:
         output_file.write(str(datetime.datetime.now()) + '\t' + ' '.join(feature_list) + '\t' + ' '.join(desciption) +
                           '\t' + str(-result['loss']) + '\n')
+    save_model(model, feature_list, kwargs)
 
     return result
+
+def save_model(model, feature_list, model_hyperparams):
+    #printing for debugging
+
+    print('\n\n')
+    print(feature_list)
+    print(model_hyperparams)
+    print('\n\n')
+
+    # to save the model after each iteration
+    feature_string = ''
+    for i in range(0,len(feature_list)):
+        feature_string = feature_string + feature_list[i] + ','
+    for hparam in model_hyperparams:
+        feature_string = feature_string + hparam + '=' + str(model_hyperparams[hparam]) + ','
+    feature_string = feature_string[:-1]
+    pickle.dump(model, open(output_dir + '/' + feature_string + '.model', 'wb'))
+    
 
 
 def main():

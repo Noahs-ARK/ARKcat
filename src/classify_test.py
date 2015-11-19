@@ -74,7 +74,7 @@ def classify(data_filename, label_filename, feature_dir, list_of_features, model
         feature_matrices.append(counts)
         column_names.append(columns)
 
-    # concatenate all features togethe
+    # concatenate all features together
     X = sparse.csr_matrix(sparse.hstack(feature_matrices))
     column_names = np.concatenate(column_names)
     if verbose > 0:
@@ -94,7 +94,7 @@ def classify(data_filename, label_filename, feature_dir, list_of_features, model
     f1 = cross_val_score(model, X, y, cv=skf,scoring=score_eval,n_jobs=n_jobs).mean()
 
     print f1
-    return {'loss': -f1, 'status': STATUS_OK}
+    return {'loss': -f1, 'status': STATUS_OK, 'model': model}
 
 
 
