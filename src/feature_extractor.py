@@ -112,16 +112,20 @@ class FeatureExtractorCounts:
 
         return feature_counts
 
-    def load_from_files(self):
+    def load_vocabulary(self):
         vocab = vocabulary_with_counts.VocabWithCounts(self.get_prefix(), add_oov=True,
                                                        read_from_filename=self.get_vocab_filename())
+        return vocab
+
+    def load_from_files(self):
+        self.load_vocabulary()
+
         index = fh.read_json(self.get_index_filename())
         feature_counts = fh.unpickle_data(self.get_feature_filename())
         #oov_counts = fh.read_json(self.get_oov_count_filename())
 
         self.feature_counts = feature_counts
         self.index = index
-        self.vocab = vocab
         self.column_names = np.array(self.vocab.index2token)
         #self.oov_counts = oov_counts
         self.do_transformations()
@@ -132,27 +136,40 @@ class FeatureExtractorCounts:
         # threshold by min_doc_threshold
         temp = self.feature_counts.copy().tolil()
         n, p = temp.shape
+
+        orig_vocab_index = self.vocab.index2token[:]
+
         if self.min_doc_threshold > 1:
             print "Thresholding"
-            feature_sums = np.array(temp.sum(axis=0))
-            feature_sums = np.reshape(feature_sums, p)
+
+            # prune the vocabulary
+            self.vocab.prune(self.min_doc_threshold)
+
+            # convert this to an index into the columns of the feature matrix
+            index = np.array([k for (k, v) in enumerate(orig_vocab_index) if v in self.vocab.index2token])
+
+            # make sure we include the OOV column:
+
+
+            #feature_sums = np.array(temp.sum(axis=0))
+            #feature_sums = np.reshape(feature_sums, p)
             # select the first colum (OOV) automatically, and then all the rest
-            feature_sums[0] = self.min_doc_threshold
-            feature_sel = np.array(feature_sums >= self.min_doc_threshold)
-            index = np.arange(p)[feature_sel]
+            #feature_sums[0] = self.min_doc_threshold
+            #feature_sel = np.array(feature_sums >= self.min_doc_threshold)
+            #index = np.arange(p)[feature_sel]
 
             print "Size before thresholding", temp.shape
             thresholded = temp[:, index]
             print "Size after thresholding", thresholded.shape
 
             # add counts of out-of-vocabulary words based on this thresholding
-            neg_index = np.arange(p)[np.array(1-feature_sel, dtype=bool)]
-            oov_counts = temp[:, neg_index]
-            oov_sums = oov_counts.sum(axis=1)
-            thresholded[:, 0] = oov_sums
+            #neg_index = np.arange(p)[np.array(1-feature_sel, dtype=bool)]
+            #oov_counts = temp[:, neg_index]
+            #oov_sums = oov_counts.sum(axis=1)
+            #thresholded[:, 0] = oov_sums
 
             self.feature_counts = thresholded.copy().tocsr()
-            self.column_names = self.column_names[feature_sel]
+            self.column_names = self.vocab.index2token
 
         # binarize counts
         if self.binarize:

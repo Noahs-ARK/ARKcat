@@ -7,7 +7,7 @@ import numpy as np
 from feature_extractor_ngrams import FeatureExtractorCountsNgrams
 from feature_extractor_chargrams import FeatureExtractorCountsCharGrams
 
-def load_feature(feature_description, feature_dir, source, items_to_load=None, verbose=1):
+def load_feature(feature_description, feature_dir, source, items_to_load=None, load_vocab=False, verbose=1):
     """Load the feature counts associated with a given feature for a list of items
 
     Args:
@@ -32,14 +32,17 @@ def load_feature(feature_description, feature_dir, source, items_to_load=None, v
         sys.exit("Feature name " + feature_name + " not recognized")
 
     print extractor.get_dirname()
-    if not os.path.exists(extractor.get_dirname()):
-        if verbose > 0:
-            print "Extracting", feature_description
-        extractor.extract_features(source, write_to_file=True)
+    if load_vocab == False:
+        if not os.path.exists(extractor.get_dirname()):
+            if verbose > 0:
+                print "Extracting", feature_description
+            extractor.extract_features(source, write_to_file=True)
+        else:
+            if verbose > 1:
+                print "Loading", extractor.get_full_name()
+            extractor.load_from_files()
     else:
-        if verbose > 1:
-            print "Loading", extractor.get_full_name()
-        extractor.load_from_files()
+        extractor.extract_features(source, write_to_file=True, load_vocab=False)
 
     index, column_names, counts = extractor.get_counts()
 
