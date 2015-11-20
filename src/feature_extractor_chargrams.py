@@ -23,7 +23,7 @@ class FeatureExtractorCountsCharGrams(FeatureExtractorCounts):
     def get_n(self):
         return self.n
 
-    def extract_features(self, source, write_to_file=True):
+    def extract_features(self, source, write_to_file=True, load_vocab=False):
         print "Extracting " + self.name + " tokens"
 
         # read in a dict of {document_key: text}
@@ -32,7 +32,12 @@ class FeatureExtractorCountsCharGrams(FeatureExtractorCounts):
 
         tokens = self.extract_tokens_from_file(data, self.get_n())
 
-        vocab = self.make_vocabulary(tokens, all_items)
+        if load_vocab == False:
+            vocab = self.make_vocabulary(tokens, all_items)
+            self.vocab = vocab
+        else:
+            vocab = self.load_vocabulary()
+            self.vocab = vocab
 
         #feature_counts, oov_counts = self.extract_feature_counts(all_items, tokens, vocab)
         feature_counts = self.extract_feature_counts(all_items, tokens, vocab)

@@ -22,7 +22,7 @@ import file_handling as fh
 def main():
     """ test function """
     # Handle input options and arguments
-    usage = "%prog text.json labels.csv feature_dir feature1 [feature2...]"
+    usage = "%prog train_text.json train_labels.csv dev_text.json dev_labels.csv train_feature_dir dev_feature_dir feature1 [feature2...]"
     parser = OptionParser(usage=usage)
     parser.add_option('-m', dest='model', default='LR',
                       help='Model type [LR|SVM]; default=%default')
@@ -39,18 +39,23 @@ def main():
     regularizer = options.regularizer
     alpha = float(options.alpha)
 
-    data_filename = args[0]
-    label_filename = args[1]
-    feature_dir = args[2]
-    features = args[3:]
+    train_data_filename = args[0]
+    train_label_filename = args[1]
+    dev_data_filename = args[2]
+    dev_label_filename = args[3]
 
-    classify(data_filename, label_filename, feature_dir, features, model_type=model_type,
-             regularizer=regularizer, alpha=alpha, verbose=verbose)
+    train_feature_dir = args[4]
+    dev_feature_dir = args[5]
+    features = args[6:]
+
+    classify(train_data_filename, train_label_filename, dev_data_filename, dev_label_filename,
+             train_feature_dir, dev_feature_dir, features, model_type=model_type,
+             regularizer=regularizer, alpha=alpha, verbose=verbose, folds=0)
 
 
 def classify(train_data_filename, train_label_filename, dev_data_filename, dev_label_filename, 
              train_feature_dir, dev_feature_dir, feature_list, model_type='LR', 
-             regularizer='l1', alpha=1.0, verbose=1,folds=2,n_jobs=-1,score_eval='f1'):
+             regularizer='l1', alpha=1.0, verbose=1, folds=2, n_jobs=-1, score_eval='f1'):
     
     if model_type == 'LR':
         model = lr(penalty=regularizer, C=alpha)
@@ -63,8 +68,13 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
                                      feature_list, verbose)
     #if we have separate dev data, so we don't need cross validation
     if folds < 1:
-        dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, dev_feature_dir, 
-                                     feature_list, verbose)
+        #dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, dev_feature_dir,
+        #                             feature_list, verbose)
+
+        # Try loading dev data using train vocabulary, and not saving dev feature extractions
+        dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, train_feature_dir,
+                                     feature_list, verbose, load_vocab=True)
+
         f1 = no_cross_validation(train_X, train_Y, dev_X, dev_Y, model)
         print('dev f1: ' + str(f1))
     #if we don't have separate dev data, so we need cross validation
@@ -87,7 +97,7 @@ def no_cross_validation(X_train, Y_train, X_dev, Y_dev, model):
     return dev_f1
 
 
-def load_features(data_filename, label_filename, feature_dir, feature_list, verbose):
+def load_features(data_filename, label_filename, feature_dir, feature_list, verbose, load_vocab=False):
     
     labels = pd.read_csv(label_filename, header=0, index_col=0)
     items_to_load = labels.index
@@ -103,7 +113,7 @@ def load_features(data_filename, label_filename, feature_dir, feature_list, verb
     for feature in feature_list:
         feature_description = feature
         rows, columns, counts = feature_loader.load_feature(feature_description, feature_dir, data_filename,
-                                                            items_to_load, verbose=1)
+                                                            items_to_load, verbose=1, load_vocab=load_vocab)
         if items is None:
             items = rows
         else:

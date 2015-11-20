@@ -118,7 +118,7 @@ class FeatureExtractorCounts:
         return vocab
 
     def load_from_files(self):
-        self.load_vocabulary()
+        self.vocab = self.load_vocabulary()
 
         index = fh.read_json(self.get_index_filename())
         feature_counts = fh.unpickle_data(self.get_feature_filename())
