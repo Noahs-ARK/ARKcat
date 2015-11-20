@@ -15,6 +15,7 @@ all of the above can be installed using pip. If you have sudo access, run:
     sudo pip install -U numpy scipy pandas pymongo networkx hyperopt nltk scikit-learn
 
 If you don't, and want to install locally, run:
+
     pip install -U --user numpy scipy pandas pymongo networkx hyperopt nltk scikit-learn
 
 to download the NLKT files, run 
