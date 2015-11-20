@@ -13,6 +13,7 @@ from sklearn.linear_model import LogisticRegression as lr
 from sklearn.metrics import f1_score
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.cross_validation import cross_val_score
+from sklearn import metrics
 
 import feature_loader
 
@@ -47,9 +48,47 @@ def main():
              regularizer=regularizer, alpha=alpha, verbose=verbose)
 
 
-def classify(data_filename, label_filename, feature_dir, list_of_features, model_type='LR',
+def classify(train_data_filename, train_label_filename, dev_data_filename, dev_label_filename, 
+             train_feature_dir, dev_feature_dir, feature_list, model_type='LR', 
              regularizer='l1', alpha=1.0, verbose=1,folds=2,n_jobs=-1,score_eval='f1'):
+    
+    if model_type == 'LR':
+        model = lr(penalty=regularizer, C=alpha)
+    elif model_type == 'SVM':
+        model = svm.LinearSVC(penalty=regularizer, C=alpha)
+    else:
+        sys.exit('Model type ' + model_type + ' not supported')
 
+    train_X, train_Y = load_features(train_data_filename, train_label_filename, train_feature_dir, 
+                                     feature_list, verbose)
+    #if we have separate dev data, so we don't need cross validation
+    if folds < 1:
+        dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, dev_feature_dir, 
+                                     feature_list, verbose)
+        f1 = no_cross_validation(train_X, train_Y, dev_X, dev_Y, model)
+        print('dev f1: ' + str(f1))
+    #if we don't have separate dev data, so we need cross validation
+    else:
+        skf = StratifiedKFold(train_Y, folds,random_state=17)
+        f1 = cross_val_score(model, train_X, train_Y, cv=skf,scoring=score_eval,n_jobs=n_jobs).mean()
+        print('crossvalidation f1: ' + str(f1))
+
+    return {'loss': -f1, 'status': STATUS_OK, 'model': model}
+
+def no_cross_validation(X_train, Y_train, X_dev, Y_dev, model):
+    model.fit(X_train, Y_train)
+
+    Y_train_pred = model.predict(X_train)
+    Y_dev_pred = model.predict(X_dev)
+
+    train_f1 = metrics.f1_score(Y_train, Y_train_pred)
+    dev_f1 = metrics.f1_score(Y_dev, Y_dev_pred)
+
+    return dev_f1
+
+
+def load_features(data_filename, label_filename, feature_dir, feature_list, verbose):
+    
     labels = pd.read_csv(label_filename, header=0, index_col=0)
     items_to_load = labels.index
 
@@ -61,7 +100,7 @@ def classify(data_filename, label_filename, feature_dir, list_of_features, model
     feature_matrices = []
     column_names = []
     print "Loading features"
-    for feature in list_of_features:
+    for feature in feature_list:
         feature_description = feature
         rows, columns, counts = feature_loader.load_feature(feature_description, feature_dir, data_filename,
                                                             items_to_load, verbose=1)
@@ -76,27 +115,12 @@ def classify(data_filename, label_filename, feature_dir, list_of_features, model
 
     # concatenate all features together
     X = sparse.csr_matrix(sparse.hstack(feature_matrices))
-    column_names = np.concatenate(column_names)
+
     if verbose > 0:
         print "Full feature martix size:", X.shape
+    Y = labels.as_matrix().ravel()
 
-    #return items, column_names, X
-    if model_type == 'LR':
-        model = lr(penalty=regularizer, C=alpha)
-    elif model_type == 'SVM':
-        model = svm.LinearSVC(C=alpha, penalty=regularizer)
-    else:
-        sys.exit('Model type ' + model_type + ' not supported')
-
-    y = labels.as_matrix().ravel()
-
-    skf = StratifiedKFold(y, folds,random_state=17)
-    f1 = cross_val_score(model, X, y, cv=skf,scoring=score_eval,n_jobs=n_jobs).mean()
-
-    print f1
-    return {'loss': -f1, 'status': STATUS_OK, 'model': model}
-
-
+    return X, Y
 
 
 

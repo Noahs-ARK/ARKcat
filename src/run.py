@@ -49,9 +49,27 @@ space = {
 }
 
 def call_experiment(args):
+    model = args['model']['model']
+    feature_list, description, kwargs = wrangle_params(args)
+    result = classify_test.classify(train_data_filename, train_label_filename, dev_data_filename, 
+                                    dev_label_filename, train_feature_dir, dev_feature_dir, 
+                                    feature_list, **kwargs)
+    with codecs.open(log_filename, 'a') as output_file:
+        output_file.write(str(datetime.datetime.now()) + '\t' + ' '.join(feature_list) + '\t' + ' '.join(description) +
+                          '\t' + str(-result['loss']) + '\n')
+    save_model(model, feature_list, kwargs)
+
+    return result
+
+def wrangle_params(args):
     kwargs = {}
 
-    print args
+    # WARNING THIS IS A HACK! Should pass this is as a param
+    kwargs['folds'] = 0
+
+    print('')
+    print('the args:')
+    print(args)
     model = args['model']['model']
     kwargs['model_type'] = model
     if model == 'SVM':
@@ -73,14 +91,9 @@ def call_experiment(args):
         feature_list.append(bigrams)
 
     print feature_list
-    desciption = [str(k) + '=' + str(v) for (k, v) in kwargs.items()]
-    result = classify_test.classify(data_filename, label_filename, feature_dir, feature_list, **kwargs)
-    with codecs.open(log_filename, 'a') as output_file:
-        output_file.write(str(datetime.datetime.now()) + '\t' + ' '.join(feature_list) + '\t' + ' '.join(desciption) +
-                          '\t' + str(-result['loss']) + '\n')
-    save_model(model, feature_list, kwargs)
-
-    return result
+    description = [str(k) + '=' + str(v) for (k, v) in kwargs.items()]
+    return feature_list, description, kwargs
+    
 
 def save_model(model, feature_list, model_hyperparams):
     #printing for debugging
@@ -93,17 +106,16 @@ def save_model(model, feature_list, model_hyperparams):
     # to save the model after each iteration
     feature_string = ''
     for i in range(0,len(feature_list)):
-        feature_string = feature_string + feature_list[i] + ','
+        feature_string = feature_string + feature_list[i] + ';'
     for hparam in model_hyperparams:
-        feature_string = feature_string + hparam + '=' + str(model_hyperparams[hparam]) + ','
+        feature_string = feature_string + hparam + '=' + str(model_hyperparams[hparam]) + ';'
     feature_string = feature_string[:-1]
     pickle.dump(model, open(output_dir + '/' + feature_string + '.model', 'wb'))
     
 
 
 def main():
-
-    usage = "%prog text.json labels.csv feature_dir output_dir"
+    usage = "%prog train_text.json train_labels.csv dev_text.json dev_labels.csv train_feature_dir dev_feature_dir output_dir"
     parser = OptionParser(usage=usage)
     parser.add_option('-m', dest='max_iter', default=4,
                       help='Maximum iterations of Bayesian optimization; default=%default')
@@ -111,19 +123,23 @@ def main():
     (options, args) = parser.parse_args()
     max_iter = int(options.max_iter)
 
-    global data_filename, label_filename, feature_dir, output_dir, log_filename
+    global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename, train_feature_dir, dev_feature_dir, output_dir, log_filename
 
-    data_filename = args[0]
-    label_filename = args[1]
-    feature_dir = args[2]
-    output_dir = args[3]
+    train_data_filename = args[0]
+    train_label_filename = args[1]
+    dev_data_filename = args[2]
+    dev_label_filename = args[3]
+    train_feature_dir = args[4]
+    dev_feature_dir = args[5]
+    output_dir = args[6]
+    
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     log_filename = os.path.join(output_dir, 'log.txt')
 
     with open(log_filename, 'w') as logfile:
-        logfile.write(','.join([data_filename, label_filename, feature_dir, output_dir]) + '\n')
+        logfile.write(','.join([train_data_filename, train_label_filename, dev_data_filename, dev_label_filename, train_feature_dir, dev_feature_dir, output_dir]) + '\n')
 
     trials = Trials()
     best = fmin(call_experiment,
