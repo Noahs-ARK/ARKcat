@@ -112,9 +112,14 @@ class FeatureExtractorCounts:
 
         return feature_counts
 
-    def load_vocabulary(self):
-        vocab = vocabulary_with_counts.VocabWithCounts(self.get_prefix(), add_oov=True,
-                                                       read_from_filename=self.get_vocab_filename())
+    def load_vocabulary(self, vocab_source=None):
+        if vocab_source is None:
+            vocab = vocabulary_with_counts.VocabWithCounts(self.get_prefix(), add_oov=True,
+                                                           read_from_filename=self.get_vocab_filename())
+        else:
+            vocab_filename = os.path.join(vocab_source, os.path.basename(self.dirname), 'vocab.json')
+            vocab = vocabulary_with_counts.VocabWithCounts(self.get_prefix(), add_oov=True,
+                                                           read_from_filename=vocab_filename)
         return vocab
 
     def load_from_files(self):

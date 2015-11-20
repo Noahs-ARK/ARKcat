@@ -7,7 +7,7 @@ import numpy as np
 from feature_extractor_ngrams import FeatureExtractorCountsNgrams
 from feature_extractor_chargrams import FeatureExtractorCountsCharGrams
 
-def load_feature(feature_description, feature_dir, source, items_to_load=None, load_vocab=False, verbose=1):
+def load_feature(feature_description, feature_dir, source, items_to_load=None, vocab_source=None, verbose=1):
     """Load the feature counts associated with a given feature for a list of items
 
     Args:
@@ -15,6 +15,7 @@ def load_feature(feature_description, feature_dir, source, items_to_load=None, l
         feature_dir (string): directory where extracted features will be written
         source (string): json filename with all document text
         verbose (int): level of verbosity
+        vocab_source (string): equivalent of feature_dir when loading a vocab extracted from training data
 
     Returns:
         np.array: vector of item labels (n,)
@@ -32,7 +33,7 @@ def load_feature(feature_description, feature_dir, source, items_to_load=None, l
         sys.exit("Feature name " + feature_name + " not recognized")
 
     print extractor.get_dirname()
-    if load_vocab == False:
+    if vocab_source is None:
         if not os.path.exists(extractor.get_dirname()):
             if verbose > 0:
                 print "Extracting", feature_description
@@ -42,7 +43,7 @@ def load_feature(feature_description, feature_dir, source, items_to_load=None, l
                 print "Loading", extractor.get_full_name()
             extractor.load_from_files()
     else:
-        extractor.extract_features(source, write_to_file=True, load_vocab=False)
+        extractor.extract_features(source, write_to_file=False, vocab_source=vocab_source)
 
     index, column_names, counts = extractor.get_counts()
 
