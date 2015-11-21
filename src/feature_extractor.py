@@ -79,8 +79,8 @@ class FeatureExtractorCounts:
         n_features = len(vocab)
 
         row_starts_and_ends = [0]
-        column_indices = []
-        values = []
+        column_indices = [len(vocab)-1]
+        values = [0]
         #oov_counts = []
 
         for item in items:
@@ -107,8 +107,9 @@ class FeatureExtractorCounts:
 
         feature_counts = sparse.csr_matrix((values, column_indices, row_starts_and_ends), dtype=dtype)
 
-        assert feature_counts.shape[0] == n_items
-        assert feature_counts.shape[1] == n_features
+        print max(column_indices)
+        print feature_counts.shape[0] == n_items
+        print feature_counts.shape[1] == n_features
 
         return feature_counts
 
@@ -122,8 +123,8 @@ class FeatureExtractorCounts:
                                                            read_from_filename=vocab_filename)
         return vocab
 
-    def load_from_files(self):
-        self.vocab = self.load_vocabulary()
+    def load_from_files(self, vocab_source=None):
+        self.vocab = self.load_vocabulary(vocab_source=vocab_source)
 
         index = fh.read_json(self.get_index_filename())
         feature_counts = fh.unpickle_data(self.get_feature_filename())

@@ -33,17 +33,14 @@ def load_feature(feature_description, feature_dir, source, items_to_load=None, v
         sys.exit("Feature name " + feature_name + " not recognized")
 
     print extractor.get_dirname()
-    if vocab_source is None:
-        if not os.path.exists(extractor.get_dirname()):
-            if verbose > 0:
-                print "Extracting", feature_description
-            extractor.extract_features(source, write_to_file=True)
-        else:
-            if verbose > 1:
-                print "Loading", extractor.get_full_name()
-            extractor.load_from_files()
+    if not os.path.exists(extractor.get_dirname()):
+        if verbose > 0:
+            print "Extracting", feature_description
+        extractor.extract_features(source, write_to_file=True, vocab_source=vocab_source)
     else:
-        extractor.extract_features(source, write_to_file=False, vocab_source=vocab_source)
+        if verbose > 1:
+            print "Loading", extractor.get_full_name()
+        extractor.load_from_files()
 
     index, column_names, counts = extractor.get_counts()
 
