@@ -33,7 +33,7 @@ class FeatureExtractorCountsNgrams(FeatureExtractorCounts):
 
             sentences = tokenizer.split_sentences(text)
             for s in sentences:
-                sent_tokens = tokenizer.make_ngrams(s, n)
+                sent_tokens = tokenizer.make_ngrams(s, self.n)
                 tokens = tokens + sent_tokens
 
             tokens = [self.get_prefix() + t for t in tokens]
