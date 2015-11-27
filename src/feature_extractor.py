@@ -194,7 +194,7 @@ class FeatureExtractorCounts:
             doc_sums = self.feature_counts.sum(axis=1)
             tf = sparse.csr_matrix(self.feature_counts.multiply(1.0/doc_sums))
             doc_counts = self.vocab.get_all_doc_counts()
-            n_docs = np.array(doc_counts.max())
+            n_docs = doc_counts.max()
             idf = np.log(float(n_docs) / doc_counts)
             self.feature_counts = sparse.csr_matrix(tf.multiply(idf))
 
