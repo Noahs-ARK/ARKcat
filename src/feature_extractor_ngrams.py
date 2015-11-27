@@ -9,12 +9,12 @@ class FeatureExtractorCountsNgrams(FeatureExtractorCounts):
 
     n = None
 
-    def __init__(self, basedir, n=1, min_doc_threshold=1, binarize=True):
+    def __init__(self, basedir, n=1, min_doc_threshold=1, transform=None):
         name = 'ngrams'
         self.n = int(n)
         prefix = '_n' + str(n) + '_'
         FeatureExtractorCounts.__init__(self, basedir, name, prefix, min_doc_threshold=min_doc_threshold,
-                                        binarize=binarize)
+                                        transform=transform)
         self.extend_dirname()
 
     def extend_dirname(self):

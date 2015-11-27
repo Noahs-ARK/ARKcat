@@ -31,8 +31,8 @@ space = {
     'features': {
         'unigrams':
             {
-                'u_binarize': hp.choice('u_binarize', ['True', 'False']),
-                'u_min_doc_threshold': hp.choice('u_min_doc_threshold', [1,2,3,4,5])
+                'transform': hp.choice('u_transform', ['None', 'binarize', 'tfidf']),
+                'min_doc_threshold': hp.choice('u_min_doc_threshold', [1,2,3,4,5])
             },
         'bigrams':
             hp.choice('bigrams', [
@@ -41,8 +41,8 @@ space = {
                 },
                 {
                     'use': True,
-                    'b_binarize': hp.choice('b_binarize', ['True', 'False']),
-                    'b_min_doc_threshold': hp.choice('b_min_doc_threshold', [1,2,3,4,5])
+                    'transform': hp.choice('b_transform', ['None', 'binarize', 'tfidf']),
+                    'min_doc_threshold': hp.choice('b_min_doc_threshold', [1,2,3,4,5])
                 }
             ]),
     }
@@ -81,13 +81,13 @@ def wrangle_params(args):
 
     feature_list = []
     unigrams = 'ngrams,n=1' + \
-               ',binarize=' + args['features']['unigrams']['u_binarize'] + \
-               ',min_doc_threshold=' + str(args['features']['unigrams']['u_min_doc_threshold'])
+               ',transform=' + args['features']['unigrams']['transform'] + \
+               ',min_doc_threshold=' + str(args['features']['unigrams']['min_doc_threshold'])
     feature_list.append(unigrams)
     if args['features']['bigrams']['use']:
         bigrams = 'ngrams,n=2' + \
-                  ',binarize=' + args['features']['bigrams']['b_binarize'] + \
-                  ',min_doc_threshold=' + str(args['features']['bigrams']['b_min_doc_threshold'])
+                  ',transform=' + args['features']['bigrams']['transform'] + \
+                  ',min_doc_threshold=' + str(args['features']['bigrams']['min_doc_threshold'])
         feature_list.append(bigrams)
 
     print feature_list

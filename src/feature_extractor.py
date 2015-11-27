@@ -21,11 +21,11 @@ class FeatureExtractorCounts:
     vocab = None
     column_names = None
 
-    def __init__(self, basedir, name, prefix, min_doc_threshold=1, binarize=True):
+    def __init__(self, basedir, name, prefix, min_doc_threshold=1, transform=None):
         self.name = name
         self.prefix = prefix
         self.min_doc_threshold = int(min_doc_threshold)
-        self.binarize = ast.literal_eval(str(binarize))
+        self.transform = transform
         self.feature_counts = None
         self.index = None
         self.vocab = None
@@ -40,8 +40,8 @@ class FeatureExtractorCounts:
     def get_min_doc_threshold(self):
         return self.min_doc_threshold
 
-    def get_binarize(self):
-        return self.binarize
+    def get_transform(self):
+        return self.transform
 
     def get_dirname(self):
         return self.dirname
@@ -136,9 +136,9 @@ class FeatureExtractorCounts:
 
         feature_counts = sparse.csr_matrix((values, column_indices, row_starts_and_ends), dtype=dtype)
 
-        print max(column_indices)
-        print feature_counts.shape[0] == n_items
-        print feature_counts.shape[1] == n_features
+        #print max(column_indices)
+        #print feature_counts.shape[0] == n_items
+        #print feature_counts.shape[1] == n_features
 
         return feature_counts
 
@@ -164,33 +164,39 @@ class FeatureExtractorCounts:
         self.do_transformations()
 
     def do_transformations(self):
-        """Apply thresholding and binarization"""
+        """Apply thresholding and transforms"""
 
         # threshold by min_doc_threshold
-        temp = self.feature_counts.copy().tolil()
+        print "Thresholding"
 
+        temp = self.feature_counts.copy().tolil()
         orig_vocab_index = self.vocab.index2token[:]
 
-        if self.min_doc_threshold > 1:
-            print "Thresholding"
+        # prune the vocabulary
+        self.vocab.prune(self.min_doc_threshold)
 
-            # prune the vocabulary
-            self.vocab.prune(self.min_doc_threshold)
+        # convert this to an index into the columns of the feature matrix
+        index = np.array([k for (k, v) in enumerate(orig_vocab_index) if v in self.vocab.index2token])
 
-            # convert this to an index into the columns of the feature matrix
-            index = np.array([k for (k, v) in enumerate(orig_vocab_index) if v in self.vocab.index2token])
+        print "Size before thresholding", temp.shape
+        thresholded = temp[:, index]
+        print "Size after thresholding", thresholded.shape
 
-            print "Size before thresholding", temp.shape
-            thresholded = temp[:, index]
-            print "Size after thresholding", thresholded.shape
+        self.feature_counts = thresholded.copy().tocsr()
+        self.column_names = self.vocab.index2token
 
-            self.feature_counts = thresholded.copy().tocsr()
-            self.column_names = self.vocab.index2token
-
-        # binarize counts
-        if self.binarize:
+        if self.transform == 'binarize':
             print "Binarizing"
             self.feature_counts = sparse.csr_matrix(self.feature_counts > 0, dtype=int)
+
+        elif self.transform == 'tfidf':
+            print "Doing tf-idf transform"
+            doc_sums = self.feature_counts.sum(axis=1)
+            tf = sparse.csr_matrix(self.feature_counts.multiply(1.0/doc_sums))
+            doc_counts = np.array(self.vocab.get_all_doc_counts())
+            n_docs = np.array(doc_counts.max())
+            idf = np.log(float(n_docs) / doc_counts)
+            self.feature_counts = sparse.csr_matrix(tf.multiply(idf))
 
     def get_counts(self):
         return self.index, self.column_names, self.feature_counts

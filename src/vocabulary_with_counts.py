@@ -1,5 +1,7 @@
 from collections import Counter
 
+import numpy as np
+
 from vocabulary import Vocab
 import file_handling as fh
 
@@ -36,6 +38,11 @@ class VocabWithCounts(Vocab):
         counts = [self.get_count(t) for t in tokens]
         return counts
 
+    def get_all_doc_counts(self):
+        doc_counts = np.array([self.doc_counts[t] for t in self.index2token])
+        j = np.argmin(doc_counts)
+        return doc_counts
+
     def get_count_from_index(self, index):
         token = self.get_token(index)
         return self.get_count(token)
@@ -46,8 +53,8 @@ class VocabWithCounts(Vocab):
 
     def prune(self, min_doc_threshold=1):
         self.index2token = [t for t in self.index2token if self.doc_counts[t] >= min_doc_threshold]
-        if self.oov_token not in self.index2token and self.oov_index > -1:
-            self.index2token.insert(self.oov_index, self.oov_token)
+        #if self.oov_token not in self.index2token and self.oov_index > -1:
+        #    self.index2token.insert(self.oov_index, self.oov_token)
         self.token2index = dict(zip(self.index2token, range(len(self.token2index))))
         self.counts = Counter({t: c for (t, c) in self.counts.items() if t in self.token2index})
         self.doc_counts = Counter({t: c for (t, c) in self.doc_counts.items() if t in self.token2index})
