@@ -40,7 +40,6 @@ class VocabWithCounts(Vocab):
 
     def get_all_doc_counts(self):
         doc_counts = np.array([self.doc_counts[t] for t in self.index2token])
-        j = np.argmin(doc_counts)
         return doc_counts
 
     def get_count_from_index(self, index):

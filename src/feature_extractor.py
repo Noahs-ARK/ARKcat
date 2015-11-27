@@ -168,6 +168,7 @@ class FeatureExtractorCounts:
 
         # threshold by min_doc_threshold
         print "Thresholding"
+        print "Size before thresholding", temp.shape
 
         temp = self.feature_counts.copy().tolil()
         orig_vocab_index = self.vocab.index2token[:]
@@ -178,7 +179,6 @@ class FeatureExtractorCounts:
         # convert this to an index into the columns of the feature matrix
         index = np.array([k for (k, v) in enumerate(orig_vocab_index) if v in self.vocab.index2token])
 
-        print "Size before thresholding", temp.shape
         thresholded = temp[:, index]
         print "Size after thresholding", thresholded.shape
 
@@ -193,7 +193,7 @@ class FeatureExtractorCounts:
             print "Doing tf-idf transform"
             doc_sums = self.feature_counts.sum(axis=1)
             tf = sparse.csr_matrix(self.feature_counts.multiply(1.0/doc_sums))
-            doc_counts = np.array(self.vocab.get_all_doc_counts())
+            doc_counts = self.vocab.get_all_doc_counts()
             n_docs = np.array(doc_counts.max())
             idf = np.log(float(n_docs) / doc_counts)
             self.feature_counts = sparse.csr_matrix(tf.multiply(idf))
