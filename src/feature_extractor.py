@@ -168,10 +168,11 @@ class FeatureExtractorCounts:
 
         # threshold by min_doc_threshold
         print "Thresholding"
-        print "Size before thresholding", temp.shape
 
         temp = self.feature_counts.copy().tolil()
         orig_vocab_index = self.vocab.index2token[:]
+
+        print "Size before thresholding", temp.shape
 
         # prune the vocabulary
         self.vocab.prune(self.min_doc_threshold)
