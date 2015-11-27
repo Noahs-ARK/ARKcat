@@ -13,7 +13,7 @@ class FeatureExtractorCountsCharGrams(FeatureExtractorCounts):
         name = 'chargrams'
         self.n = int(n)
         prefix = '_cg' + str(n) + '_'
-        FeatureExtractorCounts.__init__(self, basedir, 'chargrams', prefix, min_doc_threshold=min_doc_threshold,
+        FeatureExtractorCounts.__init__(self, basedir, name, prefix, min_doc_threshold=min_doc_threshold,
                                         binarize=binarize)
         self.extend_dirname()
 
@@ -23,38 +23,7 @@ class FeatureExtractorCountsCharGrams(FeatureExtractorCounts):
     def get_n(self):
         return self.n
 
-    def extract_features(self, source, write_to_file=True, vocab_source=None):
-        print "Extracting " + self.name + " tokens"
-
-        # read in a dict of {document_key: text}
-        data = fh.read_json(source)
-        all_items = data.keys()
-
-        tokens = self.extract_tokens_from_file(data, self.get_n())
-
-        if vocab_source is None:
-            vocab = self.make_vocabulary(tokens, all_items)
-            self.vocab = vocab
-        else:
-            vocab = self.load_vocabulary(vocab_source)
-            self.vocab = vocab
-
-        #feature_counts, oov_counts = self.extract_feature_counts(all_items, tokens, vocab)
-        feature_counts = self.extract_feature_counts(all_items, tokens, vocab)
-
-        if write_to_file:
-            vocab.write_to_file(self.get_vocab_filename())
-            fh.write_to_json(all_items, self.get_index_filename(), sort_keys=False)
-            fh.pickle_data(feature_counts, self.get_feature_filename())
-            #fh.write_to_json(oov_counts, self.get_oov_count_filename(), sort_keys=False)
-
-        self.feature_counts = feature_counts
-        self.index = all_items
-        self.vocab = vocab
-        self.column_names = np.array(self.vocab.index2token)
-        self.do_transformations()
-
-    def extract_tokens_from_file(self, data, n):
+    def extract_tokens_from_text(self, data):
         token_dict = {}
         for key, text in data.items():
             text = text.lower()

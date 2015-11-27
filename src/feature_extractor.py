@@ -2,7 +2,6 @@ import os
 import ast
 from collections import Counter
 from scipy import sparse
-import random
 
 import numpy as np
 
@@ -48,7 +47,6 @@ class FeatureExtractorCounts:
         return self.dirname
 
     def make_dirname(self, basedir):
-        #dirname = ','.join([self.name, 'mdt=' + str(self.min_doc_threshold), 'bin=' + str(self.binarize)])
         self.dirname = os.path.join(basedir, self.name)
 
     def get_feature_filename(self):
@@ -66,13 +64,51 @@ class FeatureExtractorCounts:
         for item in items:
             vocab.add_tokens(tokens[item])
 
-        # don't prune now; do it as a transformation
-        #vocab.prune(min_doc_threshold=self.get_min_doc_threshold())
-
-        #if verbose:
-        #    print "Vocabulary size after pruning:", len(vocab)
-
         return vocab
+
+    def extract_features(self, source, write_to_file=True, vocab_source=None):
+        print "Extracting ngram tokens"
+
+        # read in a dict of {document_key: text}
+        data = fh.read_json(source)
+        all_items = data.keys()
+
+        tokens = self.extract_tokens_from_text(data)
+
+        if vocab_source is None:
+            vocab = self.make_vocabulary(tokens, all_items)
+            self.vocab = vocab
+        else:
+            vocab = self.load_vocabulary(vocab_source)
+            self.vocab = vocab
+
+        feature_counts = self.extract_feature_counts(all_items, tokens, vocab)
+
+        if write_to_file:
+            vocab.write_to_file(self.get_vocab_filename())
+            fh.write_to_json(all_items, self.get_index_filename(), sort_keys=False)
+            fh.pickle_data(feature_counts, self.get_feature_filename())
+
+        self.feature_counts = feature_counts
+        self.index = all_items
+        self.column_names = np.array(self.vocab.index2token)
+        self.do_transformations()
+
+    def extract_tokens_from_text(self, data):
+        """
+        Basic way of converting feature input into lists of tokens.
+        Override this in your feature extractor
+        :param data: dictionary of key-value pairs, where value could be text (as here), a list, or whatever
+        :return: token_dict: dictionary of key:value pairs, where the values are lists of tokens to be counted
+        """
+        token_dict = {}
+        for key, text in data.items():
+            text = text.lower()
+            text = text.lstrip()
+            text = text.rstrip()
+            tokens = text.split()
+            token_dict[key] = tokens
+        return token_dict
 
     def extract_feature_counts(self, items, tokens, vocab):
         n_items = len(items)
@@ -81,7 +117,6 @@ class FeatureExtractorCounts:
         row_starts_and_ends = [0]
         column_indices = [len(vocab)-1]
         values = [0]
-        #oov_counts = []
 
         for item in items:
             # get the index for each token
@@ -95,12 +130,6 @@ class FeatureExtractorCounts:
             # put it into the from of a sparse matix
             column_indices.extend(token_keys)
             values.extend(token_counts)
-            #if self.get_binarize():
-            #    values.extend([1]*len(token_counts))
-            #else:
-            #    values.extend(token_counts)
-
-            #oov_counts.append(token_counter.get(vocab.oov_index, 0))
             row_starts_and_ends.append(len(column_indices))
 
         dtype = 'int32'
@@ -128,12 +157,10 @@ class FeatureExtractorCounts:
 
         index = fh.read_json(self.get_index_filename())
         feature_counts = fh.unpickle_data(self.get_feature_filename())
-        #oov_counts = fh.read_json(self.get_oov_count_filename())
 
         self.feature_counts = feature_counts
         self.index = index
         self.column_names = np.array(self.vocab.index2token)
-        #self.oov_counts = oov_counts
         self.do_transformations()
 
     def do_transformations(self):
@@ -141,7 +168,6 @@ class FeatureExtractorCounts:
 
         # threshold by min_doc_threshold
         temp = self.feature_counts.copy().tolil()
-        n, p = temp.shape
 
         orig_vocab_index = self.vocab.index2token[:]
 
@@ -154,25 +180,9 @@ class FeatureExtractorCounts:
             # convert this to an index into the columns of the feature matrix
             index = np.array([k for (k, v) in enumerate(orig_vocab_index) if v in self.vocab.index2token])
 
-            # make sure we include the OOV column:
-
-
-            #feature_sums = np.array(temp.sum(axis=0))
-            #feature_sums = np.reshape(feature_sums, p)
-            # select the first colum (OOV) automatically, and then all the rest
-            #feature_sums[0] = self.min_doc_threshold
-            #feature_sel = np.array(feature_sums >= self.min_doc_threshold)
-            #index = np.arange(p)[feature_sel]
-
             print "Size before thresholding", temp.shape
             thresholded = temp[:, index]
             print "Size after thresholding", thresholded.shape
-
-            # add counts of out-of-vocabulary words based on this thresholding
-            #neg_index = np.arange(p)[np.array(1-feature_sel, dtype=bool)]
-            #oov_counts = temp[:, neg_index]
-            #oov_sums = oov_counts.sum(axis=1)
-            #thresholded[:, 0] = oov_sums
 
             self.feature_counts = thresholded.copy().tocsr()
             self.column_names = self.vocab.index2token
