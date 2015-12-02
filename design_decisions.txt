@@ -49,3 +49,11 @@ Hyperparams:
 ideas: 
 	having a distance metric between datasets would allow us to choose datasets that are close to one another for warm starting. 
 	from the beginning: have multi-label support. each example can have more than one label
+
+
+keeping a classifier:
+	when saving to disk, we should keep all relevant bits that would go into training the model:
+	     how many examples it was trained on
+	     how many iterations of bayes opt it went through
+	     what kind of model it is
+	     the feature function that maps from the actual data to the feature vectors
