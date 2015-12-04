@@ -10,7 +10,6 @@ from hyperopt import STATUS_OK
 
 from sklearn import svm
 from sklearn.linear_model import LogisticRegression as lr
-from sklearn.metrics import f1_score
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.cross_validation import cross_val_score
 from sklearn import metrics
