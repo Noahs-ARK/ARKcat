@@ -32,8 +32,9 @@ space = {
         'unigrams':
             {
                 'transform': hp.choice('u_transform', ['None', 'binarize', 'tfidf']),
-                'min_doc_threshold': hp.choice('u_min_doc_threshold', [1])#[1,2,3,4,5]) DEBUGGING
+                'min_doc_threshold': hp.choice('u_min_doc_threshold', [1,2,3,4,5]) 
             },
+
         'bigrams':
             hp.choice('bigrams', [
                 {
@@ -42,16 +43,15 @@ space = {
                 {
                     'use': True,
                     'transform': hp.choice('b_transform', ['None', 'binarize', 'tfidf']),
-                    'min_doc_threshold': hp.choice('b_min_doc_threshold', [1])#[1,2,3,4,5]) DEBUGGING
+                    'min_doc_threshold': hp.choice('b_min_doc_threshold',[1,2,3,4,5])
                 }
             ]),
+        }
     }
-}
 
 def call_experiment(args):
-    global num_trials
-    num_trials = num_trials + 1
-    model = args['model']['model']
+    global trial_num
+    trial_num = trial_num + 1
     feature_list, description, kwargs = wrangle_params(args)
     result = classify_test.classify(train_data_filename, train_label_filename, dev_data_filename, 
                                     dev_label_filename, train_feature_dir, dev_feature_dir, 
@@ -59,9 +59,9 @@ def call_experiment(args):
     with codecs.open(log_filename, 'a') as output_file:
         output_file.write(str(datetime.datetime.now()) + '\t' + ' '.join(feature_list) + '\t' + ' '.join(description) +
                           '\t' + str(-result['loss']) + '\n')
-    save_model(model, feature_list, kwargs)
+    save_model(result['model'], feature_list, kwargs)
 
-    print("\nFinished iteration " + str(num_trials) + ".\n\n\n")
+    print("\nFinished iteration " + str(trial_num) + ".\n\n\n")
     return result
 
 def wrangle_params(args):
@@ -106,7 +106,7 @@ def save_model(model, feature_list, model_hyperparams):
     for hparam in model_hyperparams:
         feature_string = feature_string + hparam + '=' + str(model_hyperparams[hparam]) + ';'
     feature_string = feature_string[:-1]
-    pickle.dump([model, model_hyperparams, num_trials], open(output_dir + '/' + feature_string + '.model', 'wb'))
+    pickle.dump([model, model_hyperparams, trial_num, train_feature_dir, feature_list], open(model_dir + feature_string + '.model', 'wb'))
     
 
 
@@ -120,7 +120,7 @@ def main():
     max_iter = int(options.max_iter)
 
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
-    global output_dir, train_feature_dir, dev_feature_dir, model_dir, log_filename, num_trials
+    global output_dir, train_feature_dir, dev_feature_dir, model_dir, log_filename, trial_num
 
     train_data_filename = args[0]
     train_label_filename = args[1]
@@ -132,7 +132,7 @@ def main():
     dev_feature_dir = output_dir + '/dev_features/'
     model_dir = output_dir + '/saved_models/'
     
-    num_trials = 0
+    trial_num = 0
     
     for directory in [output_dir, train_feature_dir, dev_feature_dir, model_dir]:
         if not os.path.exists(directory):
@@ -152,7 +152,7 @@ def main():
     
     print space_eval(space, best)
     print "losses:", [-l for l in trials.losses()]
-    print("number of trials: " + str(len(trails.trials)))
+    print("number of trials: " + str(len(trials.trials)))
 
 
 if __name__ == '__main__':

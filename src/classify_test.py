@@ -74,7 +74,7 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
         # Try loading dev data using train vocabulary, and not saving dev feature extractions
         dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, dev_feature_dir,
                                      feature_list, verbose, vocab_source=train_feature_dir)
-#        import pdb; pdb.set_trace() DEBUGGING
+#        import pdb; pdb.set_trace() #DEBUGGING
         f1 = no_cross_validation(train_X, train_Y, dev_X, dev_Y, model)
         print('dev f1: ' + str(f1))
     #if we don't have separate dev data, so we need cross validation
