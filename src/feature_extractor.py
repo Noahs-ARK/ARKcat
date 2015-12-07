@@ -14,17 +14,17 @@ class FeatureExtractorCounts:
     name = None
     prefix = None
     n = None
-    min_doc_threshold = None
+    min_df = None
     binarize = None
 
     index = None
     vocab = None
     column_names = None
 
-    def __init__(self, basedir, name, prefix, min_doc_threshold=1, transform=None):
+    def __init__(self, basedir, name, prefix, min_df=1, transform=None):
         self.name = name
         self.prefix = prefix
-        self.min_doc_threshold = int(min_doc_threshold)
+        self.min_df = int(min_df)
         self.transform = transform
         self.feature_counts = None
         self.index = None
@@ -37,8 +37,8 @@ class FeatureExtractorCounts:
     def get_prefix(self):
         return self.prefix
 
-    def get_min_doc_threshold(self):
-        return self.min_doc_threshold
+    def get_min_df(self):
+        return self.min_df
 
     def get_transform(self):
         return self.transform
@@ -47,7 +47,7 @@ class FeatureExtractorCounts:
         return self.dirname
 
     def make_dirname(self, basedir):
-        self.dirname = os.path.join(basedir, self.name)
+        self.dirname = os.path.join(basedir, self.name + ',min_df=' + str(self.min_df))
 
     def get_feature_filename(self):
         return fh.make_filename(fh.makedirs(self.dirname), 'counts', 'pkl')
@@ -77,6 +77,7 @@ class FeatureExtractorCounts:
 
         if vocab_source is None:
             vocab = self.make_vocabulary(tokens, all_items)
+            vocab.prune(self.min_df)
             self.vocab = vocab
         else:
             vocab = self.load_vocabulary(vocab_source)
@@ -132,7 +133,7 @@ class FeatureExtractorCounts:
             values.extend(token_counts)
             row_starts_and_ends.append(len(column_indices))
 
-        dtype = 'int32'
+        dtype = 'float'
 
         feature_counts = sparse.csr_matrix((values, column_indices, row_starts_and_ends), dtype=dtype)
 
@@ -165,26 +166,6 @@ class FeatureExtractorCounts:
 
     def do_transformations(self):
         """Apply thresholding and transforms"""
-
-        # threshold by min_doc_threshold
-        print "Thresholding"
-
-        temp = self.feature_counts.copy().tolil()
-        orig_vocab_index = self.vocab.index2token[:]
-
-        print "Size before thresholding", temp.shape
-
-        # prune the vocabulary
-        self.vocab.prune(self.min_doc_threshold)
-
-        # convert this to an index into the columns of the feature matrix
-        index = np.array([k for (k, v) in enumerate(orig_vocab_index) if v in self.vocab.index2token])
-
-        thresholded = temp[:, index]
-        print "Size after thresholding", thresholded.shape
-
-        self.feature_counts = thresholded.copy().tocsr()
-        self.column_names = self.vocab.index2token
 
         if self.transform == 'binarize':
             print "Binarizing"

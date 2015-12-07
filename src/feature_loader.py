@@ -90,7 +90,7 @@ def main():
     data_file = args[0]
     feature_dir = args[1]
 
-    feature_description = ','.join([feature_type, 'min_doc_threshold=' + str(min_doc_thresh),
+    feature_description = ','.join([feature_type, 'min_df=' + str(min_doc_thresh),
                                     'binarize=' + str(binarize), 'n=' + str(n)])
 
     items, columns, data = load_feature(feature_description, feature_dir, data_file)
