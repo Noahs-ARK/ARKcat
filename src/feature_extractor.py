@@ -83,15 +83,15 @@ class FeatureExtractorCounts:
             vocab = self.load_vocabulary(vocab_source)
             self.vocab = vocab
 
-        feature_counts = self.extract_feature_counts(all_items, tokens, vocab)
+        feature_counts, index = self.extract_feature_counts(all_items, tokens, vocab)
 
         if write_to_file:
             vocab.write_to_file(self.get_vocab_filename())
-            fh.write_to_json(all_items, self.get_index_filename(), sort_keys=False)
+            fh.write_to_json(index, self.get_index_filename(), sort_keys=False)
             fh.pickle_data(feature_counts, self.get_feature_filename())
 
         self.feature_counts = feature_counts
-        self.index = all_items
+        self.index = index
         self.column_names = np.array(self.vocab.index2token)
         self.do_transformations()
 
@@ -139,10 +139,11 @@ class FeatureExtractorCounts:
                                            shape=(n_items, n_features), dtype=dtype)
 
         #print max(column_indices)
-        #print feature_counts.shape[0] == n_items
-        #print feature_counts.shape[1] == n_features
+        print feature_counts.shape[0] == n_items
+        print feature_counts.shape[1] == n_features
 
-        return feature_counts
+        index = dict(zip(items, range(len(items))))
+        return feature_counts, index
 
     def load_vocabulary(self, vocab_source=None):
         if vocab_source is None:

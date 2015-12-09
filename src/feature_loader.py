@@ -7,7 +7,7 @@ import numpy as np
 from feature_extractor_ngrams import FeatureExtractorCountsNgrams
 from feature_extractor_chargrams import FeatureExtractorCountsCharGrams
 
-def load_feature(feature_description, feature_dir, source, items_to_load=None, vocab_source=None, verbose=1):
+def load_feature(feature_description, feature_dir, source, items_to_load, vocab_source=None, verbose=1):
     """Load the feature counts associated with a given feature for a list of items
 
     Args:
@@ -44,11 +44,8 @@ def load_feature(feature_description, feature_dir, source, items_to_load=None, v
 
     index, column_names, counts = extractor.get_counts()
 
-    if items_to_load is None:
-        return index, np.array(column_names), counts
-    else:
-        indices_to_load = [index.index(i) for i in items_to_load]
-        return items_to_load, np.array(column_names), counts[indices_to_load, :]
+    indices_to_load = [index[i] for i in items_to_load]
+    return items_to_load, np.array(column_names), counts[indices_to_load, :]
 
 
 def kwargs_list_to_dict(list_of_kwargs):
