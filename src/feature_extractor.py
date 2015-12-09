@@ -116,8 +116,8 @@ class FeatureExtractorCounts:
         n_features = len(vocab)
 
         row_starts_and_ends = [0]
-        column_indices = [len(vocab)-1]
-        values = [0]
+        column_indices = []
+        values = []
 
         for item in items:
             # get the index for each token
@@ -135,7 +135,8 @@ class FeatureExtractorCounts:
 
         dtype = 'float'
 
-        feature_counts = sparse.csr_matrix((values, column_indices, row_starts_and_ends), dtype=dtype)
+        feature_counts = sparse.csr_matrix((values, column_indices, row_starts_and_ends),
+                                           shape=(n_items, n_features), dtype=dtype)
 
         #print max(column_indices)
         #print feature_counts.shape[0] == n_items
