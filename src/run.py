@@ -113,7 +113,7 @@ def save_model(model, feature_list, model_hyperparams):
 def main():
     usage = "%prog train_text.json train_labels.csv dev_text.json dev_labels.csv output_dir"
     parser = OptionParser(usage=usage)
-    parser.add_option('-m', dest='max_iter', default=4,
+    parser.add_option('-m', dest='max_iter', default=10,
                       help='Maximum iterations of Bayesian optimization; default=%default')
 
     (options, args) = parser.parse_args()

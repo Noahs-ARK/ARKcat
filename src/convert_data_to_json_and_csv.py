@@ -16,9 +16,9 @@ for t in types_of_data:
     for index, line in enumerate(lines):
         index = index + 1
         if index == len(lines): 
-            ofile.write('  "' + str(index) + '": "' + line[:-2] + '"\n')
+            ofile.write('  "' + str(index) + '": "' + line[:-2].replace('\*','*') + '"\n')
         else:
-            ofile.write('  "' + str(index) + '": "' + line[:-2] + '",\n')
+            ofile.write('  "' + str(index) + '": "' + line[:-2].replace('\*','*') + '",\n')
                  
     ofile.write('}')
     ofile.close()
