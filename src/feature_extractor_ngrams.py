@@ -9,11 +9,11 @@ class FeatureExtractorCountsNgrams(FeatureExtractorCounts):
 
     n = None
 
-    def __init__(self, basedir, n=1, min_doc_threshold=1, transform=None):
+    def __init__(self, basedir, n=1, min_df=1, transform=None):
         name = 'ngrams'
         self.n = int(n)
         prefix = '_n' + str(n) + '_'
-        FeatureExtractorCounts.__init__(self, basedir, name, prefix, min_doc_threshold=min_doc_threshold,
+        FeatureExtractorCounts.__init__(self, basedir, name, prefix, min_df=min_df,
                                         transform=transform)
         self.extend_dirname()
 
