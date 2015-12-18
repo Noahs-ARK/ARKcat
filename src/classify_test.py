@@ -54,12 +54,12 @@ def main():
 
 def classify(train_data_filename, train_label_filename, dev_data_filename, dev_label_filename, 
              train_feature_dir, dev_feature_dir, feature_list, model_type='LR', 
-             regularizer='l1', alpha=1.0, verbose=1, folds=2, n_jobs=-1, score_eval='f1'):
+             regularizer='l1', alpha=1.0, converg_tol=0.01, verbose=1, folds=2, n_jobs=-1, score_eval='f1'):
     
     if model_type == 'LR':
-        model = lr(penalty=regularizer, C=alpha)
+        model = lr(penalty=regularizer, C=alpha, tol=converg_tol)
     elif model_type == 'SVM':
-        model = svm.LinearSVC(penalty=regularizer, C=alpha)
+        model = svm.LinearSVC(penalty=regularizer, C=alpha, tol=converg_tol)
     else:
         sys.exit('Model type ' + model_type + ' not supported')
 
@@ -73,14 +73,14 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
         # Try loading dev data using train vocabulary, and not saving dev feature extractions
         dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, dev_feature_dir,
                                      feature_list, verbose, vocab_source=train_feature_dir)
-        print("size of train_X[0]: ", train_X[0].shape)
-        for thing in train_X[0]:
-            print(thing)
-        for thing in train_Y:
-            print(thing),
-            if not (thing == 1 or thing == 0):
-                print('found something bad')
-        import pdb; pdb.set_trace() #DEBUGGING
+#        print("size of train_X[0]: ", train_X[0].shape)
+#        for thing in train_X[0]:
+#            print(thing)
+#        for thing in train_Y:
+#            print(thing),
+#            if not (thing == 1 or thing == 0):
+#                print('found something bad')
+#        import pdb; pdb.set_trace() #DEBUGGING
         f1 = no_cross_validation(train_X, train_Y, dev_X, dev_Y, model)
         print('dev f1: ' + str(f1))
     #if we don't have separate dev data, so we need cross validation
@@ -97,8 +97,8 @@ def no_cross_validation(X_train, Y_train, X_dev, Y_dev, model):
     Y_train_pred = model.predict(X_train)
     Y_dev_pred = model.predict(X_dev)
 
-    train_f1 = metrics.f1_score(Y_train, Y_train_pred)
-    dev_f1 = metrics.f1_score(Y_dev, Y_dev_pred)
+    train_f1 = metrics.accuracy_score(Y_train, Y_train_pred)
+    dev_f1 = metrics.accuracy_score(Y_dev, Y_dev_pred)
 
     return dev_f1
 

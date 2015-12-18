@@ -16,37 +16,61 @@ output_dir = None
 log_filename = None
 
 space = {
-    'model': hp.choice('model', [
-        {
-            'model': 'SVM',
-            'regularizer_svm': 'l2',
-            'C_svm': hp.loguniform('C_svm', -1.15, 9.2)
-        },
+
+    'model':
+#        {
+#            'model': 'SVM',
+#            'regularizer_svm': 'l2',
+#            'C_svm': hp.loguniform('C_svm', -1.15, 9.2)
+#        },
         {
             'model': 'LR',
-            'regularizer_lr': hp.choice('regularizer_lr', ['l1', 'l2']),
-            'alpha_lr': hp.loguniform('alpha_lr', -1.15, 9.2)
-        }
-    ]),
+            'regularizer_lr': 'l2',
+            'alpha_lr': hp.uniform('alpha_lr', 9.5, 10.49),
+            'converg_tol': hp.uniform('converg_tol', 0.975, 0.985)
+        },
+#    ]),
+
+#    'model': hp.choice('model', [
+
+#        {
+#            'model': 'SVM',
+#            'regularizer_svm': 'l2',
+#            'C_svm': hp.loguniform('C_svm', -1.15, 9.2)
+#        },
+#        {
+#            'model': 'LR',
+#            'regularizer_lr': hp.choice('regularizer_lr', ['l1', 'l2']),
+#            'alpha_lr': hp.loguniform('alpha_lr', -1.15, 9.2)
+#        }
+#    ]),
     'features': {
         'unigrams':
             {
-                'transform': hp.choice('u_transform', ['None', 'binarize', 'tfidf']),
-                'min_df': hp.choice('u_min_df', [1,2,3,4,5])
+                'transform': 'tfidf',
+                'min_df': 1
             },
 
-        'bigrams':
-            hp.choice('bigrams', [
-                {
-                    'use': False
-                },
-                {
-                    'use': True,
-                    'transform': hp.choice('b_transform', ['None', 'binarize', 'tfidf']),
-                    'min_df': hp.choice('b_min_df',[1,2,3,4,5])
-                }
-            ]),
+        'bigrams': 
+            {
+
+                'use': True,
+                'transform':  'tfidf',
+                'min_df': 1
+            }
         }
+
+#        'bigrams':
+#            hp.choice('bigrams', [
+#                {
+#                    'use': False
+#                },
+#                {
+#                    'use': True,
+#                    'transform': hp.choice('b_transform', ['None', 'binarize', 'tfidf']),
+#                    'min_df': hp.choice('b_min_df',[1,2,3,4,5])
+#                }
+#            ]),
     }
 
 def call_experiment(args):
@@ -81,6 +105,7 @@ def wrangle_params(args):
     elif model == 'LR':
         kwargs['regularizer'] = args['model']['regularizer_lr']
         kwargs['alpha'] = args['model']['alpha_lr']
+        kwargs['converg_tol'] = args['model']['converg_tol']
 
     feature_list = []
     unigrams = 'ngrams,n=1' + \
@@ -113,7 +138,7 @@ def save_model(model, feature_list, model_hyperparams):
 def main():
     usage = "%prog train_text.json train_labels.csv dev_text.json dev_labels.csv output_dir"
     parser = OptionParser(usage=usage)
-    parser.add_option('-m', dest='max_iter', default=10,
+    parser.add_option('-m', dest='max_iter', default=50,
                       help='Maximum iterations of Bayesian optimization; default=%default')
 
     (options, args) = parser.parse_args()
