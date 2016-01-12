@@ -176,6 +176,8 @@ class FeatureExtractorCounts:
         elif self.transform == 'tfidf':
             print "Doing tf-idf transform"
             doc_sums = self.feature_counts.sum(axis=1)
+            if np.min(doc_sums) == 0:
+                doc_sums[doc_sums == 0] = 1.0
             tf = sparse.csr_matrix(self.feature_counts.multiply(1.0/doc_sums))
             doc_counts = self.vocab.get_all_doc_counts()
             n_docs = doc_counts.max()
