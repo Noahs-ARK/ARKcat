@@ -57,18 +57,6 @@ space = {
             ]),
     }}
 
-#####################
-####DEBUGGING####
-#        'bigrams': 
-#            {
-#
-#                'use': True,
-#                'transform':  'tfidf',
-#                'min_df': 1
-#            }
-#        }
-
-
 
 def call_experiment(args):
     global trial_num
@@ -151,7 +139,7 @@ def main():
     output_dir = args[4]
 
     train_feature_dir = output_dir + '/train_features/'
-    dev_feature_dir = output_dir + '/dev1_features/'
+    dev_feature_dir = output_dir + '/dev_train_features/'
     model_dir = output_dir + '/saved_models/'
     
     trial_num = 0
