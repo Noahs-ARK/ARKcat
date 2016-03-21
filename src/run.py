@@ -162,6 +162,7 @@ def main():
     
     print space_eval(space, best)
     print "losses:", [-l for l in trials.losses()]
+    print('the best loss: ', max([-l for l in trials.losses()]))
     print("number of trials: " + str(len(trials.trials)))
 
 

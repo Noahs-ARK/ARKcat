@@ -73,34 +73,28 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
         # Try loading dev data using train vocabulary, and not saving dev feature extractions
         dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, dev_feature_dir,
                                      feature_list, verbose, vocab_source=train_feature_dir)
-#        print("size of train_X[0]: ", train_X[0].shape)
-#        for thing in train_X[0]:
-#            print(thing)
-#        for thing in train_Y:
-#            print(thing),
-#            if not (thing == 1 or thing == 0):
-#                print('found something bad')
-#        import pdb; pdb.set_trace() #DEBUGGING
-        f1 = no_cross_validation(train_X, train_Y, dev_X, dev_Y, model)
-        print('dev f1: ' + str(f1))
+
+        dev_f1, dev_acc, train_f1, train_acc = compute_evaluation_metrics(train_X, train_Y, dev_X, dev_Y, model)
+        print('train acc: ' + str(train_acc))
+        print('train f1: ' + str(train_f1))
+        print('dev acc: ' + str(dev_acc))
+        print('dev f1: ' + str(dev_f1))
+        neg_loss = dev_acc
     #if we don't have separate dev data, so we need cross validation
     else:
         skf = StratifiedKFold(train_Y, folds,random_state=17)
-        f1 = cross_val_score(model, train_X, train_Y, cv=skf,scoring=score_eval,n_jobs=n_jobs).mean()
+        neg_loss = cross_val_score(model, train_X, train_Y, cv=skf,scoring=score_eval,n_jobs=n_jobs).mean()
         print('crossvalidation f1: ' + str(f1))
 
-    return {'loss': -f1, 'status': STATUS_OK, 'model': model}
+    return {'loss': -neg_loss, 'status': STATUS_OK, 'model': model}
 
-def no_cross_validation(X_train, Y_train, X_dev, Y_dev, model):
+def compute_evaluation_metrics(X_train, Y_train, X_dev, Y_dev, model):
     model.fit(X_train, Y_train)
 
     Y_train_pred = model.predict(X_train)
     Y_dev_pred = model.predict(X_dev)
 
-    train_f1 = metrics.accuracy_score(Y_train, Y_train_pred)
-    dev_f1 = metrics.accuracy_score(Y_dev, Y_dev_pred)
-
-    return dev_f1
+    return metrics.f1_score(Y_dev, Y_dev_pred), metrics.accuracy_score(Y_dev, Y_dev_pred), metrics.f1_score(Y_train, Y_train_pred), metrics.accuracy_score(Y_train, Y_train_pred)
 
 
 def load_features(data_filename, label_filename, feature_dir, feature_list, verbose, vocab_source=None):
