@@ -1,4 +1,4 @@
-import os
+import os, sys
 import codecs
 import datetime
 import cPickle as pickle
@@ -68,7 +68,7 @@ def call_experiment(args):
     with codecs.open(log_filename, 'a') as output_file:
         output_file.write(str(datetime.datetime.now()) + '\t' + ' '.join(feature_list) + '\t' + ' '.join(description) +
                           '\t' + str(-result['loss']) + '\n')
-    save_model(result['model'], feature_list, kwargs)
+    save_model(result['model'], feature_list, kwargs, result)
 
     print("\nFinished iteration " + str(trial_num) + ".\n\n\n")
     return result
@@ -108,7 +108,7 @@ def wrangle_params(args):
     return feature_list, description, kwargs
     
 
-def save_model(model, feature_list, model_hyperparams):
+def save_model(model, feature_list, model_hyperparams, result):
     # to save the model after each iteration
     feature_string = ''
     for i in range(0,len(feature_list)):
@@ -116,22 +116,22 @@ def save_model(model, feature_list, model_hyperparams):
     for hparam in model_hyperparams:
         feature_string = feature_string + hparam + '=' + str(model_hyperparams[hparam]) + ';'
     feature_string = feature_string[:-1]
-    pickle.dump([model, model_hyperparams, trial_num, train_feature_dir, feature_list], open(model_dir + feature_string + '.model', 'wb'))
+    pickle.dump([model, model_hyperparams, trial_num, train_feature_dir, feature_list, result], open(model_dir + feature_string + '.model', 'wb'))
     
 
 
-def main():
+#sets the global variables, including params passed as args
+def set_globals():
     usage = "%prog train_text.json train_labels.csv dev_text.json dev_labels.csv output_dir"
     parser = OptionParser(usage=usage)
     parser.add_option('-m', dest='max_iter', default=30,
                       help='Maximum iterations of Bayesian optimization; default=%default')
 
     (options, args) = parser.parse_args()
-    max_iter = int(options.max_iter)
 
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
-    global output_dir, train_feature_dir, dev_feature_dir, model_dir, log_filename, trial_num
-
+    global output_dir, train_feature_dir, dev_feature_dir, model_dir, log_filename, trial_num, max_iter
+    
     train_data_filename = args[0]
     train_label_filename = args[1]
     dev_data_filename = args[2]
@@ -143,6 +143,7 @@ def main():
     model_dir = output_dir + '/saved_models/'
     
     trial_num = 0
+    max_iter = int(options.max_iter)
     
     for directory in [output_dir, train_feature_dir, dev_feature_dir, model_dir]:
         if not os.path.exists(directory):
@@ -153,6 +154,9 @@ def main():
         logfile.write(','.join([train_data_filename, train_label_filename, dev_data_filename, 
                                 dev_label_filename, train_feature_dir, dev_feature_dir, output_dir]) + '\n')
 
+
+def main():
+    set_globals()
     trials = Trials()
     best = fmin(call_experiment,
                 space=space,
