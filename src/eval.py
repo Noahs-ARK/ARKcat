@@ -22,20 +22,24 @@ def predict_one_model(model, data, labels, feature_dir):
 def eval_best_model(models):
     best_model = None
     test_evals = []
+    dev_evals = []
     for model in models:
         if best_model == None or -best_model[5]['loss'] < -model[5]['loss']:
             best_model = model
         preds_and_gold = predict_one_model(model, test_data, test_labels, feat_dir)
         acc = metrics.accuracy_score(preds_and_gold[0], preds_and_gold[1])
-        test_evals.append(acc)
+        test_evals.append(round(acc,5))
+        dev_evals.append(round(-model[5]['loss'],5))
     print(-best_model[5]['loss'])
     preds_and_gold = predict_one_model(best_model, test_data, test_labels, feat_dir)
+    print("dev accuracy on all models: ")
+    print(dev_evals)
     print("test accuracy on all models: ")
     print(test_evals)
     print("test accuracy on model which did best on dev:")
     print(metrics.accuracy_score(preds_and_gold[0], preds_and_gold[1]))
-    
-    sys.exit(0)
+    print("hyperparam settings for that model:")
+    print(best_model[1])
 
 
     

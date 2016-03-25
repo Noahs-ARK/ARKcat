@@ -3,6 +3,7 @@ import codecs
 import datetime
 import cPickle as pickle
 from optparse import OptionParser
+import numpy as np
 
 from hyperopt import fmin, tpe, hp, Trials, space_eval
 
@@ -33,8 +34,14 @@ space = {
 #        },
         {
             'model': 'LR',
-            'regularizer_lr': hp.choice('regularizer_lr', ['l1', 'l2']),
-            'alpha_lr': hp.loguniform('alpha_lr', -1.15, 9.2),
+            'regularizer_lr': hp.choice('regularizer_lr',
+                [
+                    ('l1', hp.uniform('l1_strength', 0,1)),
+                    ('l2', hp.uniform('l2_strength', 0,1))
+
+#                    ('l1', hp.loguniform('l1_strength', np.log(1e-7), np.log(10**2))),
+#                    ('l2', hp.loguniform('l2_strength', np.log(1e-7), np.log(100)))
+                ]),
             'converg_tol': hp.loguniform('converg_tol', -10, -1)
 
         },
@@ -88,8 +95,8 @@ def wrangle_params(args):
         kwargs['regularizer'] = args['model']['regularizer_svm']
         kwargs['alpha'] = args['model']['C_svm']
     elif model == 'LR':
-        kwargs['regularizer'] = args['model']['regularizer_lr']
-        kwargs['alpha'] = args['model']['alpha_lr']
+        kwargs['regularizer'] = args['model']['regularizer_lr'][0]
+        kwargs['alpha'] = args['model']['regularizer_lr'][1]
         kwargs['converg_tol'] = args['model']['converg_tol']
 
     feature_list = []

@@ -67,18 +67,13 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
                                      feature_list, verbose)
     #if we have separate dev data, so we don't need cross validation
     if folds < 1:
-        #dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, dev_feature_dir,
-        #                             feature_list, verbose)
-
         # Try loading dev data using train vocabulary, and not saving dev feature extractions
         dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, dev_feature_dir,
                                      feature_list, verbose, vocab_source=train_feature_dir)
 
         dev_f1, dev_acc, train_f1, train_acc = compute_evaluation_metrics(train_X, train_Y, dev_X, dev_Y, model)
         print('train acc: ' + str(train_acc))
-        print('train f1: ' + str(train_f1))
         print('dev acc: ' + str(dev_acc))
-        print('dev f1: ' + str(dev_f1))
         neg_loss = dev_acc
     #if we don't have separate dev data, so we need cross validation
     else:
@@ -112,13 +107,13 @@ def load_features(data_filename, label_filename, feature_dir, feature_list, verb
     print "Loading features"
     for feature in feature_list:
         feature_description = feature
-        print("DEBUGGING:")
-        print(feature_description)
-        print(feature_dir)
-        print(data_filename)
-        print(items_to_load)
-        print(vocab_source)
-        print('\n')
+#        print("DEBUGGING:")
+#        print(feature_description)
+#        print(feature_dir)
+#        print(data_filename)
+#        print(items_to_load)
+#        print(vocab_source)
+#        print('\n')
 
         rows, columns, counts = feature_loader.load_feature(feature_description, feature_dir, 
                                 data_filename, items_to_load, verbose=1, vocab_source=vocab_source)
