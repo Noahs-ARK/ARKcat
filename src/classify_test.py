@@ -8,8 +8,6 @@ from scipy import sparse
 
 from hyperopt import STATUS_OK
 
-from sklearn import svm
-from sklearn.linear_model import LogisticRegression as lr
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.cross_validation import cross_val_score
 from sklearn import metrics
@@ -17,6 +15,9 @@ from sklearn import metrics
 import feature_loader
 
 import file_handling as fh
+
+from models import Model
+
 
 def main():
     """ test function """
@@ -52,16 +53,10 @@ def main():
              regularizer=regularizer, alpha=alpha, verbose=verbose, folds=0)
 
 
+
 def classify(train_data_filename, train_label_filename, dev_data_filename, dev_label_filename, 
-             train_feature_dir, dev_feature_dir, feature_list, model_type='LR', 
-             regularizer='l1', alpha=1.0, converg_tol=0.01, verbose=1, folds=2, n_jobs=-1, score_eval='f1'):
-    
-    if model_type == 'LR':
-        model = lr(penalty=regularizer, C=alpha, tol=converg_tol)
-    elif model_type == 'SVM':
-        model = svm.LinearSVC(penalty=regularizer, C=alpha, tol=converg_tol)
-    else:
-        sys.exit('Model type ' + model_type + ' not supported')
+             train_feature_dir, dev_feature_dir, feature_list, params, verbose=1, folds=-1):
+    model = Model(params)
 
     train_X, train_Y = load_features(train_data_filename, train_label_filename, train_feature_dir, 
                                      feature_list, verbose)
@@ -71,7 +66,11 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
         dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, dev_feature_dir,
                                      feature_list, verbose, vocab_source=train_feature_dir)
 
-        dev_f1, dev_acc, train_f1, train_acc = compute_evaluation_metrics(train_X, train_Y, dev_X, dev_Y, model)
+        model.train(train_X, train_Y)
+        dev_Y_pred = model.predict(dev_X)
+        train_Y_pred = model.predict(train_X)
+        
+        dev_f1, dev_acc, train_f1, train_acc = metrics.f1_score(dev_Y, dev_Y_pred), metrics.accuracy_score(dev_Y, dev_Y_pred), metrics.f1_score(train_Y, train_Y_pred), metrics.accuracy_score(train_Y, train_Y_pred)
         print('train acc: ' + str(train_acc))
         print('dev acc: ' + str(dev_acc))
         neg_loss = dev_acc
@@ -83,13 +82,6 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
 
     return {'loss': -neg_loss, 'status': STATUS_OK, 'model': model}
 
-def compute_evaluation_metrics(X_train, Y_train, X_dev, Y_dev, model):
-    model.fit(X_train, Y_train)
-
-    Y_train_pred = model.predict(X_train)
-    Y_dev_pred = model.predict(X_dev)
-
-    return metrics.f1_score(Y_dev, Y_dev_pred), metrics.accuracy_score(Y_dev, Y_dev_pred), metrics.f1_score(Y_train, Y_train_pred), metrics.accuracy_score(Y_train, Y_train_pred)
 
 
 def load_features(data_filename, label_filename, feature_dir, feature_list, verbose, vocab_source=None):

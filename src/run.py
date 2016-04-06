@@ -43,8 +43,27 @@ space = {
 #                    ('l2', hp.loguniform('l2_strength', np.log(1e-7), np.log(100)))
                 ]),
             'converg_tol': hp.loguniform('converg_tol', -10, -1)
+        },
+        {
+            'model': 'XGBoost',
+            'eta': hp.uniform(0,1),
+            'gamma': hp.uniform(0,10),
+            'max_depth': hp.quniform('max_depth', 1,50),
+            'min_child_weight': hp.uniform('min_child_weight', 0, 10),
+            'max_delta_step': hp.uniform('max_delta_step', 0, 10),
+            'num_round': hp.quniform('num_round', 1, 10),
+            'subsample': hp.uniform('subsample', .00001, 1),
+            'regularizer_xgb': hp.choice('regularizer_xgb',
+                [
+                    ('l1', hp.uniform('l1_strength', 0,1)),
+                    ('l2', hp.uniform('l2_strength', 0,1))
+
+#                    ('l1', hp.loguniform('l1_strength', np.log(1e-7), np.log(10**2))),
+#                    ('l2', hp.loguniform('l2_strength', np.log(1e-7), np.log(100)))
+                ])
 
         },
+
     'features': {
         'unigrams':
             {
@@ -69,9 +88,17 @@ def call_experiment(args):
     global trial_num
     trial_num = trial_num + 1
     feature_list, description, kwargs = wrangle_params(args)
+    
+    ### TOTAL HACK DEBUGGING
+    
+#    kwargs['model_type'] = 'XGBoost'
+#    feature_list = ['ngrams,n=1,transform=None,min_df=1']
+
+    ### END TOTAL HACK DEBUGGING
+    
     result = classify_test.classify(train_data_filename, train_label_filename, dev_data_filename, 
                                     dev_label_filename, train_feature_dir, dev_feature_dir, 
-                                    feature_list, **kwargs)
+                                    feature_list, kwargs)
     with codecs.open(log_filename, 'a') as output_file:
         output_file.write(str(datetime.datetime.now()) + '\t' + ' '.join(feature_list) + '\t' + ' '.join(description) +
                           '\t' + str(-result['loss']) + '\n')
@@ -98,6 +125,17 @@ def wrangle_params(args):
         kwargs['regularizer'] = args['model']['regularizer_lr'][0]
         kwargs['alpha'] = args['model']['regularizer_lr'][1]
         kwargs['converg_tol'] = args['model']['converg_tol']
+    elif  model == 'xgboost':
+        kwargs['eta'] = args['model']['eta']
+        kwargs['gamma'] = args['model']['gamma']
+        kwargs['max_depth'] = args['model']['max_depth']
+        kwargs['min_child_weight'] = args['model']['min_child_weight']
+        kwargs['max_delta_step'] = args['model']['max_delta_step']
+        kwargs['subsample'] = args['model']['subsample']
+        kwargs['regularizer'] = args['model']['regularizer_xgb'][0]
+        kwargs['reg_strength'] = args['model']['regularizer_xgb'][1]
+        kwargs['num_round'] = args['model']['num_round']
+        
 
     feature_list = []
     unigrams = 'ngrams,n=1' + \
