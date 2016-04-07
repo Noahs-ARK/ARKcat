@@ -86,32 +86,33 @@ Descriptive statistics about the datasets.
 \begin{table}[h]
 \centering
 \caption{
-My accuracy vs Yogatama et al 2015 accuracy
+My accuracy vs Yogatama et al 2015 accuracy, one model (no ensemble)
 \label{tbl:test_acc}
 }
-\small \begin{tabular}{|@{\hspace{1.0mm}}c@{\hspace{1.0mm}}|@{\hspace{1.0mm}}c@{\hspace{1.0mm}}|r|r|r|}
+\small \begin{tabular}{|@{\hspace{1.0mm}}c@{\hspace{1.0mm}}|@{\hspace{1.0mm}}c@{\hspace{1.0mm}}|r|r|r|r|r|}
 \hline
 \abovespace
-& \textbf{Dataset} & My acc & Dani acc
+& \textbf{Dataset} & Dani acc & LR& XGBoost & LR and XGB
 \belowspace
 \\
 \hline
 
 \abovespace
 \multirow{4}{*}{\rotatebox{90}{\bf Other}} 
- & Stanford sentiment & 79.68 & 82.43\\
- & Amazon electronics & 0 & 91.56\\
-  & IMDB reviews & 0  & 90.85 \\
- & congress vote & 75.18  & 78.59     \belowspace
+ & Stanford sentiment &  82.43 & 79.68 & 0 & 0\\
+ & Amazon electronics & 91.56 & 0 & 0 & 0\\
+  & IMDB reviews & 90.85 & 0 & 0 & 0\\
+ & congress vote & 78.59 & 75.18 & 0 & 0   \belowspace
 \\
 \hline \hline
 \abovespace
 \multirow{4}{*}{\rotatebox{90}{\bf 20N}} 
-& all & 0 & 87.84 \\
-& science & 0 & 95.82 \\
-& religion & 0  & 86.32  \\
-& x.graphics & 0  & 92.09 \belowspace
+& all &  87.84 & 0 & 0 & 0\\
+& science & 95.82 &0 & 0 & 0\\
+& religion & 86.32 & 0 & 0 & 0\\
+& x.graphics &  92.09 & 0 & 0 & 0\belowspace
 \\
+
 
 
 \hline

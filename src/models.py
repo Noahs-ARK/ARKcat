@@ -25,6 +25,8 @@ class Model:
         
         print('about to try to make DMatrix')
         dtrain = xgboost.DMatrix(train_X, label=train_Y)
+        print('now printing the hyperparams:')
+        print(self.hp)
         
         if self.hp['regularizer'] == 'l1':
             self.hp['lambda'] = 0
@@ -32,19 +34,19 @@ class Model:
         elif self.hp['regularizer'] == 'l2':
             self.hp['alpha'] = 0
             self.hp['lambda'] = self.hp['reg_strength']
-        param = {'bst:eta':self.hp['eta'],
-                 'bst:gamma':self.hp['gamma'],
-                 'bst:max_depth':self.hp['max_depth'],
-                 'bst:min_child_weight':self.hp['min_child_weight'],
-                 'bst:max_delta_step':self.hp['max_delta_step'],
-                 'bst:subsample':self.hp['subsample'],
-                 'bst:alpha':self.hp['alpha'],
-                 'bst:lambda':self.hp['lambda']}
-
+        param = {'eta':self.hp['eta'],
+                 'gamma':self.hp['gamma'],
+                 'max_depth':self.hp['max_depth'],
+                 'min_child_weight':self.hp['min_child_weight'],
+                 'max_delta_step':self.hp['max_delta_step'],
+                 'subsample':self.hp['subsample'],
+                 'alpha':self.hp['alpha'],
+                 'lambda':self.hp['lambda']}
+        
         self.model = xgboost.train(param, dtrain, self.hp['num_round'])
 
-        
-        
+            
+
     def train_linear(self, train_X, train_Y):
         if self.hp['model_type'] == 'LR':
             self.model = lr(penalty=self.hp['regularizer'], C=self.hp['alpha'], tol=self.hp['converg_tol'])
@@ -68,7 +70,7 @@ class Model:
 
     def predict_xgboost(self, test_X):
         dtest = xgboost.DMatrix(test_X)
-        test_pred = bst.predict(dtest)
+        test_pred = self.model.predict(dtest)
         test_pred_round = []
         [test_pred_round.append(int(round(pred))) for pred in test_pred]
         return test_pred_round

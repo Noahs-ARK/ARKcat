@@ -99,13 +99,6 @@ def load_features(data_filename, label_filename, feature_dir, feature_list, verb
     print "Loading features"
     for feature in feature_list:
         feature_description = feature
-#        print("DEBUGGING:")
-#        print(feature_description)
-#        print(feature_dir)
-#        print(data_filename)
-#        print(items_to_load)
-#        print(vocab_source)
-#        print('\n')
 
         rows, columns, counts = feature_loader.load_feature(feature_description, feature_dir, 
                                 data_filename, items_to_load, verbose=1, vocab_source=vocab_source)

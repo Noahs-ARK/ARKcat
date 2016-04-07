@@ -3,7 +3,7 @@ DATASET=convote
 
 rm -r ../output
 python run.py ../../data/$DATASET/train.json ../../data/$DATASET/train.csv ../../data/$DATASET/dev.json ../../data/$DATASET/dev.csv ../output
-#python eval.py ../output/saved_models/ ../../data/$DATASET/ ../output/
+python eval.py ../output/saved_models/ ../../data/$DATASET/ ../output/
 
 #python run.py ../example_data/train.json ../example_data/train.csv ../example_data/dev.json ../example_data/dev.csv ../output
 

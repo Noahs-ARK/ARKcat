@@ -7,6 +7,7 @@ import numpy as np
 
 from hyperopt import fmin, tpe, hp, Trials, space_eval
 
+import Queue as queue
 import classify_test
 
 
@@ -18,51 +19,39 @@ log_filename = None
 
 space = {
 
-    'model':
+    'model':# hp.choice('model', [
 #        {
-#            'model': 'SVM',
-#            'regularizer_svm': 'l2',
-#            'C_svm': hp.loguniform('C_svm', -1.15, 9.2)
+#            'model': 'LR',
+#            'regularizer_lr': hp.choice('regularizer_lr',
+#                [
+#                    ('l1', hp.uniform('l1_strength_lr', 0,1)),
+#                    ('l2', hp.uniform('l2_strength_lr', 0,1))
+#
+##                    ('l1', hp.loguniform('l1_strength', np.log(1e-7), np.log(10**2))),
+##                    ('l2', hp.loguniform('l2_strength', np.log(1e-7), np.log(100)))
+#                ]),
+#            'converg_tol': hp.loguniform('converg_tol', -10, -1)
 #        },
-
-#    'model': hp.choice('model', [
-
-#        {
-#            'model': 'SVM',
-#            'regularizer_svm': 'l2',
-#            'C_svm': hp.loguniform('C_svm', -1.15, 9.2)
-#        },
-        {
-            'model': 'LR',
-            'regularizer_lr': hp.choice('regularizer_lr',
-                [
-                    ('l1', hp.uniform('l1_strength', 0,1)),
-                    ('l2', hp.uniform('l2_strength', 0,1))
-
-#                    ('l1', hp.loguniform('l1_strength', np.log(1e-7), np.log(10**2))),
-#                    ('l2', hp.loguniform('l2_strength', np.log(1e-7), np.log(100)))
-                ]),
-            'converg_tol': hp.loguniform('converg_tol', -10, -1)
-        },
         {
             'model': 'XGBoost',
-            'eta': hp.uniform(0,1),
-            'gamma': hp.uniform(0,10),
-            'max_depth': hp.quniform('max_depth', 1,50),
+            'eta': hp.uniform('eta',0,1),
+            'gamma': hp.uniform('gamma',0,10),
+            'max_depth': hp.quniform('max_depth', 1,50,1),
             'min_child_weight': hp.uniform('min_child_weight', 0, 10),
             'max_delta_step': hp.uniform('max_delta_step', 0, 10),
-            'num_round': hp.quniform('num_round', 1, 10),
-            'subsample': hp.uniform('subsample', .00001, 1),
+            'num_round': hp.quniform('num_round', 1, 10, 1),
+            'subsample': hp.uniform('subsample', .001, 1),
             'regularizer_xgb': hp.choice('regularizer_xgb',
                 [
-                    ('l1', hp.uniform('l1_strength', 0,1)),
-                    ('l2', hp.uniform('l2_strength', 0,1))
+                    ('l1', hp.uniform('l1_strength_xgb', 0,1)),
+                    ('l2', hp.uniform('l2_strength_xgb', 0,1))
 
 #                    ('l1', hp.loguniform('l1_strength', np.log(1e-7), np.log(10**2))),
 #                    ('l2', hp.loguniform('l2_strength', np.log(1e-7), np.log(100)))
                 ])
 
         },
+#    ]),
 
     'features': {
         'unigrams':
@@ -91,7 +80,6 @@ def call_experiment(args):
     
     ### TOTAL HACK DEBUGGING
     
-#    kwargs['model_type'] = 'XGBoost'
 #    feature_list = ['ngrams,n=1,transform=None,min_df=1']
 
     ### END TOTAL HACK DEBUGGING
@@ -116,6 +104,7 @@ def wrangle_params(args):
     print('')
     print('the args:')
     print(args)
+
     model = args['model']['model']
     kwargs['model_type'] = model
     if model == 'SVM':
@@ -125,16 +114,16 @@ def wrangle_params(args):
         kwargs['regularizer'] = args['model']['regularizer_lr'][0]
         kwargs['alpha'] = args['model']['regularizer_lr'][1]
         kwargs['converg_tol'] = args['model']['converg_tol']
-    elif  model == 'xgboost':
+    elif  model == 'XGBoost':
         kwargs['eta'] = args['model']['eta']
         kwargs['gamma'] = args['model']['gamma']
-        kwargs['max_depth'] = args['model']['max_depth']
+        kwargs['max_depth'] = int(args['model']['max_depth'])
         kwargs['min_child_weight'] = args['model']['min_child_weight']
         kwargs['max_delta_step'] = args['model']['max_delta_step']
         kwargs['subsample'] = args['model']['subsample']
         kwargs['regularizer'] = args['model']['regularizer_xgb'][0]
         kwargs['reg_strength'] = args['model']['regularizer_xgb'][1]
-        kwargs['num_round'] = args['model']['num_round']
+        kwargs['num_round'] = int(args['model']['num_round'])
         
 
     feature_list = []
@@ -154,12 +143,26 @@ def wrangle_params(args):
     
 
 def save_model(model, feature_list, model_hyperparams, result):
+    #STUPID FILENAMES TOO LING
+    short_name = {'model_type':'mdl', 'regularizer':'rg', 'converg_tol':'cvrg','alpha':'alpha',
+                  'eta':'eta', 'gamma':'gamma', 'max_depth':'dpth', 'min_child_weight':'mn_wght', 
+                  'max_delta_step':'mx_stp', 'subsample':'smpl', 'reg_strength':'rg_str', 
+                  'num_round':'rnds', 'lambda':'lmbda'}
+
+
     # to save the model after each iteration
     feature_string = ''
     for i in range(0,len(feature_list)):
         feature_string = feature_string + feature_list[i] + ';'
     for hparam in model_hyperparams:
-        feature_string = feature_string + hparam + '=' + str(model_hyperparams[hparam]) + ';'
+        cur_hparam = None
+        if hparam == 'folds':
+            continue
+        if isinstance(model_hyperparams[hparam], float):
+            cur_hparam = str(round(model_hyperparams[hparam]*1000)/1000) 
+        else:
+            cur_hparam = str(model_hyperparams[hparam])
+        feature_string = feature_string + short_name[hparam] + '=' + cur_hparam + ';'
     feature_string = feature_string[:-1]
     pickle.dump([model, model_hyperparams, trial_num, train_feature_dir, feature_list, result], open(model_dir + feature_string + '.model', 'wb'))
     
@@ -169,7 +172,7 @@ def save_model(model, feature_list, model_hyperparams, result):
 def set_globals():
     usage = "%prog train_text.json train_labels.csv dev_text.json dev_labels.csv output_dir"
     parser = OptionParser(usage=usage)
-    parser.add_option('-m', dest='max_iter', default=30,
+    parser.add_option('-m', dest='max_iter', default=100,
                       help='Maximum iterations of Bayesian optimization; default=%default')
 
     (options, args) = parser.parse_args()
@@ -199,6 +202,19 @@ def set_globals():
         logfile.write(','.join([train_data_filename, train_label_filename, dev_data_filename, 
                                 dev_label_filename, train_feature_dir, dev_feature_dir, output_dir]) + '\n')
 
+def printing_best(trials):
+    priority_q = queue.PriorityQueue()
+    losses = trials.losses()
+    for i in range(len(losses)):
+        priority_q.put((losses[i], i))
+    print('top losses and settings: ')
+    for i in range(0,3):
+        index = priority_q.get()[1]
+        print(losses[index])
+        print(trials.trials[index]['misc']['vals'])
+        print('')
+    print('')
+        
 
 def main():
     set_globals()
@@ -210,10 +226,31 @@ def main():
                 trials=trials)
     
     print space_eval(space, best)
-    print "losses:", [-l for l in trials.losses()]
-    print('the best loss: ', max([-l for l in trials.losses()]))
-    print("number of trials: " + str(len(trials.trials)))
+    printing_best(trials)
+#    print "losses:", [-l for l in trials.losses()]
+#    print('the best loss: ', max([-l for l in trials.losses()]))
+#    print("number of trials: " + str(len(trials.trials)))
 
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
+#### CODE GRAVEYARD ####
+
+#        {
+#            'model': 'SVM',
+#            'regularizer_svm': 'l2',
+#            'C_svm': hp.loguniform('C_svm', -1.15, 9.2)
+#        },
+
+#    'model': hp.choice('model', [
+
+#        {
+#            'model': 'SVM',
+#            'regularizer_svm': 'l2',
+#            'C_svm': hp.loguniform('C_svm', -1.15, 9.2)
+#        },

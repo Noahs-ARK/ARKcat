@@ -20,27 +20,39 @@ def predict_one_model(model, data, labels, feature_dir):
     return Y_pred, eval_Y
 
 def eval_best_model(models):
-    best_model = None
+    ordered_models = Queue.PriorityQueue()
     test_evals = []
     dev_evals = []
+    
     for model in models:
-        if best_model == None or -best_model[5]['loss'] < -model[5]['loss']:
-            best_model = model
         preds_and_gold = predict_one_model(model, test_data, test_labels, feat_dir)
         acc = metrics.accuracy_score(preds_and_gold[0], preds_and_gold[1])
         test_evals.append(round(acc,5))
         dev_evals.append(round(-model[5]['loss'],5))
-    print(-best_model[5]['loss'])
-    preds_and_gold = predict_one_model(best_model, test_data, test_labels, feat_dir)
+        ordered_models.put((model[5]['loss'], -acc, model))
+
     print("dev accuracy on all models: ")
     print(dev_evals)
     print("test accuracy on all models: ")
     print(test_evals)
-    print("test accuracy on model which did best on dev:")
-    print(metrics.accuracy_score(preds_and_gold[0], preds_and_gold[1]))
-    print("hyperparam settings for that model:")
-    print(best_model[1])
+    print("best models:")
+    best_dev_acc = -1
+    
 
+    for i in range(len(models)):
+        dev_acc, test_acc, model = ordered_models.get()
+        dev_acc = -dev_acc
+        test_acc = -test_acc
+        if best_dev_acc == -1:
+            best_dev_acc = dev_acc
+        if dev_acc < best_dev_acc and i > 5:
+            break
+        
+        print('dev acc:  ' + str(dev_acc))
+        print('test acc: ' + str(test_acc))
+        print('hyperparams: ')
+        print(model[1])
+        print('')
 
     
 def set_globals(args):
