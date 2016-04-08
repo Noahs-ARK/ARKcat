@@ -2,14 +2,14 @@ import os, sys
 import codecs
 import datetime
 import cPickle as pickle
+import Queue as queue
+
 from optparse import OptionParser
 import numpy as np
-
 from hyperopt import fmin, tpe, hp, Trials, space_eval
 
-import Queue as queue
 import classify_test
-
+import space_manager
 
 data_filename = None
 label_filename = None
@@ -17,67 +17,20 @@ feature_dir = None
 output_dir = None
 log_filename = None
 
-space = {
-
-    'model':# hp.choice('model', [
-#        {
-#            'model': 'LR',
-#            'regularizer_lr': hp.choice('regularizer_lr',
-#                [
-#                    ('l1', hp.uniform('l1_strength_lr', 0,1)),
-#                    ('l2', hp.uniform('l2_strength_lr', 0,1))
-#
-##                    ('l1', hp.loguniform('l1_strength', np.log(1e-7), np.log(10**2))),
-##                    ('l2', hp.loguniform('l2_strength', np.log(1e-7), np.log(100)))
-#                ]),
-#            'converg_tol': hp.loguniform('converg_tol', -10, -1)
-#        },
-        {
-            'model': 'XGBoost',
-            'eta': hp.uniform('eta',0,1),
-            'gamma': hp.uniform('gamma',0,10),
-            'max_depth': hp.quniform('max_depth', 1,50,1),
-            'min_child_weight': hp.uniform('min_child_weight', 0, 10),
-            'max_delta_step': hp.uniform('max_delta_step', 0, 10),
-            'num_round': hp.quniform('num_round', 1, 10, 1),
-            'subsample': hp.uniform('subsample', .001, 1),
-            'regularizer_xgb': hp.choice('regularizer_xgb',
-                [
-                    ('l1', hp.uniform('l1_strength_xgb', 0,1)),
-                    ('l2', hp.uniform('l2_strength_xgb', 0,1))
-
-#                    ('l1', hp.loguniform('l1_strength', np.log(1e-7), np.log(10**2))),
-#                    ('l2', hp.loguniform('l2_strength', np.log(1e-7), np.log(100)))
-                ])
-
-        },
-#    ]),
-
-    'features': {
-        'unigrams':
-            {
-                'transform': hp.choice('u_transform', ['None', 'binarize', 'tfidf']),
-                'min_df': hp.choice('u_min_df',[1,2,3,4,5])
-            },
-        'bigrams':
-            hp.choice('bigrams', [
-                {
-                    'use': False
-                },
-                {
-                    'use': True,
-                    'transform': hp.choice('b_transform', ['None', 'binarize', 'tfidf']),
-                    'min_df': hp.choice('b_min_df',[1,2,3,4,5])
-                }
-            ]),
-    }}
-
 
 def call_experiment(args):
     global trial_num
     trial_num = trial_num + 1
-    feature_list, description, kwargs = wrangle_params(args)
-    
+
+    feats_and_args = {}
+    all_feat_list = []
+    all_description = []
+    for i in range(num_models):
+        feature_list, description, kwargs = wrangle_params(args, str(i))
+        all_feat_list = all_feat_list + feature_list
+        all_description = all_description + description
+        feats_and_args[i] = {'feats':feature_list, 'params':kwargs}
+
     ### TOTAL HACK DEBUGGING
     
 #    feature_list = ['ngrams,n=1,transform=None,min_df=1']
@@ -86,16 +39,16 @@ def call_experiment(args):
     
     result = classify_test.classify(train_data_filename, train_label_filename, dev_data_filename, 
                                     dev_label_filename, train_feature_dir, dev_feature_dir, 
-                                    feature_list, kwargs)
+                                    feats_and_args)
     with codecs.open(log_filename, 'a') as output_file:
-        output_file.write(str(datetime.datetime.now()) + '\t' + ' '.join(feature_list) + '\t' + ' '.join(description) +
+        output_file.write(str(datetime.datetime.now()) + '\t' + ' '.join(all_feat_list) + '\t' + ' '.join(all_description) +
                           '\t' + str(-result['loss']) + '\n')
-    save_model(result['model'], feature_list, kwargs, result)
+    save_model(result)
 
     print("\nFinished iteration " + str(trial_num) + ".\n\n\n")
     return result
 
-def wrangle_params(args):
+def wrangle_params(args, model_num):
     kwargs = {}
 
     # WARNING THIS IS A HACK! Should pass this is as a param
@@ -105,36 +58,34 @@ def wrangle_params(args):
     print('the args:')
     print(args)
 
-    model = args['model']['model']
+
+    model = args['model_' + model_num]['model_' + model_num]
     kwargs['model_type'] = model
-    if model == 'SVM':
-        kwargs['regularizer'] = args['model']['regularizer_svm']
-        kwargs['alpha'] = args['model']['C_svm']
-    elif model == 'LR':
-        kwargs['regularizer'] = args['model']['regularizer_lr'][0]
-        kwargs['alpha'] = args['model']['regularizer_lr'][1]
-        kwargs['converg_tol'] = args['model']['converg_tol']
+    if model == 'LR':
+        kwargs['regularizer'] = args['model_' + model_num]['regularizer_lr_' + model_num][0]
+        kwargs['alpha'] = args['model_' + model_num]['regularizer_lr_' + model_num][1]
+        kwargs['converg_tol'] = args['model_' + model_num]['converg_tol_' + model_num]
     elif  model == 'XGBoost':
-        kwargs['eta'] = args['model']['eta']
-        kwargs['gamma'] = args['model']['gamma']
-        kwargs['max_depth'] = int(args['model']['max_depth'])
-        kwargs['min_child_weight'] = args['model']['min_child_weight']
-        kwargs['max_delta_step'] = args['model']['max_delta_step']
-        kwargs['subsample'] = args['model']['subsample']
-        kwargs['regularizer'] = args['model']['regularizer_xgb'][0]
-        kwargs['reg_strength'] = args['model']['regularizer_xgb'][1]
-        kwargs['num_round'] = int(args['model']['num_round'])
+        kwargs['eta'] = args['model_' + model_num]['eta_' + model_num]
+        kwargs['gamma'] = args['model_' + model_num]['gamma_' + model_num]
+        kwargs['max_depth'] = int(args['model_' + model_num]['max_depth_' + model_num])
+        kwargs['min_child_weight'] = args['model_' + model_num]['min_child_weight_' + model_num]
+        kwargs['max_delta_step'] = args['model_' + model_num]['max_delta_step_' + model_num]
+        kwargs['subsample'] = args['model_' + model_num]['subsample_' + model_num]
+        kwargs['regularizer'] = args['model_' + model_num]['regularizer_xgb_' + model_num][0]
+        kwargs['reg_strength'] = args['model_' + model_num]['regularizer_xgb_' + model_num][1]
+        kwargs['num_round'] = int(args['model_' + model_num]['num_round_' + model_num])
         
 
     feature_list = []
     unigrams = 'ngrams,n=1' + \
-               ',transform=' + args['features']['unigrams']['transform'] + \
-               ',min_df=' + str(args['features']['unigrams']['min_df'])
+               ',transform=' + args['features_' + model_num]['unigrams_' + model_num]['transform_' + model_num] + \
+               ',min_df=' + str(args['features_' + model_num]['unigrams_' + model_num]['min_df_' + model_num])
     feature_list.append(unigrams)
-    if args['features']['bigrams']['use']:
+    if args['features_' + model_num]['bigrams_' + model_num]['use_' + model_num]:
         bigrams = 'ngrams,n=2' + \
-                  ',transform=' + args['features']['bigrams']['transform'] + \
-                  ',min_df=' + str(args['features']['bigrams']['min_df'])
+                  ',transform=' + args['features_' + model_num]['bigrams_' + model_num]['transform_' + model_num] + \
+                  ',min_df=' + str(args['features_' + model_num]['bigrams_' + model_num]['min_df_' + model_num])
         feature_list.append(bigrams)
 
     print feature_list
@@ -142,7 +93,10 @@ def wrangle_params(args):
     return feature_list, description, kwargs
     
 
-def save_model(model, feature_list, model_hyperparams, result):
+def save_model(result):
+    model = result['model']
+    feature_list = result['model'].feats_and_params[0]['feats']
+    model_hyperparams = result['model'].feats_and_params[0]['params']
     #STUPID FILENAMES TOO LING
     short_name = {'model_type':'mdl', 'regularizer':'rg', 'converg_tol':'cvrg','alpha':'alpha',
                   'eta':'eta', 'gamma':'gamma', 'max_depth':'dpth', 'min_child_weight':'mn_wght', 
@@ -164,7 +118,7 @@ def save_model(model, feature_list, model_hyperparams, result):
             cur_hparam = str(model_hyperparams[hparam])
         feature_string = feature_string + short_name[hparam] + '=' + cur_hparam + ';'
     feature_string = feature_string[:-1]
-    pickle.dump([model, model_hyperparams, trial_num, train_feature_dir, feature_list, result], open(model_dir + feature_string + '.model', 'wb'))
+    pickle.dump([trial_num, train_feature_dir, result], open(model_dir + feature_string + '.model', 'wb'))
     
 
 
@@ -179,12 +133,14 @@ def set_globals():
 
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, log_filename, trial_num, max_iter
+    global num_models
     
     train_data_filename = args[0]
     train_label_filename = args[1]
     dev_data_filename = args[2]
     dev_label_filename = args[3]
     output_dir = args[4]
+    num_models = int(args[5])
 
     train_feature_dir = output_dir + '/train_features/'
     dev_feature_dir = output_dir + '/dev_train_features/'
@@ -219,6 +175,7 @@ def printing_best(trials):
 def main():
     set_globals()
     trials = Trials()
+    space = space_manager.get_space(num_models)
     best = fmin(call_experiment,
                 space=space,
                 algo=tpe.suggest,
@@ -227,9 +184,6 @@ def main():
     
     print space_eval(space, best)
     printing_best(trials)
-#    print "losses:", [-l for l in trials.losses()]
-#    print('the best loss: ', max([-l for l in trials.losses()]))
-#    print("number of trials: " + str(len(trials.trials)))
 
 
 if __name__ == '__main__':

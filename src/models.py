@@ -20,6 +20,7 @@ class Model:
         else:
             #should move this error up to the init
             sys.exit('Model type ' + self.hp['model_type'] + ' not supported')
+        
 
     def train_xgboost(self, train_X, train_Y):
         
@@ -74,3 +75,21 @@ class Model:
         test_pred_round = []
         [test_pred_round.append(int(round(pred))) for pred in test_pred]
         return test_pred_round
+
+
+    def predict_prob(self, test_X):
+        if self.hp['model_type'] == 'SVM' or self.hp['model_type'] == 'LR':
+            return self.predict_prob_linear(test_X)
+        if self.hp['model_type'] == 'XGBoost':
+            return self.predict_prob_xgboost(test_X)
+
+    def predict_prob_linear(self, test_X):
+        probs = self.model.predict_proba(test_X)
+        probs_of_true = []
+        for i in range(len(probs)):
+            probs_of_true.append(probs[i][1])
+        return probs_of_true
+    
+    def predict_prob_xgboost(self, test_X):
+        dtest = xgboost.DMatrix(test_X)
+        return self.model.predict(dtest)
