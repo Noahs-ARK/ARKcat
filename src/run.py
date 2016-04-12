@@ -126,7 +126,7 @@ def save_model(result):
 def set_globals():
     usage = "%prog train_text.json train_labels.csv dev_text.json dev_labels.csv output_dir"
     parser = OptionParser(usage=usage)
-    parser.add_option('-m', dest='max_iter', default=100,
+    parser.add_option('-m', dest='max_iter', default=30,
                       help='Maximum iterations of Bayesian optimization; default=%default')
 
     (options, args) = parser.parse_args()
