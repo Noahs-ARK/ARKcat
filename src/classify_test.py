@@ -1,6 +1,8 @@
 import os
 import sys
 from optparse import OptionParser
+import codecs
+import json
 
 import numpy as np
 import pandas as pd
@@ -8,6 +10,7 @@ from scipy import sparse
 
 from hyperopt import STATUS_OK
 
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cross_validation import StratifiedKFold
 from sklearn.cross_validation import cross_val_score
 from sklearn import metrics
@@ -64,39 +67,51 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
     print('train acc: ' + str(train_acc))
     print('dev acc: ' + str(dev_acc))
     return {'loss': -dev_acc, 'status': STATUS_OK, 'model': m_and_d}
+
+
+
+def load_features(data_filename, label_filename, feature_dir, feature_list, verbose, vocab=None):
+    # use TfidfVectorizer
+    json_data = None
+    data = []
+    with codecs.open(data_filename, 'r') as input_file:
+        json_data = json.load(input_file)
+    for i in range(len(json_data)):
+        data.append(json_data[str(i + 1)])
+
+    json_labels = None
+    labels = []
+    with codecs.open(label_filename, 'r') as input_file:
+        for line in input_file:
+            print(line)
+            if not line == 'idontknow,whattoputhere':
+                labels.append(line.split(',')[1])
+
     
-          
+    print(labels[0])
 
-#    model = Model(set_of_params)
+    #DEBUGGING HACK!
+    feature_list = {}
+    feature_list['n_min'] = 2
+    feature_list['n_max'] = 2
+    feature_list['binary'] = True
+    feature_list['idf'] = False
+    st = None
 
-#    train_X, train_Y = load_features(train_data_filename, train_label_filename, train_feature_dir, 
-#                                     feature_list, verbose)
-    #if we have separate dev data, so we don't need cross validation
-#    if folds < 1:
-        # Try loading dev data using train vocabulary, and not saving dev feature extractions
-#        dev_X, dev_Y = load_features(dev_data_filename, dev_label_filename, dev_feature_dir,
-#                                     feature_list, verbose, vocab_source=train_feature_dir)
-
-#        model.train(train_X, train_Y)
-#        dev_Y_pred = model.predict(dev_X)
-#        train_Y_pred = model.predict(train_X)
-        
-#        dev_f1, dev_acc, train_f1, train_acc = metrics.f1_score(dev_Y, dev_Y_pred), metrics.accuracy_score(dev_Y, dev_Y_pred), metrics.f1_score(train_Y, train_Y_pred), metrics.accuracy_score(train_Y, train_Y_pred)
-#        print('train acc: ' + str(train_acc))
-#        print('dev acc: ' + str(dev_acc))
-#        neg_loss = dev_acc
-    #if we don't have separate dev data, so we need cross validation
-#    else:
-#        skf = StratifiedKFold(train_Y, folds,random_state=17)
-#        neg_loss = cross_val_score(model, train_X, train_Y, cv=skf,scoring=score_eval,n_jobs=n_jobs).mean()
-#        print('crossvalidation f1: ' + str(f1))
-
-#    return {'loss': -neg_loss, 'status': STATUS_OK, 'model': model}
-
-
-
-def load_features(data_filename, label_filename, feature_dir, feature_list, verbose, vocab_source=None):
+    vectorizer = TfidfVectorizer(ngram_range=(int(feature_list['n_min']),int(feature_list['n_max'])),
+                                 binary=feature_list['binary'],use_idf=feature_list['idf'],
+                                 smooth_idf=True, stop_words=st, vocabulary=vocab)
+#    print('size of feature_names: ', len(vectorizer.get_feature_names()))
+    X = vectorizer.fit_transform(data)
+    print(X.shape)
+    print(len(labels))
     
+#    return X, Y, vectorizer.get_feature_names()
+    sys.exit(0)
+
+
+
+
     labels = pd.read_csv(label_filename, header=0, index_col=0)
     items_to_load = labels.index
 
