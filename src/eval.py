@@ -12,16 +12,22 @@ def eval_best_model(models):
     test_evals = []
     dev_evals = []
     
+    model_counter = 0
     for model in models:
+        sys.stdout.write('evaluating model ' + str(model_counter) + '...')
         acc = model[2]['model'].predict_acc(test_data, test_labels, feat_dir, 1)
         test_evals.append(round(acc,5))
         dev_evals.append(round(-model[2]['loss'],5))
         ordered_models.put((model[2]['loss'], -acc, model[2]))
+        sys.stdout.write('done!\n')
+        model_counter = model_counter + 1
+        
 
     print("dev accuracy on all models: ")
     print(dev_evals)
     print("test accuracy on all models: ")
     print(test_evals)
+    print('\n\n')
     print("best models:")
     best_dev_acc = -1
     
@@ -68,12 +74,15 @@ def main():
     #the models were saved in a list like this:
     #[-dev_acc, status, Data_and_Model_Manager]
     models = []
+    sys.stdout.write('loading the trained models...\n')
+    model_counter = 0
     for model_file in os.listdir(model_dir):
         if not model_file.endswith('model'):
             continue
         models.append(pickle.load(open(model_dir + model_file, 'rb')))
+        print('loaded model ' + str(model_counter))
+        model_counter = model_counter + 1
 
-    print(len(models))
     eval_best_model(models)
 
 

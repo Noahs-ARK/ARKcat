@@ -17,31 +17,26 @@ feature_dir = None
 output_dir = None
 log_filename = None
 
-
 def call_experiment(args):
     global trial_num
     trial_num = trial_num + 1
 
     feats_and_args = {}
-    all_feat_list = []
     all_description = []
     for i in range(num_models):
         feature_list, description, kwargs = wrangle_params(args, str(i))
-        all_feat_list = all_feat_list + feature_list
         all_description = all_description + description
         feats_and_args[i] = {'feats':feature_list, 'params':kwargs}
 
-    ### TOTAL HACK DEBUGGING
-    
-#    feature_list = ['ngrams,n=1,transform=None,min_df=1']
-
-    ### END TOTAL HACK DEBUGGING
     
     result = classify_test.classify(train_data_filename, train_label_filename, dev_data_filename, 
                                     dev_label_filename, train_feature_dir, dev_feature_dir, 
                                     feats_and_args)
+
+
+
     with codecs.open(log_filename, 'a') as output_file:
-        output_file.write(str(datetime.datetime.now()) + '\t' + ' '.join(all_feat_list) + '\t' + ' '.join(all_description) +
+        output_file.write(str(datetime.datetime.now()) + '\t' + ' '.join(all_description) +
                           '\t' + str(-result['loss']) + '\n')
     save_model(result)
 
@@ -51,6 +46,7 @@ def call_experiment(args):
 def wrangle_params(args, model_num):
     kwargs = {}
 
+    # DEBUGGING 
     # WARNING THIS IS A HACK! Should pass this is as a param
     kwargs['folds'] = 0
 
@@ -77,20 +73,24 @@ def wrangle_params(args, model_num):
         kwargs['num_round'] = int(args['model_' + model_num]['num_round_' + model_num])
         
 
-    feature_list = []
-    unigrams = 'ngrams,n=1' + \
-               ',transform=' + args['features_' + model_num]['unigrams_' + model_num]['transform_' + model_num] + \
-               ',min_df=' + str(args['features_' + model_num]['unigrams_' + model_num]['min_df_' + model_num])
-    feature_list.append(unigrams)
-    if args['features_' + model_num]['bigrams_' + model_num]['use_' + model_num]:
-        bigrams = 'ngrams,n=2' + \
-                  ',transform=' + args['features_' + model_num]['bigrams_' + model_num]['transform_' + model_num] + \
-                  ',min_df=' + str(args['features_' + model_num]['bigrams_' + model_num]['min_df_' + model_num])
-        feature_list.append(bigrams)
+    features = {}
+    features['ngram_range'] = args['features_' + model_num]['nmin_to_max_' + model_num]
+    features['binary'] = args['features_' + model_num]['binary_' + model_num]
+    features['use_idf'] = args['features_' + model_num]['use_idf_' + model_num]
+    features['stop_words'] = args['features_' + model_num]['st_wrd_' + model_num]
 
-    print feature_list
+        
+    #DEBUGGING
+    #kwargs['regularizer'] = 'l2'
+    #kwargs['alpha'] = 10
+    #kwargs['converg_tol'] = .098
+    #END DEBUGGING
+
+    print kwargs
+    print features
     description = [str(k) + '=' + str(v) for (k, v) in kwargs.items()]
-    return feature_list, description, kwargs
+    description[0] = description[0] + ',' + [str(k) + '=' + str(v) for (k, v) in features.items()][0]
+    return features, description, kwargs
     
 
 def save_model(result):
@@ -101,13 +101,14 @@ def save_model(result):
     short_name = {'model_type':'mdl', 'regularizer':'rg', 'converg_tol':'cvrg','alpha':'alpha',
                   'eta':'eta', 'gamma':'gamma', 'max_depth':'dpth', 'min_child_weight':'mn_wght', 
                   'max_delta_step':'mx_stp', 'subsample':'smpl', 'reg_strength':'rg_str', 
-                  'num_round':'rnds', 'lambda':'lmbda'}
+                  'num_round':'rnds', 'lambda':'lmbda', 'ngram_range':'ngrms', 'binary':'bnry',
+                  'use_idf':'idf', 'stop_words':'st_wrd'}
 
 
     # to save the model after each iteration
     feature_string = ''
-    for i in range(0,len(feature_list)):
-        feature_string = feature_string + feature_list[i] + ';'
+    for feat, value in feature_list.items():
+        feature_string = feature_string + short_name[feat] + '=' + str(value) + ';'
     for hparam in model_hyperparams:
         cur_hparam = None
         if hparam == 'folds':
@@ -118,7 +119,8 @@ def save_model(result):
             cur_hparam = str(model_hyperparams[hparam])
         feature_string = feature_string + short_name[hparam] + '=' + cur_hparam + ';'
     feature_string = feature_string[:-1]
-    pickle.dump([trial_num, train_feature_dir, result], open(model_dir + feature_string + '.model', 'wb'))
+    pickle.dump([trial_num, train_feature_dir, result], open(model_dir + str(trial_num) + '_' + 
+                                                             feature_string + '.model', 'wb'))
     
 
 
@@ -126,7 +128,7 @@ def save_model(result):
 def set_globals():
     usage = "%prog train_text.json train_labels.csv dev_text.json dev_labels.csv output_dir"
     parser = OptionParser(usage=usage)
-    parser.add_option('-m', dest='max_iter', default=30,
+    parser.add_option('-m', dest='max_iter', default=100,
                       help='Maximum iterations of Bayesian optimization; default=%default')
 
     (options, args) = parser.parse_args()
@@ -164,7 +166,7 @@ def printing_best(trials):
     for i in range(len(losses)):
         priority_q.put((losses[i], i))
     print('top losses and settings: ')
-    for i in range(0,3):
+    for i in range(0,min(3,max_iter)):
         index = priority_q.get()[1]
         print(losses[index])
         print(trials.trials[index]['misc']['vals'])

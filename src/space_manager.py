@@ -11,8 +11,8 @@ def get_linear_model(model_num):
     return {
         'model_' + model_num: 'LR',
         'regularizer_lr_' + model_num: hp.choice('regularizer_lr_' + model_num,[
-        ('l1', hp.uniform('l1_strength_lr_' + model_num, 0,1)),
-            ('l2', hp.uniform('l2_strength_lr_' + model_num, 0,1))
+            ('l1', hp.loguniform('l1_strength_lr_' + model_num, -5,5)),
+            ('l2', hp.loguniform('l2_strength_lr_' + model_num, -5,5))
             
 #                    ('l1', hp.loguniform('l1_strength', np.log(1e-7), np.log(10**2))),
 #                    ('l2', hp.loguniform('l2_strength', np.log(1e-7), np.log(100)))
@@ -41,23 +41,13 @@ def get_xgboost_model(model_num):
 
 
 def add_model(model_num, space):
-    set_of_models = [get_xgboost_model(model_num)]
+    #should take this as a param
+    set_of_models = [get_linear_model(model_num)]
     space['model_' + model_num] = hp.choice('model_' + model_num, set_of_models)
     space['features_' + model_num] = {
-        'unigrams_' + model_num:
-        {
-            'transform_' + model_num: hp.choice('u_transform_' + model_num, ['None', 'binarize', 'tfidf']),
-            'min_df_' + model_num: hp.choice('u_min_df_' + model_num,[1,2,3,4,5])
-        },
-        'bigrams_' + model_num:
-        hp.choice('bigrams_' + model_num, [
-            {
-                'use_' + model_num: False
-            },
-            {
-                'use_' + model_num: True,
-                'transform_' + model_num: hp.choice('b_transform_' + model_num, ['None', 'binarize', 'tfidf']),
-                'min_df_' + model_num: hp.choice('b_min_df_' + model_num,[1,2,3,4,5])
-            }
-        ]),
+        'nmin_to_max_' + model_num: hp.choice('nmin_to_max_' + model_num, 
+                                              [(1,1),(1,2),(1,3),(2,2),(2,3)]),
+        'binary_' + model_num: hp.choice('binary_' + model_num, [True, False]),
+        'use_idf_' + model_num: hp.choice('transform_' + model_num, [True, False]),
+        'st_wrd_' + model_num: hp.choice('st_word_' + model_num, [None, 'english'])
     }

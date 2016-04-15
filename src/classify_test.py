@@ -69,9 +69,7 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
     return {'loss': -dev_acc, 'status': STATUS_OK, 'model': m_and_d}
 
 
-
-def load_features(data_filename, label_filename, feature_dir, feature_list, verbose, vocab=None):
-    # use TfidfVectorizer
+def read_data_and_labels(data_filename, label_filename):
     json_data = None
     data = []
     with codecs.open(data_filename, 'r') as input_file:
@@ -83,30 +81,35 @@ def load_features(data_filename, label_filename, feature_dir, feature_list, verb
     labels = []
     with codecs.open(label_filename, 'r') as input_file:
         for line in input_file:
-            print(line)
+            line = line.strip()
             if not line == 'idontknow,whattoputhere':
                 labels.append(line.split(',')[1])
+    return data,labels
 
-    
-    print(labels[0])
+def load_features(data_filename, label_filename, feature_dir, features, verbose, vectorizer=None):
+    X_raw, Y = read_data_and_labels(data_filename, label_filename)
 
     #DEBUGGING HACK!
-    feature_list = {}
-    feature_list['n_min'] = 2
-    feature_list['n_max'] = 2
-    feature_list['binary'] = True
-    feature_list['idf'] = False
-    st = None
+    #feature_list = {}
+    #feature_list['n_min'] = 1
+    #feature_list['n_max'] = 2
+    #feature_list['binary'] = False
+    #feature_list['idf'] = True
+    #st = None
 
-    vectorizer = TfidfVectorizer(ngram_range=(int(feature_list['n_min']),int(feature_list['n_max'])),
-                                 binary=feature_list['binary'],use_idf=feature_list['idf'],
-                                 smooth_idf=True, stop_words=st, vocabulary=vocab)
-#    print('size of feature_names: ', len(vectorizer.get_feature_names()))
-    X = vectorizer.fit_transform(data)
-    print(X.shape)
-    print(len(labels))
-    
-#    return X, Y, vectorizer.get_feature_names()
+    if vectorizer == None:
+
+        vectorizer = TfidfVectorizer(**features)
+
+        X = vectorizer.fit_transform(X_raw)
+        print('size of X: ', X.shape)
+        print('size of Y: ', len(Y))
+        return X, Y, vectorizer
+    else:
+        X = vectorizer.transform(X_raw)
+        return X, Y
+
+    #DEBUGGING need to remove this stuff
     sys.exit(0)
 
 

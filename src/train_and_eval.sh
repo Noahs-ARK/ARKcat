@@ -1,5 +1,5 @@
-DATASET=trees_binary
-#DATASET=convote
+#DATASET=trees_binary
+DATASET=convote
 
 rm -r ../output
 python run.py ../../data/$DATASET/train.json ../../data/$DATASET/train.csv ../../data/$DATASET/dev.json ../../data/$DATASET/dev.csv ../output 1
