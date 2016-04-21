@@ -39,7 +39,6 @@ def get_xgboost_model(model_num):
             ])
         }
 
-
 def add_model(model_num, space):
     #should take this as a param
     set_of_models = [get_linear_model(model_num)]
