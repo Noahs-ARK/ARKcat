@@ -135,7 +135,7 @@ def set_globals():
 
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, log_filename, trial_num, max_iter
-    global num_models
+    global num_models, model_types
     
     train_data_filename = args[0]
     train_label_filename = args[1]
@@ -143,6 +143,8 @@ def set_globals():
     dev_label_filename = args[3]
     output_dir = args[4]
     num_models = int(args[5])
+    model_types = args[6].split(',')
+    
 
     train_feature_dir = output_dir + '/train_features/'
     dev_feature_dir = output_dir + '/dev_train_features/'
@@ -177,7 +179,7 @@ def printing_best(trials):
 def main():
     set_globals()
     trials = Trials()
-    space = space_manager.get_space(num_models)
+    space = space_manager.get_space(num_models, model_types)
     best = fmin(call_experiment,
                 space=space,
                 algo=tpe.suggest,
@@ -190,23 +192,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-#### CODE GRAVEYARD ####
-
-#        {
-#            'model': 'SVM',
-#            'regularizer_svm': 'l2',
-#            'C_svm': hp.loguniform('C_svm', -1.15, 9.2)
-#        },
-
-#    'model': hp.choice('model', [
-
-#        {
-#            'model': 'SVM',
-#            'regularizer_svm': 'l2',
-#            'C_svm': hp.loguniform('C_svm', -1.15, 9.2)
-#        },

@@ -1,9 +1,13 @@
 #DATASET=trees_binary
 #DATASET=convote
-DATASET=amazon_reviews
+#DATASET=amazon_reviews
+DATASET=$1
+NUM_MODELS=$2
+MODEL_TYPE=$3
+NUM_ITERS=$4
 
 rm -r ../output
-python run.py ../../data/$DATASET/train.json ../../data/$DATASET/train.csv ../../data/$DATASET/dev.json ../../data/$DATASET/dev.csv ../output 1
+python run.py ../../data/$DATASET/train.json ../../data/$DATASET/train.csv ../../data/$DATASET/dev.json ../../data/$DATASET/dev.csv ../output $NUM_MODELS $MODEL_TYPE -m $NUM_ITERS
 python eval.py ../output/saved_models/ ../../data/$DATASET/ ../output/
 
 #python run.py ../example_data/train.json ../example_data/train.csv ../example_data/dev.json ../example_data/dev.csv ../output

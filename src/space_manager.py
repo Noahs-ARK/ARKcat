@@ -1,10 +1,11 @@
 from hyperopt import fmin, tpe, hp, Trials, space_eval
 
-def get_space(num_models):
+def get_space(num_models, model_types):
     space = {}
+    
 
     for i in range(num_models):
-        add_model(str(i), space)
+        add_model(str(i), space, model_types)
     return space
 
 def get_linear_model(model_num):
@@ -39,9 +40,15 @@ def get_xgboost_model(model_num):
             ])
         }
 
-def add_model(model_num, space):
-    #should take this as a param
-    set_of_models = [get_linear_model(model_num)]
+def add_model(model_num, space, model_types):
+    set_of_models = []
+    for m in model_types:
+        if m == 'linear':
+            set_of_models.append(get_linear_model(model_num))
+        elif m == 'xgboost':
+            set_of_models.append(get_xgboost_model(model_num))
+        else:
+            raise NameError('the model ' + m + ' is not implemented.')
     space['model_' + model_num] = hp.choice('model_' + model_num, set_of_models)
     space['features_' + model_num] = {
         'nmin_to_max_' + model_num: hp.choice('nmin_to_max_' + model_num, 
