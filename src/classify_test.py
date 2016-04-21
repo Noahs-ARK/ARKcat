@@ -15,7 +15,7 @@ from sklearn.cross_validation import StratifiedKFold
 from sklearn.cross_validation import cross_val_score
 from sklearn import metrics
 
-import feature_loader
+#import feature_loader
 
 import file_handling as fh
 
