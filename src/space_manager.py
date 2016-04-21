@@ -23,16 +23,16 @@ def get_linear_model(model_num):
 def get_xgboost_model(model_num):
     return {
             'model_' + model_num: 'XGBoost',
-            'eta_' + model_num: hp.uniform('eta_' + model_num,0,1),
+            'eta_' + model_num: hp.loguniform('eta_' + model_num,-5,0),
             'gamma_' + model_num: hp.uniform('gamma_' + model_num,0,10),
-            'max_depth_' + model_num: hp.quniform('max_depth_' + model_num, 1,50,1),
+            'max_depth_' + model_num: hp.quniform('max_depth_' + model_num, 1,30,1),
             'min_child_weight_' + model_num: hp.uniform('min_child_weight_' + model_num, 0, 10),
             'max_delta_step_' + model_num: hp.uniform('max_delta_step_' + model_num, 0, 10),
             'num_round_' + model_num: hp.quniform('num_round_' + model_num, 1, 10, 1),
-            'subsample_' + model_num: hp.uniform('subsample_' + model_num, .001, 1),
+            'subsample_' + model_num: 1,# hp.uniform('subsample_' + model_num, .001, 1),
             'regularizer_xgb_' + model_num: hp.choice('regularizer_xgb_' + model_num,[
-                ('l1', hp.uniform('l1_strength_xgb_' + model_num, 0,1)),
-                ('l2', hp.uniform('l2_strength_xgb_' + model_num, 0,1))
+                ('l1', hp.loguniform('l1_strength_xgb_' + model_num, -5,5)),
+                ('l2', hp.loguniform('l2_strength_xgb_' + model_num, -5,5))
                 
 #                    ('l1_' + model_num, hp.loguniform('l1_strength_' + model_num, np.log(1e-7), np.log(10**2))),
 #                    ('l2_' + model_num, hp.loguniform('l2_strength_' + model_num, np.log(1e-7), np.log(100)))

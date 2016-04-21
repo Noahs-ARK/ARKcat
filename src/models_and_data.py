@@ -47,6 +47,5 @@ class Data_and_Model_Manager:
             preds.append(0)
             for j in range(len(probs)):
                 preds[i] = preds[i] + probs[j][i]/len(probs)
-            preds[i] = str(int(round(preds[i])))
-        
+            preds[i] = int(round(preds[i]))
         return preds

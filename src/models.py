@@ -1,6 +1,7 @@
 import os,sys
 import xgboost
 import classify_test
+from scipy import sparse
 from sklearn import metrics
 from sklearn import svm
 from sklearn.linear_model import LogisticRegression as lr
@@ -42,7 +43,9 @@ class Model:
                  'max_delta_step':self.hp['max_delta_step'],
                  'subsample':self.hp['subsample'],
                  'alpha':self.hp['alpha'],
-                 'lambda':self.hp['lambda']}
+                 'lambda':self.hp['lambda'],
+                 'objective':'reg:logistic'
+        }
         
         self.model = xgboost.train(param, dtrain, self.hp['num_round'])
 

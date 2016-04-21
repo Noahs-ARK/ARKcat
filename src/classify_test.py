@@ -83,7 +83,7 @@ def read_data_and_labels(data_filename, label_filename):
         for line in input_file:
             line = line.strip()
             if not line == 'idontknow,whattoputhere':
-                labels.append(line.split(',')[1])
+                labels.append(float(line.split(',')[1]))
     return data,labels
 
 def load_features(data_filename, label_filename, feature_dir, features, verbose, vectorizer=None):
