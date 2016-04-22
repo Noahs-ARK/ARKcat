@@ -41,6 +41,7 @@ def call_experiment(args):
     save_model(result)
 
     print("\nFinished iteration " + str(trial_num) + ".\n\n\n")
+    sys.stdout.flush()
     return result
 
 def wrangle_params(args, model_num):

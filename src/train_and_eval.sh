@@ -5,18 +5,15 @@ DATASET=$1
 NUM_MODELS=$2
 MODEL_TYPE=$3
 NUM_ITERS=$4
+SAVE_LOC=$5
 
-rm -r ../output
-python run.py ../../data/$DATASET/train.json ../../data/$DATASET/train.csv ../../data/$DATASET/dev.json ../../data/$DATASET/dev.csv ../output $NUM_MODELS $MODEL_TYPE -m $NUM_ITERS
-python eval.py ../output/saved_models/ ../../data/$DATASET/ ../output/
+rm -r $SAVE_LOC
+mkdir -p $SAVE_LOC
+echo $1
+echo $2
+echo $3
+echo $4
+echo `pwd`
 
-#python run.py ../example_data/train.json ../example_data/train.csv ../example_data/dev.json ../example_data/dev.csv ../output
-
-#python run.py ../../data/atheistchristian/train.json ../../data/atheistchristian/train.csv ../../data/atheistchristian/dev.json ../../data/atheistchristian/dev.csv ../output
-
-#python run.py ../../data/trees_binary/train2.json ../../data/trees_binary/train2.csv ../../data/trees_binary/dev_train.json ../../data/trees_binary/dev_train.csv ../output
-
-
-#python run.py ../../data/convote/train.json ../../data/convote/train.csv ../../data/convote/dev.json ../../data/convote/dev.csv ../output
-
-#python run.py ../../data/amazon_reviews/train.json ../../data/amazon_reviews/train.csv ../../data/amazon_reviews/dev.json ../../data/amazon_reviews/dev.csv ../output
+python run.py ../../data/$DATASET/train.json ../../data/$DATASET/train.csv ../../data/$DATASET/dev.json ../../data/$DATASET/dev.csv $SAVE_LOC $NUM_MODELS $MODEL_TYPE -m $NUM_ITERS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
+#python eval.py $SAVE_LOC/saved_models/ ../../data/$DATASET/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
