@@ -144,7 +144,7 @@ def set_globals():
     dev_label_filename = args[3]
     output_dir = args[4]
     num_models = int(args[5])
-    model_types = args[6].split(',')
+    model_types = args[6].split('-')
     
 
     train_feature_dir = output_dir + '/train_features/'
