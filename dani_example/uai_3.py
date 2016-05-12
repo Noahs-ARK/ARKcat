@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import sys
 
 import HPOlib.benchmark_util as benchmark_util
 import HPOlib.benchmark_functions as benchmark_functions
@@ -32,7 +33,7 @@ __contact__ = "automl.org"
 __credits__ = ["Jasper Snoek", "Ryan P. Adams", "Hugo Larochelle"]
 
      
-def uai_2(params, **kwargs):
+def uai_2(params):#, **kwargs):
     print 'Params: ', params, '\n'
     #y = benchmark_functions.save_svm_on_grid(params, opt_time=ret_time, **kwargs)
     logreg = linear_model.LogisticRegression(penalty=params['penalty'],tol=float(params['tol']),C=float(params['strength']))
@@ -47,7 +48,7 @@ def uai_2(params, **kwargs):
     vectorizer = TfidfVectorizer(ngram_range=(int(params['n_min']),int(params['n_max'])),binary=params['binary'],use_idf=params['idf'],smooth_idf=True, stop_words=st)
     #print 'preprocess data'
     #EDITED FILEPATH FROM DANI'S VERSION:
-    data_dir = '/home/jesse/projects/data/trees_binary/'
+    data_dir = sys.argv[1]
     ifile=open(data_dir + 'train.data')
     train=[]
     ntrain=0
@@ -108,16 +109,17 @@ if __name__ == "__main__":
     #print "Result for ParamILS: %s, %f, 1, %f, %d, %s" % \
     #    ("SAT", abs(duration), result, -1, str(__file__))
     starttime = time.time()
-    args, params = benchmark_util.parse_cli()
-    params['penalty']='l2'
-    params['tol']=0.098#0.0341863931454#0.0150987537966
-    params['strength']=10#20.0092406164#141.096317833
-    params['n_min']=1
-    params['n_max']=2
-    params['binary']=True#False
-    params['idf']=True
-    params['stop_words']=False
-    [result,test_error] = uai_2(params, **args)
+#    args, params = benchmark_util.parse_cli()
+    params = {}
+    params['penalty']=sys.argv[2]
+    params['tol']=float(sys.argv[3])#0.098#0.0341863931454#0.0150987537966
+    params['strength']=float(sys.argv[4])#20.0092406164#141.096317833
+    params['n_min']=int(sys.argv[5])
+    params['n_max']=int(sys.argv[6])
+    params['binary']= sys.argv[7] == 'True'#True#False
+    params['idf']=sys.argv[8] == 'True'
+    params['stop_words']=sys.argv[9] == 'True'
+    [result,test_error] = uai_2(params)
     duration = time.time() - starttime
     #params['test_result']=test_error
     print "Result for ParamILS: %s, %f, 1, %f, %f, %d, %s" % \
