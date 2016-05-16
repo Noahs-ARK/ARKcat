@@ -22,7 +22,7 @@ class Data_and_Model_Manager:
                                                            train_label_filename, train_feature_dir,
                                                            feat_and_param['feats'], verbose)
             train_Y = self.convert_labels(train_Y_raw)
-            cur_model = Model(feat_and_param['params'])
+            cur_model = Model(feat_and_param['params'], self.num_labels)
             cur_model.train(train_X, train_Y)
             self.trained_models[i] = cur_model
             self.vectorizers[i] = vectorizer
@@ -61,8 +61,12 @@ class Data_and_Model_Manager:
     def convert_probs_to_preds(self, probs):
         preds = []
         for i in range(len(probs[0])):
-            preds.append(0)
+            cur_probs = []
+            for k in range(self.num_labels):
+                cur_probs.append(0)
             for j in range(len(probs)):
-                preds[i] = preds[i] + probs[j][i]/len(probs)
-            preds[i] = int(round(preds[i]))
+                for k in range(self.num_labels):
+                    cur_probs[k] = probs[j][i][k]/len(probs) + cur_probs[k]
+            preds.append(cur_probs.index(max(cur_probs)))
         return preds
+

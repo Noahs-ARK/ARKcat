@@ -17,3 +17,6 @@ echo `pwd`
 
 python run.py ../../data/$DATASET/train.json ../../data/$DATASET/train.csv ../../data/$DATASET/dev.json ../../data/$DATASET/dev.csv $SAVE_LOC $NUM_MODELS $MODEL_TYPE -m $NUM_ITERS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
 python eval.py $SAVE_LOC/saved_models/ ../../data/$DATASET/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
+
+#because i'm running out of space lol
+rm -r $SAVE_LOC/saved_models/

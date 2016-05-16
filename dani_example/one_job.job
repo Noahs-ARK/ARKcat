@@ -1,0 +1,17 @@
+#!/bin/bash
+#PBS -q long
+#PBS -l ncpus=4
+#PBS -l pmem=10000mb
+#PBS -l walltime=600:00:00
+#PBS -o /home/jessed/ARKcat/dani_example/output
+#PBS -d .
+#PBS -j oe
+# Redirect, so don't have to wait till job finish to see stdout/stderr
+echo "switching into the virtual environment..."
+source /home/jessed/ARKcat/dani_example/venvDaniEx/bin/activate
+echo "switched into virtual env!"
+cd /home/jessed/ARKcat/dani_example
+
+
+python uai_3.py $DATASET $PENALTY $TOL $STR $NMIN $NMAX $BINARY $IDF $STOP
+

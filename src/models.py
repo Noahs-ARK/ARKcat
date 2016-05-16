@@ -8,8 +8,9 @@ from sklearn.linear_model import LogisticRegression as lr
 
 
 class Model:
-    def __init__(self, params):
+    def __init__(self, params, n_labels):
         self.hp = params
+        self.num_labels = n_labels
         
         
     def train(self, train_X, train_Y):
@@ -44,7 +45,8 @@ class Model:
                  'subsample':self.hp['subsample'],
                  'alpha':self.hp['alpha'],
                  'lambda':self.hp['lambda'],
-                 'objective':'reg:logistic'
+                 'objective':'multi:softprob',
+                 'num_class':self.num_labels
         }
         
         self.model = xgboost.train(param, dtrain, self.hp['num_round'])
@@ -87,11 +89,7 @@ class Model:
             return self.predict_prob_xgboost(test_X)
 
     def predict_prob_linear(self, test_X):
-        probs = self.model.predict_proba(test_X)
-        probs_of_true = []
-        for i in range(len(probs)):
-            probs_of_true.append(probs[i][1])
-        return probs_of_true
+        return self.model.predict_proba(test_X)
     
     def predict_prob_xgboost(self, test_X):
         dtest = xgboost.DMatrix(test_X)

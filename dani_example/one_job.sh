@@ -1,0 +1,1 @@
+qsub -v DATASET=/home/jessed/data/trees_binary/,PENALTY=l2,TOL=0.098,STR=10,NMIN=1,NMAX=2,BINARY=True,IDF=True,STOP=False ./one_job.job

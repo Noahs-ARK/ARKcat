@@ -41,8 +41,8 @@ def eval_best_model(models):
         if dev_acc < best_dev_acc and i > 5:
             break
         
-        print('dev acc:  ' + str(dev_acc))
         print('test acc: ' + str(test_acc))
+        print('dev acc:  ' + str(dev_acc))
         print('hyperparams: ')
         print(model['model'].feats_and_params)
         print('')
