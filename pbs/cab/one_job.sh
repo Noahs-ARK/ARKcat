@@ -16,4 +16,4 @@
 #done
 
 
-qsub -v DATASET=20_ng_comp,NUM_MODELS=1,MODEL_TYPE=linear,NUM_ITERS=30 ./one_job.job
+qsub -v DATASET=trees_binary,NUM_MODELS=1,MODEL_TYPE=linear,NUM_ITERS=30 ./one_job.job
