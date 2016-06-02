@@ -1,0 +1,20 @@
+#!/bin/bash
+#PBS -q long
+#PBS -l ncpus=4
+#PBS -l pmem=10000mb
+#PBS -l walltime=600:00:00
+#PBS -o /home/jessed/ARKcat/pbs/output_all_jobs
+#PBS -d .
+#PBS -j oe
+# Redirect, so don't have to wait till job finish to see stdout/stderr
+echo "switching into the virtual environment..."
+source /home/jessed/ARKcat/venv/bin/activate
+echo "switched into virtual env!"
+echo "Made it here... and suruch is awesome"
+cd /home/jessed/ARKcat/src
+echo "made it to diff dir"
+echo "about to run the hyperopt"
+
+SAVE_LOC="/home/jessed/ARKcat/output/$DATASET,nmodels=$NUM_MODELS,type=$MODEL_TYPE,iters=$NUM_ITERS"
+bash train_and_eval.sh /home/jessed/data/$DATASET $NUM_MODELS $MODEL_TYPE $NUM_ITERS $SAVE_LOC $NUM_FOLDS #> $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
+

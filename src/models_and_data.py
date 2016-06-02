@@ -21,6 +21,8 @@ class Data_and_Model_Manager:
             train_X, train_Y_raw, vectorizer = classify_test.load_features(train_data_filename, 
                                                            train_label_filename, train_feature_dir,
                                                            feat_and_param['feats'], verbose)
+            if train_X.shape[0] == 0:
+                raise IOError("problem! the training set is empty.")
             train_Y = self.convert_labels(train_Y_raw)
             cur_model = Model(feat_and_param['params'], self.num_labels)
             cur_model.train(train_X, train_Y)

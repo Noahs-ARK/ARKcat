@@ -31,7 +31,7 @@ def call_experiment(args):
     
     result = classify_test.classify(train_data_filename, train_label_filename, dev_data_filename, 
                                     dev_label_filename, train_feature_dir, dev_feature_dir, 
-                                    feats_and_args)
+                                    feats_and_args, folds=num_folds)
 
 
 
@@ -46,10 +46,6 @@ def call_experiment(args):
 
 def wrangle_params(args, model_num):
     kwargs = {}
-
-    # DEBUGGING 
-    # WARNING THIS IS A HACK! Should pass this is as a param
-    kwargs['folds'] = 0
 
     print('')
     print('the args:')
@@ -139,8 +135,8 @@ def set_globals():
     output_dir = args[1]
     num_models = int(args[2])
     model_types = args[3].split('-')
+    num_folds = args[4]
     
-
     train_feature_dir = output_dir + '/train_features/'
     dev_feature_dir = output_dir + '/dev_train_features/'
     model_dir = output_dir + '/saved_models/'
