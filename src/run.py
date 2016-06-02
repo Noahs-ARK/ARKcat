@@ -81,12 +81,6 @@ def wrangle_params(args, model_num):
     features['stop_words'] = args['features_' + model_num]['st_wrd_' + model_num]
 
         
-    #DEBUGGING
-    #kwargs['regularizer'] = 'l2'
-    #kwargs['alpha'] = 10
-    #kwargs['converg_tol'] = .098
-    #END DEBUGGING
-
     print kwargs
     print features
     description = [str(k) + '=' + str(v) for (k, v) in kwargs.items()]
@@ -98,7 +92,7 @@ def save_model(result):
     model = result['model']
     feature_list = result['model'].feats_and_params[0]['feats']
     model_hyperparams = result['model'].feats_and_params[0]['params']
-    #STUPID FILENAMES TOO LING
+    #STUPID FILENAMES TOO LONG
     short_name = {'model_type':'mdl', 'regularizer':'rg', 'converg_tol':'cvrg','alpha':'alpha',
                   'eta':'eta', 'gamma':'gamma', 'max_depth':'dpth', 'min_child_weight':'mn_wght', 
                   'max_delta_step':'mx_stp', 'subsample':'smpl', 'reg_strength':'rg_str', 
@@ -138,13 +132,13 @@ def set_globals():
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, log_filename, trial_num, max_iter
     global num_models, model_types
     
-    train_data_filename = args[0]
-    train_label_filename = args[1]
-    dev_data_filename = args[2]
-    dev_label_filename = args[3]
-    output_dir = args[4]
-    num_models = int(args[5])
-    model_types = args[6].split('-')
+    train_data_filename = args[0] + 'train.data'
+    train_label_filename = args[0] + 'train.labels'
+    dev_data_filename = args[0] + 'dev.data'
+    dev_label_filename = args[0] + 'dev.labels'
+    output_dir = args[1]
+    num_models = int(args[2])
+    model_types = args[3].split('-')
     
 
     train_feature_dir = output_dir + '/train_features/'
@@ -163,6 +157,8 @@ def set_globals():
         logfile.write(','.join([train_data_filename, train_label_filename, dev_data_filename, 
                                 dev_label_filename, train_feature_dir, dev_feature_dir, output_dir]) + '\n')
 
+
+
 def printing_best(trials):
     priority_q = queue.PriorityQueue()
     losses = trials.losses()
@@ -178,6 +174,7 @@ def printing_best(trials):
         
 
 def main():
+    print("Made it to the start of main!")
     set_globals()
     trials = Trials()
     space = space_manager.get_space(num_models, model_types)

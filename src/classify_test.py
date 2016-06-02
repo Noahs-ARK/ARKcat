@@ -70,32 +70,21 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
 
 
 def read_data_and_labels(data_filename, label_filename):
-    json_data = None
+    if not os.path.isfile(data_filename):
+        return [], []
     data = []
-    with codecs.open(data_filename, 'r') as input_file:
-        json_data = json.load(input_file)
-    for i in range(len(json_data)):
-        data.append(json_data[str(i + 1)])
+    with open(data_filename, 'r') as input_file:
+        for line in input_file:
+            data.append(line.strip())
 
-    json_labels = None
     labels = []
     with codecs.open(label_filename, 'r') as input_file:
         for line in input_file:
-            line = line.strip()
-            if not line == 'idontknow,whattoputhere':
-                labels.append(line.split(',')[1])
+            labels.append(line.strip())
     return data,labels
 
 def load_features(data_filename, label_filename, feature_dir, features, verbose, vectorizer=None):
     X_raw, Y = read_data_and_labels(data_filename, label_filename)
-
-    #DEBUGGING HACK!
-    #feature_list = {}
-    #feature_list['n_min'] = 1
-    #feature_list['n_max'] = 2
-    #feature_list['binary'] = False
-    #feature_list['idf'] = True
-    #st = None
 
     if vectorizer == None:
 
