@@ -61,7 +61,7 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
              train_feature_dir, dev_feature_dir, feats_and_params, verbose=1, folds=-1):
     m_and_d = Data_and_Model_Manager(feats_and_params)
     train_acc = m_and_d.train_models(train_data_filename, train_label_filename, 
-                                     train_feature_dir, verbose)
+                                     train_feature_dir, verbose, folds)
     dev_acc = m_and_d.predict_acc(dev_data_filename, dev_label_filename, dev_feature_dir, verbose)
     
     print('train acc: ' + str(train_acc))
@@ -85,7 +85,7 @@ def read_data_and_labels(data_filename, label_filename):
 
 def load_features(data_filename, label_filename, feature_dir, features, verbose, vectorizer=None):
     X_raw, Y = read_data_and_labels(data_filename, label_filename)
-
+    print data_filename
     if vectorizer == None:
 
         vectorizer = TfidfVectorizer(**features)
