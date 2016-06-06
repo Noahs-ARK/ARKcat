@@ -16,4 +16,4 @@
 #done
 
 
-qsub -v DATASET=trees_binary,NUM_MODELS=1,MODEL_TYPE=linear,NUM_ITERS=30 ./one_job.job
+qsub -v DATASET=trees_binary,NUM_MODELS=1,MODEL_TYPE=linear,NUM_ITERS=30,NUM_FOLDS=1 ./one_job.job

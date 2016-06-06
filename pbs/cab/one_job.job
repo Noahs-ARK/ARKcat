@@ -2,7 +2,7 @@
 #PBS -l ncpus=4
 #PBS -l pmem=3900mb
 #PBS -l walltime=600:00:00
-#PBS -o /cab1/jessed/bayes_opt/ARKcat/pbs/output/
+#PBS -o /cab1/jessed/bayes_opt/ARKcat/pbs/output/cab/
 #PBS -d .
 #PBS -j oe
 # Redirect, so don't have to wait till job finish to see stdout/stderr
@@ -15,6 +15,6 @@ echo "made it to diff dir"
 echo "about to run the hyperopt"
 
 SAVE_LOC="/cab1/jessed/bayes_opt/ARKcat/output/$DATASET,nmodels=$NUM_MODELS,type=$MODEL_TYPE,iters=$NUM_ITERS"
-cd ../src/
-bash train_and_eval.sh $DATASET $NUM_MODELS $MODEL_TYPE $NUM_ITERS $SAVE_LOC 
+cd ../../src/
+bash train_and_eval.sh $DATASET $NUM_MODELS $MODEL_TYPE $NUM_ITERS $SAVE_LOC $NUM_FOLDS
 

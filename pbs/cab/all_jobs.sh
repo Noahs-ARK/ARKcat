@@ -8,7 +8,7 @@ do
 	    for N_ITERS in 30 100
 	    do
 
-		qsub -v DATASET=$DSET,NUM_MODELS=$N_MDLS,MODEL_TYPE=$MDL_TYP,NUM_ITERS=$N_ITERS ./one_job.job
+		qsub -v DATASET=$DSET,NUM_MODELS=$N_MDLS,MODEL_TYPE=$MDL_TYP,NUM_ITERS=$N_ITERS,NUM_FOLDS=1 ./one_job.job
 		
 	    done
 	done
