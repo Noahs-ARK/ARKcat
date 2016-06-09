@@ -60,8 +60,12 @@ def main():
 def classify(train_data_filename, train_label_filename, dev_data_filename, dev_label_filename, 
              train_feature_dir, dev_feature_dir, feats_and_params, verbose=1, folds=-1):
     m_and_d = Data_and_Model_Manager(feats_and_params)
-    train_acc = m_and_d.train_models(train_data_filename, train_label_filename, 
-                                     train_feature_dir, verbose, folds)
+    m_and_d.load_train_and_dev_data(train_data_filename, train_label_filename, 
+                                    train_feature_dir, dev_data_filename, dev_label_filename,
+                                    dev_feature_dir, verbose)
+    m_and_d.k_fold_cv(folds)
+    
+#    train_acc = m_and_d.train_models()
     dev_acc = m_and_d.predict_acc(dev_data_filename, dev_label_filename, dev_feature_dir, verbose)
     
     print('train acc: ' + str(train_acc))
