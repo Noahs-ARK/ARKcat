@@ -35,17 +35,18 @@ class Data_and_Model_Manager:
         self.train = [train_x, train_y]
         self.dev = [dev_x, dev_y]
 
-    def k_fold_cv(self, folds):
-        if folds == 1 and len(self.dev[0]) > 0:
+    def k_fold_cv(self, num_folds):
+        if num_folds == 1 and len(self.dev[0]) > 0:
             return train_models(self.train, self.dev)
         else:
             self.train[0].extend(self.dev[0])
             self.train[1].extend(self.dev[1])
             
-            if folds < 5:
-                folds = StratifiedKFold(self.train[1], 5, shuffle=True)
+            if num_folds < 5:
+                num_folds = StratifiedKFold(self.train[1], 5, shuffle=True)
             else:
-                folds = StratifiedKFold(self.train[1], folds, shuffle=True)
+                folds = StratifiedKFold(self.train[1], num_folds, shuffle=True)
+            avg_dev_acc
             for train_indxs, dev_indxs in folds:
                 cur_train_X = [self.train[0][i] for i in train_indxs]
                 cur_train_Y = [self.train[1][i] for i in train_indxs]
@@ -53,6 +54,7 @@ class Data_and_Model_Manager:
                 cur_dev_X = [self.train[1][i] for i in dev_indxs]
                 train_models([cur_train_X, cur_train_Y], [cur_dev_X, cur_dev_Y])
                 #put average here
+            
 
                 
         
