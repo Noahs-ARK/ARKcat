@@ -66,35 +66,19 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
     m_and_d.k_fold_cv(folds)
     
 #    train_acc = m_and_d.train_models()
-    dev_acc = m_and_d.predict_acc(dev_data_filename, dev_label_filename, dev_feature_dir, verbose)
+    dev_acc = m_and_d.predict_acc_from_file(dev_data_filename, dev_label_filename)
     
     print('train acc: ' + str(train_acc))
     print('dev acc: ' + str(dev_acc))
     return {'loss': -dev_acc, 'status': STATUS_OK, 'model': m_and_d}
 
 
-def read_data_and_labels(data_filename, label_filename):
-    if not os.path.isfile(data_filename):
-        return [], []
-    data = []
-    with open(data_filename, 'r') as input_file:
-        for line in input_file:
-            data.append(line.strip())
-
-    labels = []
-    with codecs.open(label_filename, 'r') as input_file:
-        for line in input_file:
-            labels.append(line.strip())
-    return data,labels
 
 def load_features(data_filename, label_filename, feature_dir, features, verbose, vectorizer=None):
     X_raw, Y = read_data_and_labels(data_filename, label_filename)
     print data_filename
     if vectorizer == None:
 
-        vectorizer = TfidfVectorizer(**features)
-
-        X = vectorizer.fit_transform(X_raw)
         print('size of X: ', X.shape)
         print('size of Y: ', len(Y))
         return X, Y, vectorizer

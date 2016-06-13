@@ -1,5 +1,4 @@
 
-import classify_test
 from models import Model
 from sklearn import metrics
 from sklearn.cross_validation import StratifiedKFold
@@ -26,12 +25,25 @@ class Data_and_Model_Manager:
             raise TypeError("you're trying to train this kind of model (which isn't implemented):" + 
                             self.hp['model_type'])
 
+    def read_data_and_labels(self, data_filename, label_filename):
+        if not os.path.isfile(data_filename):
+            return [], []
+        data = []
+        with open(data_filename, 'r') as input_file:
+            for line in input_file:
+                data.append(line.strip())
+
+        labels = []
+        with codecs.open(label_filename, 'r') as input_file:
+            for line in input_file:
+                labels.append(line.strip())
+        return data,labels
 
     def load_train_and_dev_data(self, train_data_filename, train_label_filename, 
                                     train_feature_dir, dev_data_filename, dev_label_filename,
                                     dev_feature_dir, verbose):
-        train_x, train_y = classify_test.read_data_and_labels(train_data_filename, train_label_filename)
-        dev_x, dev_y = classify_test.read_data_and_labels(dev_data_filename, dev_label_filename)
+        train_x, train_y = self.read_data_and_labels(train_data_filename, train_label_filename)
+        dev_x, dev_y = self.read_data_and_labels(dev_data_filename, dev_label_filename)
         self.train = [train_x, train_y]
         self.dev = [dev_x, dev_y]
 
@@ -46,31 +58,34 @@ class Data_and_Model_Manager:
                 num_folds = StratifiedKFold(self.train[1], 5, shuffle=True)
             else:
                 folds = StratifiedKFold(self.train[1], num_folds, shuffle=True)
-            avg_dev_acc
+            avg_dev_acc = 0
+            avg_train_acc = 0
             for train_indxs, dev_indxs in folds:
                 cur_train_X = [self.train[0][i] for i in train_indxs]
                 cur_train_Y = [self.train[1][i] for i in train_indxs]
                 cur_dev_X = [self.train[0][i] for i in dev_indxs]
-                cur_dev_X = [self.train[1][i] for i in dev_indxs]
-                train_models([cur_train_X, cur_train_Y], [cur_dev_X, cur_dev_Y])
+                cur_dev_Y = [self.train[1][i] for i in dev_indxs]
+                train_models([cur_train_X, cur_train_Y])
+                avg_dev_acc = avg_dev_acc + self.predict_acc(cur_dev_X, cur_dev_Y)
                 #put average here
+            return train_models(self.train)
+
+
+
+
+
+
+    def train_models(self, [train_X_raw, train_Y_raw]):
+        if train_X.shape[0] == 0:
+            raise IOError("problem! the training set is empty.")
             
-
-                
-        
-        
-
-    def train_models(self, train_data_filename, train_label_filename, train_feature_dir, verbose):
         probs = {}
+        train_Y = self.convert_labels(train_Y_raw)
         for i, feat_and_param in self.feats_and_params.items():
             
-
-            train_X, train_Y_raw, vectorizer = classify_test.load_features(train_data_filename, 
-                                                           train_label_filename, train_feature_dir,
-                                                           feat_and_param['feats'], verbose)
-            if train_X.shape[0] == 0:
-                raise IOError("problem! the training set is empty.")
-            train_Y = self.convert_labels(train_Y_raw)
+            vectorizer = TfidfVectorizer(feats_and_param['feats'])
+            train_X = vectorizer.fit_transform(train_X_raw)
+            
             cur_model = self.init_model(feat_and_param['params'], self.num_labels)
             cur_model.train(train_X, train_Y)
             self.trained_models[i] = cur_model
@@ -92,20 +107,20 @@ class Data_and_Model_Manager:
             new_Y.append(self.label_dict[y])
         return new_Y
         
-
-                
-
-    def predict_acc(self, data_filename, label_filename, feature_dir, verbose):
+    def predict_acc(self, test_X_raw, test_Y):
         pred_probs = {}
         for i, feat_and_param in self.feats_and_params.items():
-            test_X, test_Y = classify_test.load_features(data_filename, label_filename, feature_dir, 
-                                           feat_and_param['feats'], verbose, 
-                                                         vectorizer=self.vectorizers[i])
+            test_X = self.vectorizers[i].transform(test_X_raw)
             pred_probs[i] = self.trained_models[i].predict_prob(test_X)
+            
         preds_as_nums = self.convert_probs_to_preds(pred_probs)
         preds = self.convert_labels(preds_as_nums)
         return metrics.accuracy_score(test_Y, preds)
-
+        
+    def predict_acc_from_file(self, test_X_filename, test_Y_filename):
+        test_X, test_Y = read_data_and_labels(test_X_filename, test_Y_filename)
+        return self.predict_acc(test_X, test_Y)
+        
 
     def convert_probs_to_preds(self, probs):
         preds = []
