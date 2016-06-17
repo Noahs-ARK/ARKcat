@@ -1,9 +1,11 @@
-
-from models import Model
+import os
 from sklearn import metrics
 from sklearn.cross_validation import StratifiedKFold
+from sklearn.feature_extraction.text import TfidfVectorizer
 from model_xgb import Model_XGB
 from model_lr import Model_LR
+#DEBUGGING
+#import xgboost
 
 
 class Data_and_Model_Manager:
@@ -11,15 +13,16 @@ class Data_and_Model_Manager:
         self.feats_and_params = f_and_p
         self.trained_models = {}
         self.vectorizers = {}
+        #DEBUGGING need to remove this train feature_dir thing, or use it
         self.train_feat_dirs = {}
         self.label_dict = {}
         self.num_labels = 0
 
 
     def init_model(self, params, n_labels):
-        if self.hp['model_type'] == 'LR':
+        if params['model_type'] == 'LR':
             return Model_LR(params, n_labels)
-        elif self.hp['model_type'] == 'XGBoost':
+        elif params['model_type'] == 'XGBoost':
             return Model_XGB(params, n_labels)
         else:
             raise TypeError("you're trying to train this kind of model (which isn't implemented):" + 
@@ -34,7 +37,7 @@ class Data_and_Model_Manager:
                 data.append(line.strip())
 
         labels = []
-        with codecs.open(label_filename, 'r') as input_file:
+        with open(label_filename, 'r') as input_file:
             for line in input_file:
                 labels.append(line.strip())
         return data,labels
@@ -49,41 +52,68 @@ class Data_and_Model_Manager:
 
     def k_fold_cv(self, num_folds):
         if num_folds == 1 and len(self.dev[0]) > 0:
-            return train_models(self.train, self.dev)
+            train_acc = self.train_models(self.train[0], self.train[1])
+            dev_acc = self.predict_acc(self.dev[0], self.dev[1])
+            return {'train_acc':train_acc, 'dev_acc':dev_acc}
         else:
             self.train[0].extend(self.dev[0])
             self.train[1].extend(self.dev[1])
             
             if num_folds < 5:
-                num_folds = StratifiedKFold(self.train[1], 5, shuffle=True)
+                folds = StratifiedKFold(self.train[1], 5, shuffle=True)
             else:
                 folds = StratifiedKFold(self.train[1], num_folds, shuffle=True)
             avg_dev_acc = 0
-            avg_train_acc = 0
             for train_indxs, dev_indxs in folds:
+
                 cur_train_X = [self.train[0][i] for i in train_indxs]
                 cur_train_Y = [self.train[1][i] for i in train_indxs]
                 cur_dev_X = [self.train[0][i] for i in dev_indxs]
                 cur_dev_Y = [self.train[1][i] for i in dev_indxs]
-                train_models([cur_train_X, cur_train_Y])
-                avg_dev_acc = avg_dev_acc + self.predict_acc(cur_dev_X, cur_dev_Y)
-                #put average here
-            return train_models(self.train)
+                self.train_models(cur_train_X, cur_train_Y)
+
+                #DEBUGGING
+"""
+                print("ABOUT TO PRINT SIZES OF TRANSFORMED DATA:")
+#                tmp_train = self.vectorizers[0].transform(cur_train_X)
+#                tmp_dev = self.vectorizers[0].transform(cur_dev_X)
+                v = TfidfVectorizer()
+                v.fit(cur_train_X)
+                tmp_train = v.transform(cur_train_X)
+                tmp_dev = v.transform(cur_dev_X)
+                train_Y = self.convert_labels(cur_train_Y)
+                dmtx_train = xgboost.DMatrix(tmp_train, train_Y)
+                dmtx_dev = xgboost.DMatrix(tmp_dev)
+                
+                print(tmp_train.shape)
+                print(tmp_dev.shape)
+                print(dmtx_train.num_row(), dmtx_train.num_col())
+                print(dmtx_dev.num_row(), dmtx_dev.num_col())
+                
+
+                print("training cur_model, just for fucks sake")
+                cur_model = xgboost.train({}, dmtx_train, 10)
+                print("About to try to predict!!")
+                cur_model.predict(dmtx_dev)
+                print("\n\n\n")                
+"""
+                avg_dev_acc = avg_dev_acc + self.predict_acc(cur_dev_X, cur_dev_Y)/num_folds
+            return {'train_acc':self.train_models(self.train[0], self.train[1]), 'dev_acc':avg_dev_acc}
 
 
 
 
 
 
-    def train_models(self, [train_X_raw, train_Y_raw]):
-        if train_X.shape[0] == 0:
+    def train_models(self, train_X_raw, train_Y_raw):
+        if len(train_X_raw) == 0:
             raise IOError("problem! the training set is empty.")
             
         probs = {}
         train_Y = self.convert_labels(train_Y_raw)
         for i, feat_and_param in self.feats_and_params.items():
             
-            vectorizer = TfidfVectorizer(feats_and_param['feats'])
+            vectorizer = TfidfVectorizer(**feat_and_param['feats'])
             train_X = vectorizer.fit_transform(train_X_raw)
             
             cur_model = self.init_model(feat_and_param['params'], self.num_labels)
@@ -91,8 +121,6 @@ class Data_and_Model_Manager:
             self.trained_models[i] = cur_model
             self.vectorizers[i] = vectorizer
             probs[i] = cur_model.predict_prob(train_X)
-            #DEBUGGING need to remove this train feature_dir thing, or use it
-            self.train_feat_dirs[i] = train_feature_dir
         preds = self.convert_probs_to_preds(probs)
         return metrics.accuracy_score(train_Y, preds)
             
@@ -111,6 +139,8 @@ class Data_and_Model_Manager:
         pred_probs = {}
         for i, feat_and_param in self.feats_and_params.items():
             test_X = self.vectorizers[i].transform(test_X_raw)
+            print("SIZE OF TEST_X:")
+            print(test_X.shape)
             pred_probs[i] = self.trained_models[i].predict_prob(test_X)
             
         preds_as_nums = self.convert_probs_to_preds(pred_probs)
@@ -118,7 +148,7 @@ class Data_and_Model_Manager:
         return metrics.accuracy_score(test_Y, preds)
         
     def predict_acc_from_file(self, test_X_filename, test_Y_filename):
-        test_X, test_Y = read_data_and_labels(test_X_filename, test_Y_filename)
+        test_X, test_Y = self.read_data_and_labels(test_X_filename, test_Y_filename)
         return self.predict_acc(test_X, test_Y)
         
 

@@ -15,7 +15,7 @@ def eval_best_model(models):
     model_counter = 0
     for model in models:
         sys.stdout.write('evaluating model ' + str(model_counter) + '...')
-        acc = model[2]['model'].predict_acc(test_data, test_labels, feat_dir, 1)
+        acc = model[2]['model'].predict_acc_from_file(test_data, test_labels)
         test_evals.append(round(acc,5))
         dev_evals.append(round(-model[2]['loss'],5))
         ordered_models.put((model[2]['loss'], -acc, model[2]))
@@ -54,8 +54,8 @@ def set_globals(args):
         sys.exit(0)
     global model_dir, test_data, test_labels, feat_dir
     model_dir = args[0]
-    test_data = args[1] + 'test.json'
-    test_labels = args[1] + 'test.csv'
+    test_data = args[1] + 'test.data'
+    test_labels = args[1] + 'test.labels'
     feat_dir = args[2] + 'test_features'
 
 

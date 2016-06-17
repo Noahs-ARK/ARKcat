@@ -19,7 +19,7 @@ echo $4
 echo `pwd`
 
 echo "about to run.py"
-python run.py $DATASET/ $SAVE_LOC $NUM_MODELS $MODEL_TYPE -m $NUM_ITERS $NUM_FOLDS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
+python run.py /cab1/corpora/bayes_opt/$DATASET/ $SAVE_LOC $NUM_MODELS $MODEL_TYPE -m $NUM_ITERS $NUM_FOLDS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
 echo "done with run.py. now going to eval.py"
 python eval.py $SAVE_LOC/saved_models/ /cab1/corpora/bayes_opt/$DATASET/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
 echo "done with eval.py"

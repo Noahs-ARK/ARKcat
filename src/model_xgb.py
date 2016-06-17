@@ -41,5 +41,6 @@ class Model_XGB:
         return test_pred_round
 
     def predict_prob(self, test_X):
-        return self.model.predict(xgboost.DMatrix(test_X))
+        data_matrix = xgboost.DMatrix(test_X)
+        return self.model.predict(data_matrix)
 

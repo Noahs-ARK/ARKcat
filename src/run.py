@@ -102,6 +102,7 @@ def save_model(result):
         feature_string = feature_string + short_name[feat] + '=' + str(value) + ';'
     for hparam in model_hyperparams:
         cur_hparam = None
+        #DEBUGGING
         if hparam == 'folds':
             continue
         if isinstance(model_hyperparams[hparam], float):
@@ -126,7 +127,7 @@ def set_globals():
 
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, log_filename, trial_num, max_iter
-    global num_models, model_types
+    global num_models, model_types, num_folds
     
     train_data_filename = args[0] + 'train.data'
     train_label_filename = args[0] + 'train.labels'
@@ -135,7 +136,8 @@ def set_globals():
     output_dir = args[1]
     num_models = int(args[2])
     model_types = args[3].split('-')
-    num_folds = args[4]
+    num_folds = int(args[4])
+    print('train data filename: ',train_data_filename)
     
     train_feature_dir = output_dir + '/train_features/'
     dev_feature_dir = output_dir + '/dev_train_features/'

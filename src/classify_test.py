@@ -63,17 +63,17 @@ def classify(train_data_filename, train_label_filename, dev_data_filename, dev_l
     m_and_d.load_train_and_dev_data(train_data_filename, train_label_filename, 
                                     train_feature_dir, dev_data_filename, dev_label_filename,
                                     dev_feature_dir, verbose)
-    m_and_d.k_fold_cv(folds)
+    acc = m_and_d.k_fold_cv(folds)
     
 #    train_acc = m_and_d.train_models()
-    dev_acc = m_and_d.predict_acc_from_file(dev_data_filename, dev_label_filename)
+#    dev_acc = m_and_d.predict_acc_from_file(dev_data_filename, dev_label_filename)
     
-    print('train acc: ' + str(train_acc))
-    print('dev acc: ' + str(dev_acc))
-    return {'loss': -dev_acc, 'status': STATUS_OK, 'model': m_and_d}
+    print('train acc: ' + str(acc['train_acc']))
+    print('dev acc: ' + str(acc['dev_acc']))
+    return {'loss': -acc['dev_acc'], 'status': STATUS_OK, 'model': m_and_d}
 
 
-
+#DEBUGGING need to remove this stuff
 def load_features(data_filename, label_filename, feature_dir, features, verbose, vectorizer=None):
     X_raw, Y = read_data_and_labels(data_filename, label_filename)
     print data_filename
@@ -86,7 +86,7 @@ def load_features(data_filename, label_filename, feature_dir, features, verbose,
         X = vectorizer.transform(X_raw)
         return X, Y
 
-    #DEBUGGING need to remove this stuff
+
     sys.exit(0)
 
 
