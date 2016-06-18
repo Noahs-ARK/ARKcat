@@ -73,10 +73,10 @@ class Data_and_Model_Manager:
                 self.train_models(cur_train_X, cur_train_Y)
 
                 #DEBUGGING
-"""
+                """
                 print("ABOUT TO PRINT SIZES OF TRANSFORMED DATA:")
-#                tmp_train = self.vectorizers[0].transform(cur_train_X)
-#                tmp_dev = self.vectorizers[0].transform(cur_dev_X)
+                #tmp_train = self.vectorizers[0].transform(cur_train_X)
+                #tmp_dev = self.vectorizers[0].transform(cur_dev_X)
                 v = TfidfVectorizer()
                 v.fit(cur_train_X)
                 tmp_train = v.transform(cur_train_X)
@@ -96,7 +96,7 @@ class Data_and_Model_Manager:
                 print("About to try to predict!!")
                 cur_model.predict(dmtx_dev)
                 print("\n\n\n")                
-"""
+                """
                 avg_dev_acc = avg_dev_acc + self.predict_acc(cur_dev_X, cur_dev_Y)/num_folds
             return {'train_acc':self.train_models(self.train[0], self.train[1]), 'dev_acc':avg_dev_acc}
 
