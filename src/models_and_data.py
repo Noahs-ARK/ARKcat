@@ -75,31 +75,6 @@ class Data_and_Model_Manager:
                 cur_dev_Y = [self.train[1][i] for i in dev_indxs]
                 self.train_models(cur_train_X, cur_train_Y)
 
-                #DEBUGGING
-                """
-                print("ABOUT TO PRINT SIZES OF TRANSFORMED DATA:")
-                #tmp_train = self.vectorizers[0].transform(cur_train_X)
-                #tmp_dev = self.vectorizers[0].transform(cur_dev_X)
-                v = TfidfVectorizer()
-                v.fit(cur_train_X)
-                tmp_train = v.transform(cur_train_X)
-                tmp_dev = v.transform(cur_dev_X)
-                train_Y = self.convert_labels(cur_train_Y)
-                dmtx_train = xgboost.DMatrix(tmp_train, train_Y)
-                dmtx_dev = xgboost.DMatrix(tmp_dev)
-
-                print(tmp_train.shape)
-                print(tmp_dev.shape)
-                print(dmtx_train.num_row(), dmtx_train.num_col())
-                print(dmtx_dev.num_row(), dmtx_dev.num_col())
-
-
-                print("training cur_model, just for fucks sake")
-                cur_model = xgboost.train({}, dmtx_train, 10)
-                print("About to try to predict!!")
-                cur_model.predict(dmtx_dev)
-                print("\n\n\n")
-                """
                 avg_dev_acc = avg_dev_acc + self.predict_acc(cur_dev_X, cur_dev_Y)/num_folds
             return {'train_acc':self.train_models(self.train[0], self.train[1]), 'dev_acc':avg_dev_acc}
 
@@ -117,9 +92,21 @@ class Data_and_Model_Manager:
         for i, feat_and_param in self.feats_and_params.items():
 
             vectorizer = TfidfVectorizer(**feat_and_param['feats'])
-            train_X = vectorizer.fit_transform(train_X_raw)
+            vectorizer.fit(train_X_raw)
 
-            cur_model = self.init_model(feat_and_param['params'], self.num_labels)
+            if feat_and_param['params']['model_type'] == 'cnn':
+                tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)
+                train_X_raw_tokenized = [tokenizer(ex) for ex in train_X_raw]
+                train_X = []
+                for example in train_X_raw_tokenized:
+                    train_X.append([vectorizer.transform(word) for word in example])
+                index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
+                cur_model = self.init_model(feat_and_param['params'], self.num_labels, index_to_word)
+            else:
+                train_X = vectorizer.transform(train_X_raw)
+                cur_model = self.init_model(feat_and_param['params'], self.num_labels)
+
+
             cur_model.train(train_X, train_Y)
             self.trained_models[i] = cur_model
             self.vectorizers[i] = vectorizer
@@ -154,7 +141,6 @@ class Data_and_Model_Manager:
         test_X, test_Y = self.read_data_and_labels(test_X_filename, test_Y_filename)
         return self.predict_acc(test_X, test_Y)
 
-
     def convert_probs_to_preds(self, probs):
         preds = []
         for i in range(len(probs[0])):
@@ -166,3 +152,4 @@ class Data_and_Model_Manager:
                     cur_probs[k] = probs[j][i][k]/len(probs) + cur_probs[k]
             preds.append(cur_probs.index(max(cur_probs)))
         return preds
+

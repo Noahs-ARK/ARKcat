@@ -2,6 +2,7 @@ import xgboost
 import os,sys
 import scipy
 
+
 class Model_XGB:
     def __init__(self, params, n_labels):
         self.hp = params
@@ -34,14 +35,13 @@ class Model_XGB:
         self.model = xgboost.train(param, dtrain, self.hp['num_round'])
 
     def predict(self, test_X):
-        test_X = scipy.sparse.csc_matrix(test_X)
-        dtest = xgboost.DMatrix(test_X)
-        test_pred = self.model.predict(dtest)
+        test_pred = self.predict_prob(test_X)
         test_pred_round = []
         [test_pred_round.append(int(round(pred))) for pred in test_pred]
         return test_pred_round
 
     def predict_prob(self, test_X):
-        data_matrix = xgboost.DMatrix(scipy.sparse.csc_matrix(test_X))
-        return self.model.predict(data_matrix)
+        test_X = scipy.sparse.csc_matrix(test_X)
+        dtest = xgboost.DMatrix(test_X)
+        return  self.model.predict(dtest)
 

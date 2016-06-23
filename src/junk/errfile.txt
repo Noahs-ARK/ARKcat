@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "run.py", line 215, in <module>
+    main()
+  File "run.py", line 208, in main
+    trials=trials)
+  File "/Users/katya/venv/lib/python2.7/site-packages/hyperopt-0.0.2-py2.7.egg/hyperopt/fmin.py", line 334, in fmin
+  File "/Users/katya/venv/lib/python2.7/site-packages/hyperopt-0.0.2-py2.7.egg/hyperopt/fmin.py", line 294, in exhaust
+  File "/Users/katya/venv/lib/python2.7/site-packages/hyperopt-0.0.2-py2.7.egg/hyperopt/fmin.py", line 268, in run
+  File "/Users/katya/venv/lib/python2.7/site-packages/hyperopt-0.0.2-py2.7.egg/hyperopt/fmin.py", line 187, in serial_evaluate
+  File "/Users/katya/venv/lib/python2.7/site-packages/hyperopt-0.0.2-py2.7.egg/hyperopt/fmin.py", line 114, in evaluate
+  File "run.py", line 35, in call_experiment
+    feats_and_args, folds=num_folds)
+  File "/Users/katya/repos/ARKcat/src/classify_test.py", line 66, in classify
+    acc = m_and_d.k_fold_cv(folds)
+  File "/Users/katya/repos/ARKcat/src/models_and_data.py", line 58, in k_fold_cv
+    train_acc = self.train_models(self.train[0], self.train[1])
+  File "/Users/katya/repos/ARKcat/src/models_and_data.py", line 123, in train_models
+    cur_model.train(train_X, train_Y)
+  File "/Users/katya/repos/ARKcat/src/model_cnn.py", line 52, in train
+    self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array)
+  File "/Users/katya/repos/ARKcat/src/cnn_train.py", line 109, in main
+    bundle = get_train_data(train_x, train_y, params)
+  File "/Users/katya/repos/ARKcat/src/cnn_train.py", line 103, in get_train_data
+    train_X, train_Y = sort_examples_by_length(train_X, train_Y)
+  File "/Users/katya/repos/ARKcat/src/cnn_train.py", line 59, in sort_examples_by_length
+    for i in range(len(x)):
+  File "/Users/katya/venv/lib/python2.7/site-packages/scipy/sparse/base.py", line 199, in __len__
+    raise TypeError("sparse matrix length is ambiguous; use getnnz()"
+TypeError: sparse matrix length is ambiguous; use getnnz() or shape[0]

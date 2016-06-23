@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "run.py", line 191, in <module>
+    main()
+  File "run.py", line 176, in main
+    set_globals()
+  File "run.py", line 139, in set_globals
+    num_folds = int(args[4])
+IndexError: list index out of range
