@@ -3,7 +3,7 @@ import os, sys
 #to read the results:
 
 
-output_dir = "/home/jessed/ARKcat/output/"
+output_dir = sys.argv[1]
 
 
 def print_table_header(num_iters):
