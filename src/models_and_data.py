@@ -93,13 +93,19 @@ class Data_and_Model_Manager:
 
             vectorizer = TfidfVectorizer(**feat_and_param['feats'])
             vectorizer.fit(train_X_raw)
-
+            
+            print("length of training data: ", len(train_X_raw))
+            
             if feat_and_param['params']['model_type'] == 'CNN':
                 tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)
                 train_X_raw_tokenized = [tokenizer(ex) for ex in train_X_raw]
+                print("size of tokenized: ", len(train_X_raw_tokenized))
                 train_X = []
                 for example in train_X_raw_tokenized:
-                    train_X.append([vectorizer.transform(word) for word in example])
+                    print("first example: ", example)
+                    print([vectorizer.transform(word) for word in example])
+                    train_X.append([vectorizer.transform(example)])
+
                 index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
                 cur_model = self.init_model(feat_and_param['params'], self.num_labels, index_to_word)
             else:
