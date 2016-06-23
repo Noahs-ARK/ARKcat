@@ -1,0 +1,3 @@
+text_cnn_models_temp and _methods_temp are from my previous independent implementation of the CNN; I am in the process of adapting them to work with your code. The models_temp file contains the architecture of the tf model in a class to initialize each time I want to train another iteration. I didn't have time to test that code. The methods_temp file has miscellaneous code that the new system still depends on.
+
+model_cnn parallels your model_xgboost and model_lr files. cnn_train and cnn_eval are self-explanatory. 
