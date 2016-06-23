@@ -2,7 +2,7 @@ from hyperopt import fmin, tpe, hp, Trials, space_eval
 
 def get_space(num_models, model_types):
     space = {}
-    
+
 
     for i in range(num_models):
         add_model(str(i), space, model_types)
@@ -14,7 +14,7 @@ def get_linear_model(model_num):
         'regularizer_lr_' + model_num: hp.choice('regularizer_lr_' + model_num,[
             ('l1', hp.loguniform('l1_strength_lr_' + model_num, -5,5)),
             ('l2', hp.loguniform('l2_strength_lr_' + model_num, -5,5))
-            
+
 #                    ('l1', hp.loguniform('l1_strength', np.log(1e-7), np.log(10**2))),
 #                    ('l2', hp.loguniform('l2_strength', np.log(1e-7), np.log(100)))
         ]),
@@ -34,7 +34,7 @@ def get_xgboost_model(model_num):
             'regularizer_xgb_' + model_num: hp.choice('regularizer_xgb_' + model_num,[
                 ('l1', hp.loguniform('l1_strength_xgb_' + model_num, -5,5)),
                 ('l2', hp.loguniform('l2_strength_xgb_' + model_num, -5,5))
-                
+
 #                    ('l1_' + model_num, hp.loguniform('l1_strength_' + model_num, np.log(1e-7), np.log(10**2))),
 #                    ('l2_' + model_num, hp.loguniform('l2_strength_' + model_num, np.log(1e-7), np.log(100)))
             ])
@@ -51,7 +51,7 @@ def add_model(model_num, space, model_types):
             raise NameError('the model ' + m + ' is not implemented.')
     space['model_' + model_num] = hp.choice('model_' + model_num, set_of_models)
     space['features_' + model_num] = {
-        'nmin_to_max_' + model_num: hp.choice('nmin_to_max_' + model_num, 
+        'nmin_to_max_' + model_num: hp.choice('nmin_to_max_' + model_num,
                                               [(1,1),(1,2),(1,3),(2,2),(2,3)]),
         'binary_' + model_num: hp.choice('binary_' + model_num, [True, False]),
         'use_idf_' + model_num: hp.choice('transform_' + model_num, [True, False]),
