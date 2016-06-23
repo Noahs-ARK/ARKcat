@@ -97,10 +97,13 @@ class Data_and_Model_Manager:
                 train_X = []
                 for example in train_X_raw_tokenized:
                     train_X.append([vectorizer.transform(word) for word in example])
+                index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
+                cur_model = self.init_model(feat_and_param['params'], self.num_labels, index_to_word)
             else:
                 train_X = vectorizer.transform(train_X_raw)
+                cur_model = self.init_model(feat_and_param['params'], self.num_labels)
 
-            cur_model = self.init_model(feat_and_param['params'], self.num_labels)
+
             cur_model.train(train_X, train_Y)
             self.trained_models[i] = cur_model
             self.vectorizers[i] = vectorizer
