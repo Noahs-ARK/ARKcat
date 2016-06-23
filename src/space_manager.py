@@ -2,7 +2,7 @@ from hyperopt import fmin, tpe, hp, Trials, space_eval
 
 def get_space(num_models, model_types):
     space = {}
-    
+
 
     for i in range(num_models):
         add_model(str(i), space, model_types)
@@ -14,7 +14,7 @@ def get_linear_model(model_num):
         'regularizer_lr_' + model_num: hp.choice('regularizer_lr_' + model_num,[
             ('l1', hp.loguniform('l1_strength_lr_' + model_num, -5,5)),
             ('l2', hp.loguniform('l2_strength_lr_' + model_num, -5,5))
-            ]),
+        ]),
         'converg_tol_' + model_num: hp.loguniform('converg_tol_' + model_num, -10, -1)
     }
 
@@ -31,8 +31,45 @@ def get_xgboost_model(model_num):
             'regularizer_xgb_' + model_num: hp.choice('regularizer_xgb_' + model_num,[
                 ('l1', hp.loguniform('l1_strength_xgb_' + model_num, -5,5)),
                 ('l2', hp.loguniform('l2_strength_xgb_' + model_num, -5,5))
-                ])
+
+            ])
         }
+
+#can we make flex dependent on kernel size somehow??
+def get_cnn_model(model_num):
+    hyperparams = {
+            # choose btwn rand, word2vec--implement glove
+            'word_vectors_' + model_num: hp.choice('word_vectors_' + model_num,[
+                ('word2vec', hp.choice('word2vec_update_' + model_num, [True, False])),
+                ('rand', hp.choice('rand_update_' + model_num, [True, False]))
+            ]),
+            'model_' + model_num: 'CNN',
+            # 'word_vector_init_' + model_num: hp.choice('word_vector_init_' + model_num, [True, False]),
+            'delta_' + model_num: hp.choice('delta_' + model_num, [True, False]),
+            'flex_' + model_num: hp.quniform('flex_' + model_num, 0, 15, 1),
+            'filters_' + model_num: hp.quniform('filters_' + model_num, 100, 600,1),
+            'num_kernels_' + model_num: hp.quniform('num_kernels_' + model_num, 1, 5, 1),
+            'kernel_size_1_' + model_num: hp.quniform('kernel_size_1_' + model_num, 1, 10, 1),
+            'kernel_size_2_' + model_num: hp.quniform('kernel_size_2_' + model_num, 1, 10, 1),
+            'kernel_size_3_' + model_num: hp.quniform('kernel_size_3_' + model_num, 1, 10, 1),
+            'dropout_' + model_num: hp.uniform('dropout_' + model_num, 0, 1),
+            'batch_size_' + model_num: hp.quniform('batch_size_' + model_num, 10, 200, 1),
+            # iden, relu, and tanh
+            'activation_fn_' + model_num: hp.choice('activation_fn_' + model_num, ['iden', 'relu', 'elu', 'tanh']),
+            #none, clipped, or penalized
+            'regularizer_cnn_' + model_num: hp.choice('regularizer_cnn_' + model_num, [
+                (None, None),
+                ('l1', hp.loguniform('l1_strength_cnn_' + model_num, -5,5)),
+                ('l2', hp.loguniform('l2_strength_cnn_' + model_num, -5,5))
+            ]),
+            'learning_rate_' + model_num: .005 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 100)
+        }
+    # doesn't work yet :(
+    # print hyperparams['num_kernels_' + model_num]
+    # for i in xrange(hyperparams['num_kernels_' + model_num]):
+    #     hyperparams['kernel_' + i + '_' + model_num] = hp.quniform('kernel_size_' + i + '_'
+    #                                                    + model_num, 1, 10, 1)
+    return hyperparams
 
 def add_model(model_num, space, model_types):
     set_of_models = []
@@ -41,13 +78,15 @@ def add_model(model_num, space, model_types):
             set_of_models.append(get_linear_model(model_num))
         elif m == 'xgboost':
             set_of_models.append(get_xgboost_model(model_num))
+        elif m == 'cnn':
+            set_of_models.append(get_cnn_model(model_num))
         else:
             raise NameError('the model ' + m + ' is not implemented.')
     #DEBUGGING
     #if cnn then don't add binary option
     space['model_' + model_num] = hp.choice('model_' + model_num, set_of_models)
     space['features_' + model_num] = {
-        'nmin_to_max_' + model_num: hp.choice('nmin_to_max_' + model_num, 
+        'nmin_to_max_' + model_num: hp.choice('nmin_to_max_' + model_num,
                                               [(1,1),(1,2),(1,3),(2,2),(2,3)]),
         'binary_' + model_num: hp.choice('binary_' + model_num, [True, False]),
         'use_idf_' + model_num: hp.choice('transform_' + model_num, [True, False]),
