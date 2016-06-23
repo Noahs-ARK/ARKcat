@@ -14,16 +14,18 @@ Traceback (most recent call last):
     acc = m_and_d.k_fold_cv(folds)
   File "/Users/katya/repos/ARKcat/src/models_and_data.py", line 58, in k_fold_cv
     train_acc = self.train_models(self.train[0], self.train[1])
-  File "/Users/katya/repos/ARKcat/src/models_and_data.py", line 123, in train_models
-    cur_model.train(train_X, train_Y)
-  File "/Users/katya/repos/ARKcat/src/model_cnn.py", line 52, in train
-    self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array)
-  File "/Users/katya/repos/ARKcat/src/cnn_train.py", line 109, in main
-    bundle = get_train_data(train_x, train_y, params)
-  File "/Users/katya/repos/ARKcat/src/cnn_train.py", line 103, in get_train_data
-    train_X, train_Y = sort_examples_by_length(train_X, train_Y)
-  File "/Users/katya/repos/ARKcat/src/cnn_train.py", line 59, in sort_examples_by_length
-    for i in range(len(x)):
-  File "/Users/katya/venv/lib/python2.7/site-packages/scipy/sparse/base.py", line 199, in __len__
-    raise TypeError("sparse matrix length is ambiguous; use getnnz()"
-TypeError: sparse matrix length is ambiguous; use getnnz() or shape[0]
+  File "/Users/katya/repos/ARKcat/src/models_and_data.py", line 102, in train_models
+    train_X.append([vectorizer.transform(word) for word in example])
+  File "/Users/katya/venv/lib/python2.7/site-packages/sklearn/feature_extraction/text.py", line 1333, in transform
+    X = super(TfidfVectorizer, self).transform(raw_documents)
+  File "/Users/katya/venv/lib/python2.7/site-packages/sklearn/feature_extraction/text.py", line 866, in transform
+    _, X = self._count_vocab(raw_documents, fixed_vocab=True)
+  File "/Users/katya/venv/lib/python2.7/site-packages/sklearn/feature_extraction/text.py", line 752, in _count_vocab
+    for feature in analyze(doc):
+  File "/Users/katya/venv/lib/python2.7/site-packages/sklearn/feature_extraction/text.py", line 238, in <lambda>
+    tokenize(preprocess(self.decode(doc))), stop_words)
+  File "/Users/katya/venv/lib/python2.7/site-packages/sklearn/feature_extraction/text.py", line 115, in decode
+    doc = doc.decode(self.encoding, self.decode_error)
+  File "/Users/katya/venv/lib/python2.7/encodings/utf_8.py", line 16, in decode
+    return codecs.utf_8_decode(input, errors, True)
+UnicodeDecodeError: 'utf8' codec can't decode byte 0xc3 in position 0: unexpected end of data

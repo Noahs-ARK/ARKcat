@@ -180,12 +180,12 @@ def main(params, train_x, train_y, val_X, val_Y, key_array):
                              cnn.dropout: params['TRAIN_DROPOUT']}
                 train_step.run(feed_dict=feed_dict, session = sess)
                 #apply l2 clipping to weights and biases
-                if params['REGULARIZER'] = 'l2_clip':
+                if params['REGULARIZER'] == 'l2_clip':
                     cnn.clip_vars(params)
             dev_accuracy = cnn_eval.evaluate(cnn, val_X, val_Y, params, sess, cross_entropy=True)
             if dev_accuracy < best_dev_accuracy:
                 #!!!
-                checkpoint = saver.save(sess, 'text_cnn_run' + , global_step = params['epoch'])
+                checkpoint = saver.save(sess, 'text_cnn_run' + '!!!', global_step = params['epoch'])
                 best_dev_accuracy = dev_accuracy
                 if dev_accuracy < best_dev_accuracy - .02:
                     #early stop if accuracy drops significantly

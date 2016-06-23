@@ -9,7 +9,7 @@ import numpy as np
 from hyperopt import fmin, tpe, hp, Trials, space_eval
 
 import classify_test
-import space_manager_cnn
+import space_manager
 
 data_filename = None
 label_filename = None
@@ -200,7 +200,7 @@ def main():
     print("Made it to the start of main!")
     set_globals()
     trials = Trials()
-    space = space_manager_cnn.get_space(num_models, model_types)
+    space = space_manager.get_space(num_models, model_types)
     best = fmin(call_experiment,
                 space=space,
                 algo=tpe.suggest,

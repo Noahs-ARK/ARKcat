@@ -94,7 +94,7 @@ class Data_and_Model_Manager:
             vectorizer = TfidfVectorizer(**feat_and_param['feats'])
             vectorizer.fit(train_X_raw)
 
-            if feat_and_param['params']['model_type'] == 'cnn':
+            if feat_and_param['params']['model_type'] == 'CNN':
                 tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)
                 train_X_raw_tokenized = [tokenizer(ex) for ex in train_X_raw]
                 train_X = []
@@ -152,4 +152,3 @@ class Data_and_Model_Manager:
                     cur_probs[k] = probs[j][i][k]/len(probs) + cur_probs[k]
             preds.append(cur_probs.index(max(cur_probs)))
         return preds
-
