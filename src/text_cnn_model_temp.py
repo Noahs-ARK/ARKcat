@@ -2,8 +2,9 @@ import numpy as np
 import tensorflow as tf
 from text_cnn_methods_temp import *
 
-class CNN(object):
-    def __init__(self, params, key_array):
+class CNN:
+    def __init__(self, params, vocab):
+
         self.input_x = tf.placeholder(tf.int32, [params['BATCH_SIZE'], None])
         self.input_y = tf.placeholder(tf.float32, [params['BATCH_SIZE'], params['CLASSES']])
         self.dropout = tf.placeholder(tf.float32)
@@ -74,13 +75,13 @@ class CNN(object):
         else:
             self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])
 
-    def reinit_word_embeddings(new_key_array, params, sess):
-        with sess.as_default():
-            embeddings_array = np.concat((self.embeddings.eval(), new_key_array))
-            self.embeddings = tf.Variable(tf.convert_to_tensor(embeddings_array,
-                                          dtype = tf.float32),
-                                          trainable = params['UPDATE_WORD_VECS'])
-    #check that l1 loss is correct
+    # def reinit_word_embeddings(new_key_array, params, sess):
+    #     with sess.as_default():
+    #         embeddings_array = np.concat((self.embeddings.eval(), new_key_array))
+    #         self.embeddings = tf.Variable(tf.convert_to_tensor(embeddings_array,
+    #                                       dtype = tf.float32),
+    #                                       trainable = params['UPDATE_WORD_VECS'])
+
     def custom_loss(W, params):
         if params['REGULARIZER'] == 'l1':
             return tf.sqrt(tf.reduce_sum(tf.abs(W)))
@@ -89,6 +90,7 @@ class CNN(object):
         else:
             return 0
 
+    #needs debug
     def clip_vars(self, params):
         for W in self.weights:
             W = tf.clip_by_average_norm(W, params['L2_NORM_CONSTRAINT'])

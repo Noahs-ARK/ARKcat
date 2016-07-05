@@ -35,7 +35,7 @@ def get_xgboost_model(model_num):
             ])
         }
 
-#can we make flex dependent on kernel size somehow??
+#can we make flex dependent on kernel size somehow?? or related to max len/len diff betwn batches
 def get_cnn_model(model_num):
     hyperparams = {
             # choose btwn rand, word2vec--implement glove
