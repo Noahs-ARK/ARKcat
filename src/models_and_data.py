@@ -92,12 +92,18 @@ class Data_and_Model_Manager:
         train_Y = self.convert_labels(train_Y_raw)
         for i, feat_and_param in self.feats_and_params.items():
 
-            vectorizer = TfidfVectorizer(**feat_and_param['feats'])
-            vectorizer.fit(train_X_raw)
+
 
             print("length of training data: ", len(train_X_raw))
-
+            #DEBUGGING
+            #Shouldn't have vectorizer initialized in two braches of this if statement
+            #should have the bayes opt know not to use n-grams for cnn
             if feat_and_param['params']['model_type'] == 'CNN':
+                
+                feats_and_param['feats']['ngram_range'] = (1,1)
+                feats_and_param['feats']['binary'] = False
+                vectorizer = TfidfVectorizer(**feat_and_param['feats'])
+                vectorizer.fit(train_X_raw)
                 tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)
                 train_X_raw_tokenized = [tokenizer(ex) for ex in train_X_raw]
                 print("size of tokenized: ", len(train_X_raw_tokenized))
@@ -110,6 +116,8 @@ class Data_and_Model_Manager:
                 index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
                 cur_model = self.init_model(feat_and_param['params'], self.num_labels, index_to_word)
             else:
+                vectorizer = TfidfVectorizer(**feat_and_param['feats'])
+                vectorizer.fit(train_X_raw)
                 train_X = vectorizer.transform(train_X_raw)
                 cur_model = self.init_model(feat_and_param['params'], self.num_labels)
 
