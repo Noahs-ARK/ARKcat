@@ -9,7 +9,7 @@ class Model_CNN:
     def __init__(self, params, n_labels, indices_to_words):
         self.hp = params
         self.num_labels = n_labels
-        self.indices_to_words = indices_to_words
+        self.key_array = text_cnn_methods_temp.dict_to_array(indices_to_words)
 
     #also need dev set--split off in here??
     def train(self, train_X, train_Y):
@@ -44,7 +44,6 @@ class Model_CNN:
             self.params['UPDATE_WORD_VECS'] = False
         if self.hp['delta'] == 0:
             self.params['USE_DELTA'] = False
-        self.vocab = get_vocab(train_X)
         self.vocab.insert(0, '<PAD>')
         self.key_array = cnn_train.init_key_array(train_X[0].get_shape()[0], params) #vocab
         train_X = cnn_train.to_dense(train_X, params)
