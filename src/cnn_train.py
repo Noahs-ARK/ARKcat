@@ -218,7 +218,8 @@ def dict_to_array(d, params):
     key_array = [[] for item in range(len(vocab))]
     #DEBUG: add filepath in user input
     if params['USE_WORD2VEC']:
-        with open('/Users/katya/repos/tensorflow/output-short.txt', 'r') as word2vec:
+        #with open('/Users/katya/repos/tensorflow/output-short.txt', 'r') as word2vec:
+        with open('/home/katya/datasets/output-short.txt', 'r') as word2vec:
             word2vec.readline()
             for i in range(3000000):   #number of words in word2vec
                 line = tokenize(word2vec.readline().strip())
