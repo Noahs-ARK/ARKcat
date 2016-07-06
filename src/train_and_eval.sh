@@ -1,3 +1,6 @@
+
+#incorporate word vector file location??
+
 #DATASET=trees_binary
 #DATASET=convote
 #DATASET=amazon_reviews

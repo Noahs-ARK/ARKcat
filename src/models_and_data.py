@@ -96,9 +96,9 @@ class Data_and_Model_Manager:
             #Shouldn't have vectorizer initialized in two braches of this if statement
             #should have the bayes opt know not to use n-grams for cnn
             if feat_and_param['params']['model_type'] == 'CNN':
-                
-                feats_and_param['feats']['ngram_range'] = (1,1)
-                feats_and_param['feats']['binary'] = False
+
+                feat_and_param['feats']['ngram_range'] = (1,1)
+                feat_and_param['feats']['binary'] = False
                 vectorizer = TfidfVectorizer(**feat_and_param['feats'])
                 vectorizer.fit(train_X_raw)
                 tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)
@@ -111,7 +111,6 @@ class Data_and_Model_Manager:
                     train_X.append([vectorizer.transform(example)])
 
                 index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
-                print index_to_word
                 cur_model = self.init_model(feat_and_param['params'], self.num_labels, index_to_word)
             else:
                 vectorizer = TfidfVectorizer(**feat_and_param['feats'])

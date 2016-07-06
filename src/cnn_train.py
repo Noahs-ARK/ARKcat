@@ -3,6 +3,22 @@ import tensorflow as tf
 import text_cnn_methods_temp
 from text_cnn_model_temp import CNN
 import sys
+import re
+
+#figure out where this goes
+#takes a line of text, returns an array of strings where ecah string is a word
+def tokenize(line):
+   list_of_words = []
+   word = ''
+   for char in line:
+      if char == ' ':
+         list_of_words.append(word)
+         word = ''
+      else:
+         word += char
+   list_of_words.append(word.strip())
+   return list_of_words
+
 
 # def flex(input_list, params):
 #     for example in input_list:
@@ -191,6 +207,37 @@ def main(params, train_x, train_y, val_X, val_Y, key_array):
                     #early stop if accuracy drops significantly
                     return checkpoint
         return checkpoint
+
+def dict_to_array(d, params):
+    print 'params:', params
+    vocab = []
+    for word in d.itervalues():
+        word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
+        vocab.append(word)
+    print vocab[0]
+    key_array = [[] for item in range(len(vocab))]
+    #DEBUG: add filepath in user input
+    if params['USE_WORD2VEC']:
+        with open('/Users/katya/repos/tensorflow/output-short.txt', 'r') as word2vec:
+            word2vec.readline()
+            for i in range(3000000):   #number of words in word2vec
+                line = tokenize(word2vec.readline().strip())
+                #turn into floats
+                if line[0] in vocab:
+                    vector = []
+                    for word in line[1:]:
+                        vector.append(float(word))
+                    # print len(vector), vector
+                    if len(vector) != params['WORD_VECTOR_LENGTH']:
+                        raise ValueError
+                    key_array[vocab.index(line[0])] = vector
+    for entry in key_array:
+        if entry == []:
+            entry = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
+    key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
+    return np.toarray(key_array)
+
+
 
 if __name__ == "__main__":
     main()

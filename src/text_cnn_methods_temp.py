@@ -217,14 +217,4 @@ def initialize_vocab(vocab, params, embed_keys = {}):
         embed_keys[word] = len(embed_keys)
     return embed_keys, np.asarray(key_list)
 
-def dict_to_array(d):
-    print d
-    key_array = []
-    for key in d:
-        d[key] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", d[key])
-        print d
-        key_array.append([key, str(d[key])])
-    print key_array[0]
-    return np.toarray(key_array)
-
 if __name__ == "__main__": main()
