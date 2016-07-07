@@ -1,1 +1,0 @@
-/home/katya/datasets/sst2/train.data,/home/katya/datasets/sst2/train.labels,/home/katya/datasets/sst2/dev.data,/home/katya/datasets/sst2/dev.labels,./junk/train_features/,./junk/dev_train_features/,./junk

@@ -5,42 +5,6 @@ import numpy as np
 import math
 import os.path
 
-def initial_print_statements(params, args):
-    params['OUTPUT_FILE_NAME'] += ',%i'%params['EPOCHS']
-    if params['USE_TFIDF']:
-        params['OUTPUT_FILE_NAME'] += 'tfidf'
-    params['OUTPUT_FILE_NAME'] += ','
-    if params['USE_WORD2VEC']:
-        params['OUTPUT_FILE_NAME'] += 'word2vec'
-    else:
-        params['OUTPUT_FILE_NAME'] += 'randinit'
-    params['OUTPUT_FILE_NAME'] += ','
-    if params['UPDATE_WORD_VECS']:
-        params['OUTPUT_FILE_NAME'] += 'upd'
-    if params['USE_DELTA']:
-        params['OUTPUT_FILE_NAME'] += 'delta'
-    params['OUTPUT_FILE_NAME'] += args.string + '.txt'
-    output = open(params['OUTPUT_FILE_NAME'], 'a', 0)
-    if params['Adagrad']:
-        output.write("Running Adagrad on %s with a learning rate of " %args.path)
-    else:
-        output.write("Running Adam on %s with a learning rate of " %args.path)
-    output.write('%g and %i epochs\n'%(params['LEARNING_RATE'], params['EPOCHS']))
-    output.write('using batch size %i' %(params['BATCH_SIZE']))
-    if params['USE_TFIDF']:
-        output.write(', tfidf, ')
-    else:
-        output.write(', ')
-    if params['USE_WORD2VEC']:
-        output.write('word2vec, ')
-    else:
-        output.write('rand init, ')
-    if params['UPDATE_WORD_VECS']:
-        output.write('updating.\n')
-    else:
-        output.write('not updating.\n')
-    return output
-
 #breaks when BATCH_SIZE = 1
 def batch(input_list, output_list, params, embed_keys):
     all_x, all_y = [], []

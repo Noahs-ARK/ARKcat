@@ -50,8 +50,6 @@ class Model_CNN:
         val_Y = train_Y[val_split:]
         train_X = train_X[:val_split]
         train_Y = train_Y[:val_split]
-        print 'trainxcheck', type(train_X[0]), train_X[0]
-        print 'valxcheck', type(val_X[0]), val_X[0]
         self.model = cnn_train.main(self.params, train_X, train_Y, val_X, val_Y, self.key_array)
 
     #one-hot array

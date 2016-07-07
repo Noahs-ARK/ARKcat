@@ -18,7 +18,6 @@ output_dir = None
 log_filename = None
 
 def call_experiment(args):
-    print 'debug'
     global trial_num
     trial_num = trial_num + 1
 
