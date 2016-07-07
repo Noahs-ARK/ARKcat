@@ -4,7 +4,7 @@ from sklearn.cross_validation import StratifiedKFold
 from sklearn.feature_extraction.text import TfidfVectorizer
 from model_xgb import Model_XGB
 from model_lr import Model_LR
-from model_cnn import Model_CNN
+#from model_cnn import Model_CNN
 import re
 #DEBUGGING
 #import xgboost
@@ -91,10 +91,6 @@ class Data_and_Model_Manager:
         probs = {}
         train_Y = self.convert_labels(train_Y_raw)
         for i, feat_and_param in self.feats_and_params.items():
-
-
-
-            print("length of training data: ", len(train_X_raw))
             #DEBUGGING
             #Shouldn't have vectorizer initialized in two braches of this if statement
             #should have the bayes opt know not to use n-grams for cnn
@@ -144,8 +140,6 @@ class Data_and_Model_Manager:
         pred_probs = {}
         for i, feat_and_param in self.feats_and_params.items():
             test_X = self.vectorizers[i].transform(test_X_raw)
-            print("SIZE OF TEST_X:")
-            print(test_X.shape)
             pred_probs[i] = self.trained_models[i].predict_prob(test_X)
 
         preds_as_nums = self.convert_probs_to_preds(pred_probs)
