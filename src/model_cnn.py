@@ -24,35 +24,34 @@ class Model_CNN:
                 'BATCH_SIZE' : self.hp['batch_size'],
                 # 'optimizer_' + model_num: 1,# hp.choice('optimizer_' + model_num, 0, 1),
                 'LEARNING_RATE' : self.hp['learning_rate'],
-                'USE_WORD2VEC' : True,
-                'UPDATE_WORD_VECS' : True,
-                'USE_DELTA' : True,
+                #not implemented
+                #'USE_WORD2VEC' : self.hp['use_word2vec'],
+                'USE_WORD2VEC' : False,
+                'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
+                'USE_DELTA' : self.hp['delta'],
 
                 'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
                 'EPOCHS' : 15,
                 #set by program-do not change!
                 'epoch' : 1,
-                'l2-loss' : tf.constant(0)
-            }
-        self.params['KERNEL_SIZES'] = [self.hp['kernel_size_1'],
-                                       self.hp['kernel_size_2'],
-                                       self.hp['kernel_size_3']]
-        if self.hp['word_vector_init'] == 0:
-            self.params['USE_WORD2VEC'] = False
+                'l2-loss' : tf.constant(0),
+                'KERNEL_SIZES' : [self.hp['kernel_size_1'],
+                                  self.hp['kernel_size_2'],
+                                  self.hp['kernel_size_3']]
+        }
         if self.hp['word_vector_update'] == 0:
             self.params['UPDATE_WORD_VECS'] = False
-        if self.hp['delta'] == 0:
-            self.params['USE_DELTA'] = False
         self.key_array = cnn_train.dict_to_array(self.indices_to_words, self.params)
-        self.vocab.insert(0, '<PAD>')
-        self.key_array = cnn_train.init_key_array(train_X[0].get_shape()[0], params) #vocab
-        train_X = cnn_train.to_dense(train_X, params)
+        train_X, self.params['MAX_LENGTH'] = cnn_train.to_dense(train_X)
+        train_Y = cnn_train.one_hot(train_Y, self.params['CLASSES'])
         val_split = len(train_X)/10
-        val_X = train_X[:val_split]
-        val_Y = train_Y[:val_split]
-        train_X = train_X[val_split:]
-        train_Y = train_Y[val_split:]
+        val_X = train_X[val_split:]
+        val_Y = train_Y[val_split:]
+        train_X = train_X[:val_split]
+        train_Y = train_Y[:val_split]
+        print 'trainxcheck', type(train_X[0]), train_X[0]
+        print 'valxcheck', type(val_X[0]), val_X[0]
         self.model = cnn_train.main(self.params, train_X, train_Y, val_X, val_Y, self.key_array)
 
     #one-hot array

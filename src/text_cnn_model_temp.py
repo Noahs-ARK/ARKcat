@@ -3,21 +3,21 @@ import tensorflow as tf
 from text_cnn_methods_temp import *
 
 class CNN:
-    def __init__(self, params, vocab):
+    def __init__(self, params, key_array):
 
-        self.input_x = tf.placeholder(tf.int32, [params['BATCH_SIZE'], None])
-        self.input_y = tf.placeholder(tf.float32, [params['BATCH_SIZE'], params['CLASSES']])
-        self.dropout = tf.placeholder(tf.float32)
+        self.input_x = tf.placeholder(tf.int32, [params['BATCH_SIZE'], None], name='input_x')
+        self.input_y = tf.placeholder(tf.float32, [params['BATCH_SIZE'], params['CLASSES']], name='input_y')
+        self.dropout = tf.placeholder(tf.float32, name='dropout')
 
         word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32),
                                       trainable = params['UPDATE_WORD_VECS'])
         if params['USE_DELTA']:
             W_delta = tf.Variable(tf.ones, key_array.shape[0])
             weighted_word_embeddings = tf.matmul(word_embeddings, W_delta)
-            embedding_output = tf.nn.embedding_lookup(weighted_word_embeddings, x)
+            embedding_output = tf.nn.embedding_lookup(weighted_word_embeddings, self.input_x)
         else:
-            embedding_output = tf.nn.embedding_lookup(word_embeddings, x)
-
+            embedding_output = tf.nn.embedding_lookup(word_embeddings, self.input_x)
+        embedding_output = tf.expand_dims(embedding_output, 2)
         #init lists for convolutional layer
         slices = []
         weights = []
@@ -59,7 +59,7 @@ class CNN:
         #define accuracy for evaluation
         self.correct_prediction = tf.equal(self.predictions,
                                            tf.argmax(self.input_y, 1))
-        self.reg_loss = tf.constant(0)
+        self.reg_loss = tf.constant(0.0)
         if params['UPDATE_WORD_VECS']:
             self.reg_loss += custom_loss(word_embeddings, params)
         if params['USE_DELTA']:
@@ -70,10 +70,7 @@ class CNN:
             self.reg_loss += custom_loss(b, params)
         self.reg_loss += custom_loss(W_fc, params)
         self.reg_loss += custom_loss(b_fc, params)
-        if params['Adagrad']:
-            self.optimizer = tf.train.AdagradOptimizer(params['LEARNING_RATE'])
-        else:
-            self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])
+        self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])
 
     # def reinit_word_embeddings(new_key_array, params, sess):
     #     with sess.as_default():
@@ -86,9 +83,9 @@ class CNN:
         if params['REGULARIZER'] == 'l1':
             return tf.sqrt(tf.reduce_sum(tf.abs(W)))
         elif params['REGULARIZER'] == 'l2':
-            return tf.sqrt(tf.scalar_mul(tf.constant(2), tf.nn.l2_loss(W)))
+            return tf.sqrt(tf.scalar_mul(tf.constant(2.0), tf.nn.l2_loss(W)))
         else:
-            return 0
+            return 0.0
 
     #needs debug
     def clip_vars(self, params):

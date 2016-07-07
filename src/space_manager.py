@@ -58,9 +58,9 @@ def get_cnn_model(model_num):
             'activation_fn_' + model_num: hp.choice('activation_fn_' + model_num, ['iden', 'relu', 'elu', 'tanh']),
             #none, clipped, or penalized
             'regularizer_cnn_' + model_num: hp.choice('regularizer_cnn_' + model_num, [
-                (None, None),
-                ('l1', hp.loguniform('l1_strength_cnn_' + model_num, -5,5)),
-                ('l2', hp.loguniform('l2_strength_cnn_' + model_num, -5,5))
+                (None, 0.0),
+                ('l1', hp.loguniform('l1_strength_cnn_' + model_num, -5.0,5.0)),
+                ('l2', hp.loguniform('l2_strength_cnn_' + model_num, -5.0,5.0))
             ]),
             'learning_rate_' + model_num: .005 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 100)
         }

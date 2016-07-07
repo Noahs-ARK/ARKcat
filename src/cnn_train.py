@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import text_cnn_methods_temp
 from text_cnn_model_temp import CNN
+import cnn_eval
 import sys
 import re
 
@@ -120,6 +121,14 @@ def pad_all(list_of_examples, params):
         list_of_examples[i] = pad_one(list_of_examples[i], max_length, params)
     return list_of_examples
 
+def one_hot(train_Y, CLASSES):
+    one_hot = []
+    for i in range(len(train_Y)):
+       one_hot.append([0] * CLASSES)
+       one_hot[i][train_Y[i]] = 1
+    return np.asarray(one_hot)
+
+#defunct
 def get_max_length(list_of_examples):
     max_length = 0
     for line in list_of_examples:
@@ -140,6 +149,7 @@ def pad_one(list_of_word_vecs, max_length, params):
         # list_of_word_vecs.append([0] * params['WORD_VECTOR_LENGTH'])
     return list_of_word_vecs
 
+#defunct
 def init_key_array(vocab_size, params): # vocab):
     key_list = []
     if params['USE_WORD2VEC'] == False:
@@ -168,19 +178,21 @@ def init_key_array(vocab_size, params): # vocab):
         return np.asarray(key_list)
 
 def to_dense(train_X):
-    for example in train_X:
-        example = example.nonzero()[1].tolist()
-        for word in example:
-            word += 1
-        example = np.asarray(example)
-    return train_X
+    max_length = 0
+    for i in range(len(train_X)):
+           train_X[i] = train_X[i][0].nonzero()[1]
+           train_X[i] = train_X[i].tolist()
+           for word in train_X[i]:
+              word += 1
+           max_length = max(max_length, len(train_X[i]))
+           train_X[i] = np.asarray(train_X[i])
+    return train_X, max_length
 
-#train_x is a python list of numpy arrays containing sentences as word vectors
 def main(params, train_x, train_y, val_X, val_Y, key_array):
     with tf.Graph().as_default():
         cnn = CNN(params, key_array)
-        loss = tf.reduce_sum(cnn.cross_entropy)
-        loss += tf.scalar_mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
+        loss = cnn.cross_entropy
+        loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
         train_step = cnn.optimizer.minimize(loss)
         saver = tf.train.Saver(tf.all_variables())
         #run session
@@ -188,6 +200,7 @@ def main(params, train_x, train_y, val_X, val_Y, key_array):
                           intra_op_parallelism_threads=1, use_per_session_threads=True))
         sess.run(tf.initialize_all_variables())
         best_dev_accuracy = cnn_eval.evaluate(cnn, val_X, val_Y, params, sess, cross_entropy=True)
+        print cnn.input_x
         for i in range(params['EPOCHS']):
             params['epoch'] = i + 1
             batches_x, batches_y = scramble_batches(params, train_x, train_y)
@@ -213,13 +226,13 @@ def dict_to_array(d, params):
     vocab = []
     for word in d.itervalues():
         word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
-        vocab.append(word)
+        vocab.append(str(word))
     print vocab[0]
     key_array = [[] for item in range(len(vocab))]
     #DEBUG: add filepath in user input
     if params['USE_WORD2VEC']:
         #with open('/Users/katya/repos/tensorflow/output-short.txt', 'r') as word2vec:
-        with open('/home/katya/datasets/output-short.txt', 'r') as word2vec:
+        with open('/home/katya/datasets/output.txt', 'r') as word2vec:
             word2vec.readline()
             for i in range(3000000):   #number of words in word2vec
                 line = tokenize(word2vec.readline().strip())
@@ -232,11 +245,11 @@ def dict_to_array(d, params):
                     if len(vector) != params['WORD_VECTOR_LENGTH']:
                         raise ValueError
                     key_array[vocab.index(line[0])] = vector
-    for entry in key_array:
-        if entry == []:
-            entry = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
+    for i in range(len(key_array)):
+        if key_array[i] == []:
+            key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
     key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
-    return np.toarray(key_array)
+    return np.asarray(key_array)
 
 
 
