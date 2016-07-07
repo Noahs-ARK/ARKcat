@@ -20,30 +20,38 @@ def test_batch(test_X, params, embed_keys):
         test_X = test_X[1:]
     return all_x
 
+def float_entropy(checkpoint, val_x, val_y, key_array, params):
+    pred = evaluate(checkpoint, val_x, val_y, key_array, params, cross_entropy=True)
+    return np.mean(pred)
+
 #change 'accuracy'
-def evaluate(cnn, val_x, val_y, params, sess, cross_entropy=False):
+def evaluate(checkpoint, val_x, val_y, key_array, params, cross_entropy, reinit_word_embeddings=False):
         print 'val sets', type(val_x), type(val_y)
         print 'val 1', type(val_x[0]), val_x[0], val_x[0].shape
         #cnn.input_x = tf.placeholder(tf.int32, [2, None], name='input_x')
         #cnn.input_y = tf.placeholder(tf.float32, [2, params['CLASSES']], name='input_y')
-        print cnn.__dict__
-        print cnn.input_x
-        feed_dict = {cnn.input_x: np.stack([val_x[0]] * params['BATCH_SIZE']),
-                     cnn.input_y: np.asarray([val_y[0]] * params['BATCH_SIZE']),
-                     cnn.dropout: 1.0}
-        print 'check!', feed_dict[cnn.input_x], feed_dict[cnn.input_y]
-        print type(feed_dict[cnn.input_x])
-        if cross_entropy == True:
-            measure = cnn.cross_entropy
-        else:
-            measure = cnn.correct_prediction
-        pred = []
-        while len(val_x) > 0:
-            pred.append(measure.eval(feed_dict=feed_dict, session = sess))
-            val_x = val_x[1:]
-            val_y = val_y[1:]
-            print 'test', feed_dict[cnn.input_x]
-        return np.asarray(pred)
+        with tf.Graph().as_default():
+            cnn = CNN(params, key_array, batch_size=1)
+            saver = tf.train.Saver(tf.all_variables())
+            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=2,
+                                          intra_op_parallelism_threads=3,
+                                          use_per_session_threads=True))
+            saver.restore(sess, checkpoint)
+            if reinit_word_embeddings:
+                cnn.reinit_word_embeddings(val_x, params, sess)
+            if cross_entropy:
+                measure = cnn.cross_entropy
+            else:
+                measure = cnn.correct_prediction
+            pred = []
+            while len(val_x) > 0:
+                feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis = 0),
+                             cnn.input_y: np.expand_dims(val_y[0], axis = 0),
+                             cnn.dropout: 1.0}
+                pred.append(measure.eval(feed_dict=feed_dict, session = sess))
+                val_x = val_x[1:]
+                val_y = val_y[1:]
+            return np.asarray(pred)
 
 def main(checkpoint, params, test_bundle, key_array, prob):
     with tf.Graph().as_default():

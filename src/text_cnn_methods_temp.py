@@ -221,8 +221,9 @@ def custom_loss(W, params):
         if params['REGULARIZER'] == 'l1':
             return tf.sqrt(tf.reduce_sum(tf.abs(W)))
         elif params['REGULARIZER'] == 'l2':
-            return tf.sqrt(tf.scalar_mul(tf.constant(2), tf.nn.l2_loss(W)))
+            return tf.sqrt(tf.scalar_mul(tf.constant(2.0), tf.nn.l2_loss(W)))
         else:
-            return 0
+            return 0.0
+
 
 if __name__ == "__main__": main()

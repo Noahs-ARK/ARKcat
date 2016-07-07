@@ -6,6 +6,8 @@ import cnn_eval
 import sys
 import re
 
+#rename: cnn_obj, cnn_run, cnn_methods???
+
 #figure out where this goes
 #takes a line of text, returns an array of strings where ecah string is a word
 def tokenize(line):
@@ -199,7 +201,8 @@ def main(params, train_x, train_y, val_X, val_Y, key_array):
         sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
                           intra_op_parallelism_threads=1, use_per_session_threads=True))
         sess.run(tf.initialize_all_variables())
-        best_dev_accuracy = cnn_eval.evaluate(cnn, val_X, val_Y, params, sess, cross_entropy=True)
+        checkpoint = saver.save(sess, 'text_cnn_run_eval')
+        best_dev_accuracy = cnn_eval.float_entropy(checkpoint, val_X, val_Y, key_array, params)
         print cnn.input_x
         for i in range(params['EPOCHS']):
             params['epoch'] = i + 1
@@ -211,8 +214,8 @@ def main(params, train_x, train_y, val_X, val_Y, key_array):
                 #apply l2 clipping to weights and biases
                 if params['REGULARIZER'] == 'l2_clip':
                     cnn.clip_vars(params)
-            dev_accuracy = cnn_eval.evaluate(cnn, val_X, val_Y, params, sess, cross_entropy=True)
-            if dev_accuracy < best_dev_accuracy:
+            dev_accuracy = cnn_eval.float_entropy(checkpoint, val_X, val_Y, key_array, params)
+            if dev_accuracy > best_dev_accuracy:
                 #!!!
                 checkpoint = saver.save(sess, 'text_cnn_run' + '!!!', global_step = params['epoch'])
                 best_dev_accuracy = dev_accuracy

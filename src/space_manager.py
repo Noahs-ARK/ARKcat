@@ -39,19 +39,19 @@ def get_xgboost_model(model_num):
 def get_cnn_model(model_num):
     hyperparams = {
             # choose btwn rand, word2vec--implement glove
-            'word_vectors_' + model_num: hp.choice('word_vectors_' + model_num,[
-                ('word2vec', hp.choice('word2vec_update_' + model_num, [True, False])),
-                ('rand', hp.choice('rand_update_' + model_num, [True, False]))
-            ]),
+            # 'word_vectors_' + model_num: hp.choice('word_vectors_' + model_num,[
+            #     ('word2vec', hp.choice('word2vec_update_' + model_num, [True, False])),
+            #     ('rand', hp.choice('rand_update_' + model_num, [True, False]))
+            # ]),
             'model_' + model_num: 'CNN',
-            # 'word_vector_init_' + model_num: hp.choice('word_vector_init_' + model_num, [True, False]),
+            'word_vector_update_' + model_num: hp.choice('word_vector_update_' + model_num, [True, False]),
             'delta_' + model_num: hp.choice('delta_' + model_num, [True, False]),
             'flex_' + model_num: hp.quniform('flex_' + model_num, 0, 15, 1),
             'filters_' + model_num: hp.quniform('filters_' + model_num, 100, 600,1),
             'num_kernels_' + model_num: hp.quniform('num_kernels_' + model_num, 1, 5, 1),
-            'kernel_size_1_' + model_num: hp.quniform('kernel_size_1_' + model_num, 1, 10, 1),
-            'kernel_size_2_' + model_num: hp.quniform('kernel_size_2_' + model_num, 1, 10, 1),
-            'kernel_size_3_' + model_num: hp.quniform('kernel_size_3_' + model_num, 1, 10, 1),
+            'kernel_size_1_' + model_num: hp.quniform('kernel_size_1_' + model_num, 1, 30, 1),
+            'kernel_size_2_' + model_num: hp.quniform('kernel_size_2_' + model_num, 1, 30, 1),
+            'kernel_size_3_' + model_num: hp.quniform('kernel_size_3_' + model_num, 1, 30, 1),
             'dropout_' + model_num: hp.uniform('dropout_' + model_num, 0, 1),
             'batch_size_' + model_num: hp.quniform('batch_size_' + model_num, 10, 200, 1),
             # iden, relu, and tanh

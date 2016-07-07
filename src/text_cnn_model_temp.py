@@ -3,10 +3,14 @@ import tensorflow as tf
 from text_cnn_methods_temp import *
 
 class CNN:
-    def __init__(self, params, key_array):
-
-        self.input_x = tf.placeholder(tf.int32, [params['BATCH_SIZE'], None], name='input_x')
-        self.input_y = tf.placeholder(tf.float32, [params['BATCH_SIZE'], params['CLASSES']], name='input_y')
+    def __init__(self, params, key_array, batch_size = None):
+        if batch_size == None:
+            batch_size = params['BATCH_SIZE']
+        print params
+        print 'batch_size', batch_size, type(batch_size)
+        print params['CLASSES'], type(params['CLASSES'])
+        self.input_x = tf.placeholder(tf.int32, [batch_size, None], name='input_x')
+        self.input_y = tf.placeholder(tf.float32, [batch_size, params['CLASSES']], name='input_y')
         self.dropout = tf.placeholder(tf.float32, name='dropout')
 
         word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32),
@@ -46,7 +50,7 @@ class CNN:
             biases.append(b)
         self.h_pool = tf.concat(3, slices)
         self.h_pool_drop = tf.nn.dropout(self.h_pool, self.dropout)
-        self.h_pool_flat = tf.reshape(self.h_pool_drop, [params['BATCH_SIZE'], -1])
+        self.h_pool_flat = tf.reshape(self.h_pool_drop, [batch_size, -1])
         #fully connected softmax layer
         W_fc = weight_variable([len(params['KERNEL_SIZES']) * params['FILTERS'],
                                 params['CLASSES']])
@@ -78,14 +82,6 @@ class CNN:
     #         self.embeddings = tf.Variable(tf.convert_to_tensor(embeddings_array,
     #                                       dtype = tf.float32),
     #                                       trainable = params['UPDATE_WORD_VECS'])
-
-    def custom_loss(W, params):
-        if params['REGULARIZER'] == 'l1':
-            return tf.sqrt(tf.reduce_sum(tf.abs(W)))
-        elif params['REGULARIZER'] == 'l2':
-            return tf.sqrt(tf.scalar_mul(tf.constant(2.0), tf.nn.l2_loss(W)))
-        else:
-            return 0.0
 
     #needs debug
     def clip_vars(self, params):
