@@ -18,7 +18,6 @@ output_dir = None
 log_filename = None
 
 def call_experiment(args):
-    print 'debug'
     global trial_num
     trial_num = trial_num + 1
 
@@ -71,8 +70,11 @@ def wrangle_params(args, model_num):
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_xgb_' + model_num][1]
         kwargs['num_round'] = int(args['model_' + model_num]['num_round_' + model_num])
     elif model == 'CNN':
-        kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
-        kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
+        #???
+        kwargs['model_num'] = model_num
+        # kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
+        # kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
+        kwargs['word_vector_update'] = args['model_' + model_num]['word_vector_update_' + model_num]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
         kwargs['flex'] = int(args['model_' + model_num]['flex_' + model_num])
         kwargs['kernel_size_1'] = int(args['model_' + model_num]['kernel_size_1_' + model_num])

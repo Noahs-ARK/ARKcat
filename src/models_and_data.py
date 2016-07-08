@@ -21,13 +21,13 @@ class Data_and_Model_Manager:
         self.num_labels = 0
 
 
-    def init_model(self, params, n_labels):
+    def init_model(self, params, n_labels, index_to_word = None):
         if params['model_type'] == 'LR':
             return Model_LR(params, n_labels)
         elif params['model_type'] == 'XGBoost':
             return Model_XGB(params, n_labels)
         elif params['model_type'] == 'CNN':
-            return Model_CNN(params, n_labels)
+            return Model_CNN(params, n_labels, index_to_word)
         else:
             raise TypeError("you're trying to train this kind of model (which isn't implemented):" +
                             self.hp['model_type'])
@@ -63,7 +63,9 @@ class Data_and_Model_Manager:
             self.train[0].extend(self.dev[0])
             self.train[1].extend(self.dev[1])
 
+            #PROBLEM: SELF.TRAIN NOT INITIIAL
             if num_folds < 5:
+                print 'debug#', self.train, num_folds
                 folds = StratifiedKFold(self.train[1], 5, shuffle=True)
             else:
                 folds = StratifiedKFold(self.train[1], num_folds, shuffle=True)
@@ -78,12 +80,7 @@ class Data_and_Model_Manager:
 
                 avg_dev_acc = avg_dev_acc + self.predict_acc(cur_dev_X, cur_dev_Y)/num_folds
             return {'train_acc':self.train_models(self.train[0], self.train[1]), 'dev_acc':avg_dev_acc}
-
-
-
-
-
-
+    #eval wont work until I get test_X in correct format
     def train_models(self, train_X_raw, train_Y_raw):
         if len(train_X_raw) == 0:
             raise IOError("problem! the training set is empty.")
@@ -95,9 +92,9 @@ class Data_and_Model_Manager:
             #Shouldn't have vectorizer initialized in two braches of this if statement
             #should have the bayes opt know not to use n-grams for cnn
             if feat_and_param['params']['model_type'] == 'CNN':
-                
-                feats_and_param['feats']['ngram_range'] = (1,1)
-                feats_and_param['feats']['binary'] = False
+
+                feat_and_param['feats']['ngram_range'] = (1,1)
+                feat_and_param['feats']['binary'] = False
                 vectorizer = TfidfVectorizer(**feat_and_param['feats'])
                 vectorizer.fit(train_X_raw)
                 tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)
@@ -105,8 +102,8 @@ class Data_and_Model_Manager:
                 print("size of tokenized: ", len(train_X_raw_tokenized))
                 train_X = []
                 for example in train_X_raw_tokenized:
-                    for word in example:
-                        word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", string)
+                    for i in range(len(example)):
+                        example[i] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", example[i])
                     train_X.append([vectorizer.transform(example)])
 
                 index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
