@@ -10,14 +10,10 @@ def batch(input_list, output_list, params, embed_keys):
     all_x, all_y = [], []
     if params['BATCH_SIZE'] == 1:
         while len(output_list) > 0:
-            # print 'remaining lengeth', len(output_list)
-            # print 'batches', len(all_y)
-            # print input_list[0]
             all_x.append(np.expand_dims(sub_indices_one(input_list[0], embed_keys), axis = 0))
             all_y.append(np.reshape(np.asarray(output_list[0]), (1, 2)))
             input_list = input_list[1:]
             output_list = output_list[1:]
-        # print 'consecutive ex', all_x[1], all_x[2]
         return all_x, all_y, False, 0
     while len(output_list) >= params['BATCH_SIZE']:
         # print 'start'

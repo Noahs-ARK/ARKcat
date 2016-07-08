@@ -59,10 +59,10 @@ def get_cnn_model(model_num):
             #none, clipped, or penalized
             'regularizer_cnn_' + model_num: hp.choice('regularizer_cnn_' + model_num, [
                 (None, 0.0),
-                ('l1', hp.loguniform('l1_strength_cnn_' + model_num, -5.0,5.0)),
-                ('l2', hp.loguniform('l2_strength_cnn_' + model_num, -5.0,5.0))
+                ('l1', hp.loguniform('l1_strength_cnn_' + model_num, 0,100)),
+                ('l2', hp.loguniform('l2_strength_cnn_' + model_num, 0,100))
             ]),
-            'learning_rate_' + model_num: .005 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 100)
+            'learning_rate_' + model_num: .0025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 100)
         }
     # doesn't work yet :(
     # print hyperparams['num_kernels_' + model_num]

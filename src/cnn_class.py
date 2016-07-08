@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from text_cnn_methods_temp import *
+from cnn_methods import *
 
 class CNN:
     def __init__(self, params, key_array, batch_size = None):

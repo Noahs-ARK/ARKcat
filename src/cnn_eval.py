@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
-from text_cnn_methods_temp import *
-from text_cnn_model_temp import *
+from cnn_methods import *
+from cnn_class import *
 import sys, os
 
 #examples are going to be scrambled
@@ -21,15 +21,10 @@ def test_batch(test_X, params, embed_keys):
     return all_x
 
 def float_entropy(checkpoint, val_x, val_y, key_array, params):
-    pred = evaluate(checkpoint, val_x, val_y, key_array, params, cross_entropy=True)
+    pred = evaluate(checkpoint, val_x, val_y, key_array, params, 'cross_entropy')
     return np.mean(pred)
 
-#change 'accuracy'
-def evaluate(checkpoint, val_x, val_y, key_array, params, cross_entropy, reinit_word_embeddings=False):
-        print 'val sets', type(val_x), type(val_y)
-        print 'val 1', type(val_x[0]), val_x[0], val_x[0].shape
-        #cnn.input_x = tf.placeholder(tf.int32, [2, None], name='input_x')
-        #cnn.input_y = tf.placeholder(tf.float32, [2, params['CLASSES']], name='input_y')
+def evaluate(checkpoint, val_x, val_y, key_array, params, measure):
         with tf.Graph().as_default():
             cnn = CNN(params, key_array, batch_size=1)
             saver = tf.train.Saver(tf.all_variables())
@@ -37,32 +32,25 @@ def evaluate(checkpoint, val_x, val_y, key_array, params, cross_entropy, reinit_
                                           intra_op_parallelism_threads=3,
                                           use_per_session_threads=True))
             saver.restore(sess, checkpoint)
-            if reinit_word_embeddings:
-                cnn.reinit_word_embeddings(val_x, params, sess)
-            if cross_entropy:
-                measure = cnn.cross_entropy
+            if measure == 'cross_entropy':
+                evaluation = cnn.cross_entropy
+            elif measure == 'predict':
+                evaluation = cnn.predictions
             else:
-                measure = cnn.correct_prediction
+                evaluation == cnn.scores
             pred = []
             while len(val_x) > 0:
                 feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis = 0),
                              cnn.input_y: np.expand_dims(val_y[0], axis = 0),
                              cnn.dropout: 1.0}
-                pred.append(measure.eval(feed_dict=feed_dict, session = sess))
+                pred.append(evaluation.eval(feed_dict=feed_dict, session = sess))
                 val_x = val_x[1:]
                 val_y = val_y[1:]
             return np.asarray(pred)
 
-def main(checkpoint, params, test_bundle, key_array, prob):
-    with tf.Graph().as_default():
-        cnn = CNN(params, key_array)
-        saver = tf.train.Saver(tf.all_variables())
-        sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=2,
-                                  intra_op_parallelism_threads=3,
-                                  use_per_session_threads=True))
-        saver.restore(sess, checkpoint)
-        cnn.reinit_word_embeddings(new_key_array, params, sess)
-        return evaluate(cnn, test_bundle, params, sess, cross_entropy = prob)
+def main(checkpoint, params, test_X, key_array, measure):
+    test_Y_filler = [np.zeros(params['CLASSES'])] * test_X.shape[0]
+    return evaluate(checkpoint, test_X, test_Y_filler, key_array, params, measure)
 
 if __name__ == "__main__":
-    main(checkpoint, params, test_bundle, key_array)
+    main(checkpoint, params, test_X, key_array, measure)

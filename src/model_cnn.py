@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import cnn_train
-import text_cnn_methods_temp
+from cnn_methods import *
 import os,sys
 import scipy
 
@@ -15,8 +15,10 @@ class Model_CNN:
     def train(self, train_X, train_Y):
 
         self.params = {
+                'model_num' : self.hp['model_num'],
                 'FLEX' : self.hp['flex'],
-                'FILTERS' : self.hp['filters'],
+                #'FILTERS' : self.hp['filters'],
+                'FILTERS' : 10,
                 'ACTIVATION_FN' : self.hp['activation_fn'],
                 'REGULARIZER' : self.hp['regularizer'],
                 'REG_STRENGTH' : self.hp['reg_strength'],
@@ -27,38 +29,34 @@ class Model_CNN:
                 #not implemented
                 #'USE_WORD2VEC' : self.hp['use_word2vec'],
                 'USE_WORD2VEC' : False,
-                'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
-                'USE_DELTA' : self.hp['delta'],
+                #'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
+                'UPDATE_WORD_VECS' : False,
+                'USE_DELTA' : False,
+                'KERNEL_SIZES' : [self.hp['kernel_size_1'],
+                                  self.hp['kernel_size_2'],
+                                  self.hp['kernel_size_3']],
+                #'USE_DELTA' : self.hp['delta'],
 
                 'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
                 'EPOCHS' : 15,
                 #set by program-do not change!
                 'epoch' : 1,
-                'l2-loss' : tf.constant(0),
-                'KERNEL_SIZES' : [self.hp['kernel_size_1'],
-                                  self.hp['kernel_size_2'],
-                                  self.hp['kernel_size_3']]
+                'l2-loss' : tf.constant(0)
         }
         if self.hp['word_vector_update'] == 0:
             self.params['UPDATE_WORD_VECS'] = False
-        self.key_array = cnn_train.dict_to_array(self.indices_to_words, self.params)
-        train_X, self.params['MAX_LENGTH'] = cnn_train.to_dense(train_X)
-        train_Y = cnn_train.one_hot(train_Y, self.params['CLASSES'])
-        val_split = len(train_X)/10
-        val_X = train_X[val_split:]
-        val_Y = train_Y[val_split:]
-        train_X = train_X[:val_split]
-        train_Y = train_Y[:val_split]
-        self.model = cnn_train.main(self.params, train_X, train_Y, val_X, val_Y, self.key_array)
+        self.key_array, self.vocab = dict_to_array(self.indices_to_words, self.params)
+        train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
+        train_Y = one_hot(train_Y, self.params['CLASSES'])
+        self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array)
 
     #one-hot array
-    def predict(self, test_X, prob = False):
-        test_bundle, self.vocab, self.embed_keys, new_key_array = cnn_eval.get_test_data(test_X, self.vocab, self.embed_keys, self.key_array, self.params)
-        self.key_array = np.concat((key_array, new_key_array))
-        return cnn_eval(self.model, self.params, test_bundle, new_key_array,
-                        prob = prob)
+    def predict(self, test_X, measure = 'predict'):
+        test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
+        return cnn_eval.main(self.model, self.params, test_X, self.key_array,
+                        measure)
 
     #softmax array
     def predict_prob(self, test_X):
-        return predict(test_X, prob = True)
+        return self.predict(test_X, measure = 'scores')
