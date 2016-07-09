@@ -7,13 +7,15 @@ import Queue
 import os
 import sys
 
-def eval_best_model(models):
+def eval_best_model_of_iter_i(models, max_iter, print_k_models_per_iter):
     ordered_models = Queue.PriorityQueue()
     test_evals = []
     dev_evals = []
     
     model_counter = 0
     for model in models:
+        if model[0] > max_iter:
+            continue
         sys.stdout.write('evaluating model ' + str(model_counter) + '...')
         acc = model[2]['model'].predict_acc_from_file(test_data, test_labels)
         test_evals.append(round(acc,5))
@@ -23,12 +25,6 @@ def eval_best_model(models):
         model_counter = model_counter + 1
         
 
-    print("dev accuracy on all models: ")
-    print(dev_evals)
-    print("test accuracy on all models: ")
-    print(test_evals)
-    print('\n\n')
-    print("best models:")
     best_dev_acc = -1
     
 
@@ -38,7 +34,7 @@ def eval_best_model(models):
         test_acc = -test_acc
         if best_dev_acc == -1:
             best_dev_acc = dev_acc
-        if dev_acc < best_dev_acc and i > 5:
+        if dev_acc < best_dev_acc and i > print_k_models_per_iter:
             break
         
         print('test acc: ' + str(test_acc))
@@ -47,6 +43,15 @@ def eval_best_model(models):
         print(model['model'].feats_and_params)
         print('')
 
+def eval_best_model(models):
+    print_k_models_per_iter = 1
+    for i in range(len(models)):
+        i = i + 1
+        print("best models for iteration " + str(i) + ":")
+        eval_best_model_of_iter_i(models, i, print_k_models_per_iter)
+        print("")
+        print("")
+        
     
 def set_globals(args):
     if len(args) < 3:

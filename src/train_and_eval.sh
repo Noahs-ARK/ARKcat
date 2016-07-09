@@ -12,7 +12,7 @@ SAVE_LOC=$5
 NUM_FOLDS=$6
 
 #this command isnt executing correctly
-# rm -rf $SAVE_LOC
+rm -rf $SAVE_LOC
 echo "making the dir to save output..."
 mkdir -p $SAVE_LOC
 echo $1
@@ -24,7 +24,7 @@ echo `pwd`
 echo "about to run.py"
 python run.py $DATASET/ $SAVE_LOC $NUM_MODELS $MODEL_TYPE -m $NUM_ITERS $NUM_FOLDS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
 echo "done with run.py. now going to eval.py"
-# python eval.py $SAVE_LOC/saved_models/ $DATASET/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
+python eval.py $SAVE_LOC/saved_models/ $DATASET/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
 # echo "done with eval.py"
 
 #because i'm running out of space lol
