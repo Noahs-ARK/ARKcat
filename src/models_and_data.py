@@ -65,7 +65,6 @@ class Data_and_Model_Manager:
 
             #PROBLEM: SELF.TRAIN NOT INITIIAL
             if num_folds < 5:
-                print 'debug#', self.train, num_folds
                 folds = StratifiedKFold(self.train[1], 5, shuffle=True)
             else:
                 folds = StratifiedKFold(self.train[1], num_folds, shuffle=True)
