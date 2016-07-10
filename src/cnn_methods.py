@@ -136,17 +136,17 @@ def pad_one(list_of_word_vecs, max_length, params):
         right += 1
     return np.asarray(([0] * left) + list_of_word_vecs.tolist() + ([0] * right))
 
-def to_dense(input_X, replace = None):
+def to_dense(input_X):
     max_length = 0
     for i in range(len(input_X)):
+        print len(input_X), input_X[i]
+        if input_X[i]
         input_X[i] = input_X[i][0].nonzero()[1]
         input_X[i] = input_X[i].tolist()
         for word in input_X[i]:
-            if replace is not None:
-                word = replace[word]
             word += 1
-        max_length = max(max_length, len(input_X[i]))
-        input_X[i] = np.asarray(input_X[i])
+        max_length = max(max_length, len(train_X[i]))
+        input_X[i] = np.asarray(train_X[i])
     return input_X, max_length
 
 def custom_loss(W, params):
@@ -173,29 +173,11 @@ def init_word_vecs(key_array, vocab, params):
                 key_array[vocab.index(line[0])] = vector
     return key_array
 
-def update_vocab(key_array, vocab, indices_to_words, params):
-    map_test_vocab = {}
-    new_vocab = []
-    words_to_indices = {process(v): k for k, v in indices_to_words.items()}
-    for word in words_to_indices.iterkeys():
-        if word in vocab:
-            map_test_vocab[words_to_indices[word]] = vocab.find(word)
-        else:
-            new_vocab.append(words_to_indices[word])
-            map_test_vocab[words_to_indices[word]] = len(new_vocab) + len(vocab)
-    print map_test_vocab
-    for word in new_vocab:
-        new_key_array = dict_to_array(new_vocab, params)
-    return np.concatenate(key_array, new_key_array), map_test_vocab, vocab.extend(new_vocab)
-
-def process(vocab):
-    result = []
-    for word in vocab:
+def dict_to_array(d, params):
+    vocab = []
+    for word in d.itervalues():
         word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
-        result.append(str(word))
-    return result
-
-def dict_to_array(vocab, params):
+        vocab.append(str(word))
     key_array = [[] for item in range(len(vocab))]
     #DEBUG: add filepath in user input
     if params['USE_WORD2VEC']:
@@ -204,7 +186,7 @@ def dict_to_array(vocab, params):
         if key_array[i] == []:
             key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
     key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
-    return np.asarray(key_array)
+    return np.asarray(key_array), vocab
 
 def separate_train_and_val(train_X, train_Y):
     shuffle_in_unison(train_X, train_Y)

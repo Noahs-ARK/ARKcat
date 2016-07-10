@@ -10,17 +10,14 @@ class CNN:
         self.input_y = tf.placeholder(tf.float32, [batch_size, params['CLASSES']], name='input_y')
         self.dropout = tf.placeholder(tf.float32, name='dropout')
 
-        self.word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32),
+        word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32),
                                       trainable = params['UPDATE_WORD_VECS'])
         if params['USE_DELTA']:
-            self.W_delta = tf.Variable(tf.ones([key_array.shape[0]]), dtype = tf.float32)
-            delta_reshaped = tf.expand_dims(self.W_delta, 1)
-            delta_reshaped = tf.concat(1, [delta_reshaped] * params['WORD_VECTOR_LENGTH'])
-            weighted_word_embeddings = tf.mul(self.word_embeddings, delta_reshaped)
+            W_delta = tf.Variable(tf.ones, key_array.shape[0])
+            weighted_word_embeddings = tf.matmul(word_embeddings, W_delta)
             embedding_output = tf.nn.embedding_lookup(weighted_word_embeddings, self.input_x)
         else:
-            embedding_output = tf.nn.embedding_lookup(self.word_embeddings, self.input_x)
-        print tf.shape(embedding_output)
+            embedding_output = tf.nn.embedding_lookup(word_embeddings, self.input_x)
         embedding_output = tf.expand_dims(embedding_output, 2)
         #init lists for convolutional layer
         slices = []
@@ -65,9 +62,9 @@ class CNN:
                                            tf.argmax(self.input_y, 1))
         self.reg_loss = tf.constant(0.0)
         if params['UPDATE_WORD_VECS']:
-            self.reg_loss += custom_loss(self.word_embeddings, params)
+            self.reg_loss += custom_loss(word_embeddings, params)
         if params['USE_DELTA']:
-            self.reg_loss += custom_loss(self.W_delta, params)
+            self.reg_loss += custom_loss(W_delta, params)
         for W in weights:
             self.reg_loss += custom_loss(W, params)
         for b in biases:

@@ -24,39 +24,29 @@ def float_entropy(checkpoint, val_x, val_y, key_array, params):
     pred = evaluate(checkpoint, val_x, val_y, key_array, params, 'cross_entropy')
     return np.mean(pred)
 
-def evaluate(checkpoint, val_x, val_y, key_array, params, measure, delta = None):
+def evaluate(checkpoint, val_x, val_y, key_array, params, measure):
         with tf.Graph().as_default():
-            print key_array[1:5]
             cnn = CNN(params, key_array, batch_size=1)
-            if delta is not None:
-                print delta[1:5]
-                cnn.W_delta = tf.Variable(tf.convert_to_tensor(delta))
             saver = tf.train.Saver(tf.all_variables())
             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=2,
                                           intra_op_parallelism_threads=3,
                                           use_per_session_threads=True))
-            with sess.as_default():
-                saver.restore(sess, checkpoint)
-                if measure == 'cross_entropy':
-                    evaluation = cnn.cross_entropy
-                elif measure == 'predict':
-                    evaluation = cnn.predictions
-                else:
-                    evaluation == cnn.scores
-                pred = []
-                while len(val_x) > 0:
-                    feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis = 0),
-                                 cnn.input_y: np.expand_dims(val_y[0], axis = 0),
-                                 cnn.dropout: 1.0}
-                    pred.append(evaluation.eval(feed_dict=feed_dict, session = sess))
-                    val_x = val_x[1:]
-                    val_y = val_y[1:]
-                print 'word embeddings'
-                print cnn.word_embeddings.eval()[1:5]
-                if params['USE_DELTA']:
-                    print 'tf delta'
-                    print cnn.W_delta.eval()[1:5]
-                return np.asarray(pred)
+            saver.restore(sess, checkpoint)
+            if measure == 'cross_entropy':
+                evaluation = cnn.cross_entropy
+            elif measure == 'predict':
+                evaluation = cnn.predictions
+            else:
+                evaluation == cnn.scores
+            pred = []
+            while len(val_x) > 0:
+                feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis = 0),
+                             cnn.input_y: np.expand_dims(val_y[0], axis = 0),
+                             cnn.dropout: 1.0}
+                pred.append(evaluation.eval(feed_dict=feed_dict, session = sess))
+                val_x = val_x[1:]
+                val_y = val_y[1:]
+            return np.asarray(pred)
 
 def main(checkpoint, params, test_X, key_array, measure):
     test_Y_filler = [np.zeros(params['CLASSES'])] * test_X.shape[0]
