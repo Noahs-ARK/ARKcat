@@ -63,7 +63,7 @@ class CNN:
         self.reg_loss = tf.constant(0.0)
         if params['UPDATE_WORD_VECS']:
             self.reg_loss += custom_loss(word_embeddings, params)
-        if params['USE_DELTA']:
+        if params['USE_DELTA']: 
             self.reg_loss += custom_loss(W_delta, params)
         for W in weights:
             self.reg_loss += custom_loss(W, params)

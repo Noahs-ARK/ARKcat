@@ -1,3 +1,4 @@
+#publish code as scikit module
 import numpy as np
 import tensorflow as tf
 from cnn_methods import *
@@ -22,7 +23,7 @@ def test_batch(test_X, params, embed_keys):
 
 def float_entropy(checkpoint, val_x, val_y, key_array, params):
     pred = evaluate(checkpoint, val_x, val_y, key_array, params, 'cross_entropy')
-    return np.mean(pred)
+    return np.mean(np.asarray(pred))
 
 def evaluate(checkpoint, val_x, val_y, key_array, params, measure):
         with tf.Graph().as_default():
@@ -37,7 +38,7 @@ def evaluate(checkpoint, val_x, val_y, key_array, params, measure):
             elif measure == 'predict':
                 evaluation = cnn.predictions
             else:
-                evaluation == cnn.scores
+                evaluation = cnn.scores
             pred = []
             while len(val_x) > 0:
                 feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis = 0),
@@ -46,11 +47,13 @@ def evaluate(checkpoint, val_x, val_y, key_array, params, measure):
                 pred.append(evaluation.eval(feed_dict=feed_dict, session = sess))
                 val_x = val_x[1:]
                 val_y = val_y[1:]
-            return np.asarray(pred)
+            return pred
 
 def main(checkpoint, params, test_X, key_array, measure):
     test_Y_filler = [np.zeros(params['CLASSES'])] * test_X.shape[0]
-    return evaluate(checkpoint, test_X, test_Y_filler, key_array, params, measure)
+    pred = evaluate(checkpoint, test_X, test_Y_filler, key_array, params, measure=measure)
+    print 'pred0', pred[0]
+    return pred
 
 if __name__ == "__main__":
     main(checkpoint, params, test_X, key_array, measure)
