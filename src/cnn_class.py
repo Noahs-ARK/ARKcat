@@ -11,9 +11,9 @@ class CNN:
         self.dropout = tf.placeholder(tf.float32, name='dropout')
 
         word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32),
-                                      trainable = params['UPDATE_WORD_VECS'])
+                                      trainable = params['UPDATE_WORD_VECS'], name='word_embeddings')
         if params['USE_DELTA']:
-            W_delta = tf.Variable(tf.ones, key_array.shape[0])
+            W_delta = tf.Variable(tf.ones, key_array.shape[0], name='W_delta')
             weighted_word_embeddings = tf.matmul(word_embeddings, W_delta)
             embedding_output = tf.nn.embedding_lookup(weighted_word_embeddings, self.input_x)
         else:
@@ -41,7 +41,7 @@ class CNN:
             #max pool; each neuron sees 1 filter and returns max over a sentence
 
             pooled = tf.nn.max_pool(activ, ksize=[1, params['MAX_LENGTH'], 1, 1],
-                strides=[1, params['MAX_LENGTH'], 1, 1], padding='SAME')
+                strides=[1, params['MAX_LENGTH'], 1, 1], padding='SAME', name='max_pool')
             slices.append(pooled)
             weights.append(W)
             biases.append(b)
@@ -63,7 +63,7 @@ class CNN:
         self.reg_loss = tf.constant(0.0)
         if params['UPDATE_WORD_VECS']:
             self.reg_loss += custom_loss(word_embeddings, params)
-        if params['USE_DELTA']: 
+        if params['USE_DELTA']:
             self.reg_loss += custom_loss(W_delta, params)
         for W in weights:
             self.reg_loss += custom_loss(W, params)

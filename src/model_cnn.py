@@ -15,12 +15,12 @@ class Model_CNN:
     #also need dev set--split off in here??
     def train(self, train_X, train_Y):
         print 'train_X type:', type(train_X[0][0])
-        
+
         self.params = {
                 'model_num' : self.hp['model_num'],
                 'FLEX' : self.hp['flex'],
                 'FILTERS' : self.hp['filters'],
-                'FILTERS' : 10,
+                'FILTERS' : 1,
                 'ACTIVATION_FN' : self.hp['activation_fn'],
                 'REGULARIZER' : self.hp['regularizer'],
                 'REG_STRENGTH' : self.hp['reg_strength'],
@@ -30,14 +30,14 @@ class Model_CNN:
                 'LEARNING_RATE' : self.hp['learning_rate'],
                 #not implemented
                 #'USE_WORD2VEC' : self.hp['use_word2vec'],
-                'USE_WORD2VEC' : True,
-                'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
-                #'UPDATE_WORD_VECS' : False,
-                #'USE_DELTA' : False,
+                'USE_WORD2VEC' : False,
+                #'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
+                'UPDATE_WORD_VECS' : False,
+                'USE_DELTA' : False,
                 'KERNEL_SIZES' : [self.hp['kernel_size_1'],
                                   self.hp['kernel_size_2'],
                                   self.hp['kernel_size_3']],
-                'USE_DELTA' : self.hp['delta'],
+                #'USE_DELTA' : self.hp['delta'],
 
                 'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
@@ -46,8 +46,8 @@ class Model_CNN:
                 'epoch' : 1,
                 'l2-loss' : tf.constant(0)
         }
-        if self.hp['word_vector_update'] == 0:
-            self.params['UPDATE_WORD_VECS'] = False
+        for kernel_size in params['KERNEL_SIZES']:
+            kernel_size = weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']])
         self.key_array, self.vocab = dict_to_array(self.indices_to_words, self.params)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
@@ -56,8 +56,7 @@ class Model_CNN:
     #one-hot array
     def predict(self, test_X, measure = 'predict'):
         print 'test_X type:', type(test_X[0])
-        test_X = np.asarray(test_X)
-        self.params['MAX_LENGTH'] = get_max_length(test_X)
+        test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
         return cnn_eval.main(self.model, self.params, test_X, self.key_array,
                         measure)
 

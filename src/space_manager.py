@@ -48,7 +48,7 @@ def get_cnn_model(model_num):
             'delta_' + model_num: hp.choice('delta_' + model_num, [True, False]),
             'flex_' + model_num: hp.quniform('flex_' + model_num, 0, 15, 1),
             'filters_' + model_num: hp.quniform('filters_' + model_num, 100, 600,1),
-            'num_kernels_' + model_num: hp.quniform('num_kernels_' + model_num, 1, 5, 1),
+            #'num_kernels_' + model_num: hp.quniform('num_kernels_' + model_num, 1, 5, 1),
             'kernel_size_1_' + model_num: hp.quniform('kernel_size_1_' + model_num, 1, 30, 1),
             'kernel_size_2_' + model_num: hp.quniform('kernel_size_2_' + model_num, 1, 30, 1),
             'kernel_size_3_' + model_num: hp.quniform('kernel_size_3_' + model_num, 1, 30, 1),

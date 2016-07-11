@@ -50,7 +50,7 @@ def evaluate(checkpoint, val_x, val_y, key_array, params, measure):
             return pred
 
 def main(checkpoint, params, test_X, key_array, measure):
-    test_Y_filler = [np.zeros(params['CLASSES'])] * test_X.shape[0]
+    test_Y_filler = [np.zeros(params['CLASSES'])] * len(test_X)
     pred = evaluate(checkpoint, test_X, test_Y_filler, key_array, params, measure=measure)
     print 'pred0', pred[0]
     return pred

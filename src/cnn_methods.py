@@ -144,14 +144,15 @@ def pad_one(list_of_word_vecs, max_length, params):
 
 def to_dense(input_X):
     max_length = 0
-    for i in range(len(input_X)):
-        input_X[i] = input_X[i][0].nonzero()[1]
-        input_X[i] = input_X[i].tolist()
-        for word in input_X[i]:
+    dense = []
+    for example in input_X:
+        example_transform = example[0].nonzero()[1]
+        example_transform = example_transform.tolist()
+        for word in example_transform:
             word += 1
-        max_length = max(max_length, len(input_X[i]))
-        input_X[i] = np.asarray(input_X[i])
-    return input_X, max_length
+        max_length = max(max_length, len(example_transform))
+        dense.append(np.asarray(example_transform))
+    return dense, max_length
 
 def custom_loss(W, params):
         if params['REGULARIZER'] == 'l1':
