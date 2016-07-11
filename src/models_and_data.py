@@ -11,7 +11,8 @@ import re
 
 
 class Data_and_Model_Manager:
-    def __init__(self, f_and_p):
+    def __init__(self, f_and_p, model_dir):
+        self.model_dir = model_dir
         self.feats_and_params = f_and_p
         self.trained_models = {}
         self.vectorizers = {}
@@ -27,7 +28,7 @@ class Data_and_Model_Manager:
         elif params['model_type'] == 'XGBoost':
             return Model_XGB(params, n_labels)
         elif params['model_type'] == 'CNN':
-            return Model_CNN(params, n_labels, index_to_word)
+            return Model_CNN(params, n_labels, index_to_word, self.model_dir)
         else:
             raise TypeError("you're trying to train this kind of model (which isn't implemented):" +
                             self.hp['model_type'])

@@ -11,12 +11,6 @@ from hyperopt import fmin, tpe, hp, Trials, space_eval
 import classify_test
 import space_manager
 
-data_filename = None
-label_filename = None
-feature_dir = None
-output_dir = None
-log_filename = None
-
 def call_experiment(args):
     global trial_num
     trial_num = trial_num + 1
@@ -30,8 +24,8 @@ def call_experiment(args):
 
 
     result = classify_test.classify(train_data_filename, train_label_filename, dev_data_filename,
-                                    dev_label_filename, train_feature_dir, dev_feature_dir,
-                                    feats_and_args, folds=num_folds)
+                                    dev_label_filename, train_feature_dir, dev_feature_dir, 
+                                    model_dir, feats_and_args, folds=num_folds)
 
 
 
