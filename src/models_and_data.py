@@ -63,9 +63,7 @@ class Data_and_Model_Manager:
             self.train[0].extend(self.dev[0])
             self.train[1].extend(self.dev[1])
 
-            #PROBLEM: SELF.TRAIN NOT INITIIAL
             if num_folds < 5:
-                print 'debug#', self.train, num_folds
                 folds = StratifiedKFold(self.train[1], 5, shuffle=True)
             else:
                 folds = StratifiedKFold(self.train[1], num_folds, shuffle=True)
@@ -82,16 +80,16 @@ class Data_and_Model_Manager:
             return {'train_acc':self.train_models(self.train[0], self.train[1]), 'dev_acc':avg_dev_acc}
 
 
-    def transform_cnn_data(self, test_X_raw, feat_and_param):
+    def transform_cnn_data(self, X_raw, feat_and_param):
         feat_and_param['feats']['ngram_range'] = (1,1)
         feat_and_param['feats']['use_idf'] = False
         feat_and_param['feats']['binary'] = False
         vectorizer = TfidfVectorizer(**feat_and_param['feats'])
-        vectorizer.fit(train_X_raw)
+        vectorizer.fit(X_raw)
         tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)
-        train_X_raw_tokenized = [tokenizer(ex) for ex in train_X_raw]
+        X_raw_tokenized = [tokenizer(ex) for ex in X_raw]
         train_X = []
-        for example in train_X_raw_tokenized:
+        for example in X_raw_tokenized:
             for i in range(len(example)):
                 example[i] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", example[i])
             train_X.append([vectorizer.transform(example)])
@@ -99,8 +97,6 @@ class Data_and_Model_Manager:
         index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
         return train_X, index_to_word
 
-
-    #eval wont work until I get test_X in correct format
     def train_models(self, train_X_raw, train_Y_raw):
         if len(train_X_raw) == 0:
             raise IOError("problem! the training set is empty.")
@@ -109,7 +105,7 @@ class Data_and_Model_Manager:
         train_Y = self.convert_labels(train_Y_raw)
         for i, feat_and_param in self.feats_and_params.items():
             if feat_and_param['params']['model_type'] == 'CNN':
-                train_X, index_to_word = self.transform_cnn_data(self, train_X, feat_and_param)
+                train_X, index_to_word = self.transform_cnn_data(train_X_raw, feat_and_param)
                 vectorizer = None
             else:
                 vectorizer = TfidfVectorizer(**feat_and_param['feats'])
@@ -118,8 +114,6 @@ class Data_and_Model_Manager:
                 index_to_word = None
 
             cur_model = self.init_model(feat_and_param['params'], self.num_labels, index_to_word)
-
-
             cur_model.train(train_X, train_Y)
             self.trained_models[i] = cur_model
             self.vectorizers[i] = vectorizer

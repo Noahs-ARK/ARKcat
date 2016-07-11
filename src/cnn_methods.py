@@ -20,6 +20,12 @@ def get_max_length(list_of_examples):
         max_length = max(max_length, len(line))
     return max_length
 
+def get_max_numpy(list_of_examples):
+    max_length = 0
+    for line in list_of_examples:
+        max_length = max(max_length, line.shape[0])
+    return max_length
+
 #takes a line of text, returns an array of strings where ecah string is a word
 def tokenize(line):
    list_of_words = []
@@ -139,14 +145,12 @@ def pad_one(list_of_word_vecs, max_length, params):
 def to_dense(input_X):
     max_length = 0
     for i in range(len(input_X)):
-        print len(input_X), input_X[i]
-        if input_X[i]
         input_X[i] = input_X[i][0].nonzero()[1]
         input_X[i] = input_X[i].tolist()
         for word in input_X[i]:
             word += 1
-        max_length = max(max_length, len(train_X[i]))
-        input_X[i] = np.asarray(train_X[i])
+        max_length = max(max_length, len(input_X[i]))
+        input_X[i] = np.asarray(input_X[i])
     return input_X, max_length
 
 def custom_loss(W, params):
@@ -181,7 +185,7 @@ def dict_to_array(d, params):
     key_array = [[] for item in range(len(vocab))]
     #DEBUG: add filepath in user input
     if params['USE_WORD2VEC']:
-        key_array = init_word_vecs(vocab, key_array)
+        key_array = init_word_vecs(key_array, vocab, params)
     for i in range(len(key_array)):
         if key_array[i] == []:
             key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
