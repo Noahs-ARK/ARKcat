@@ -3,16 +3,17 @@ import sys, re
 import random, math
 import numpy as np
 import os.path
+from run import *
 
 #initializes weights, random with stddev of .1
-def weight_variable(shape):
+def weight_variable(shape, name):
   initial = tf.truncated_normal(shape, stddev=0.1)
-  return tf.Variable(initial)
+  return tf.Variable(initial, name=name)
 
 #initializes biases, all at .1
-def bias_variable(shape):
+def bias_variable(shape, name):
       initial = tf.zeros(shape=shape)
-      return tf.Variable(initial)
+      return tf.Variable(initial, name=name)
 
 def get_max_length(list_of_examples):
     max_length = 0
@@ -144,14 +145,15 @@ def pad_one(list_of_word_vecs, max_length, params):
 
 def to_dense(input_X):
     max_length = 0
-    for i in range(len(input_X)):
-        input_X[i] = input_X[i][0].nonzero()[1]
-        input_X[i] = input_X[i].tolist()
-        for word in input_X[i]:
+    dense = []
+    for example in input_X:
+        example_transform = example[0].nonzero()[1]
+        example_transform = example_transform.tolist()
+        for word in example_transform:
             word += 1
-        max_length = max(max_length, len(input_X[i]))
-        input_X[i] = np.asarray(input_X[i])
-    return input_X, max_length
+        max_length = max(max_length, len(example_transform))
+        dense.append(np.asarray(example_transform))
+    return dense, max_length
 
 def custom_loss(W, params):
         if params['REGULARIZER'] == 'l1':
@@ -196,5 +198,38 @@ def separate_train_and_val(train_X, train_Y):
     shuffle_in_unison(train_X, train_Y)
     val_split = len(train_X)/10
     return train_X[val_split:], train_Y[val_split:], train_X[:val_split], train_Y[:val_split]
+
+# def cnn_save_model()
+# #see run.save_model
+#     feature_list = result['model'].feats_and_params[0]['feats']
+#     model_hyperparams = result['model'].feats_and_params[0]['params']
+#     #STUPID FILENAMES TOO LONG
+#     short_name = {'model_type':'mdl', 'regularizer':'rg', 'converg_tol':'cvrg','alpha':'alpha',
+#                   'eta':'eta', 'gamma':'gamma', 'max_depth':'dpth', 'min_child_weight':'mn_wght',
+#                   'max_delta_step':'mx_stp', 'subsample':'smpl', 'reg_strength':'rg_str',
+#                   'num_round':'rnds', 'lambda':'lmbda', 'ngram_range':'ngrms', 'binary':'bnry',
+#                   'use_idf':'idf', 'stop_words':'st_wrd', 'word_vector_init' : 'wv_init',
+#                   'word_vector_update' : 'upd', 'delta': 'delta', 'flex': 'flex',
+#                   'kernel_size_1':'ks1', 'kernel_size_2' :'ks2', 'kernel_size_3': 'ks3',
+#                   'filters': 'fltrs', 'dropout': 'dropout', 'batch_size' : 'batch_size',
+#                   'activation_fn': 'actvn_fn', 'regularizer':'rg', 'reg_strength':'rg_str',
+#                   'learning_rate': 'learn_rt'}
+#
+#     # to save the model after each iteration
+#     feature_string = ''
+#     for feat, value in feature_list.items():
+#         feature_string = feature_string + short_name[feat] + '=' + str(value) + ';'
+#     for hparam in model_hyperparams:
+#         cur_hparam = None
+#         #DEBUGGING
+#         if hparam == 'folds':
+#             continue
+#         if isinstance(model_hyperparams[hparam], float):
+#             cur_hparam = str(round(model_hyperparams[hparam]*1000)/1000)
+#         else:
+#             cur_hparam = str(model_hyperparams[hparam])
+#         feature_string = feature_string + short_name[hparam] + '=' + cur_hparam + ';'
+#     feature_string = feature_string[:-1]
+
 
 if __name__ == "__main__": main()

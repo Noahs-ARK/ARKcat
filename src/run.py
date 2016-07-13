@@ -24,7 +24,7 @@ def call_experiment(args):
 
 
     result = classify_test.classify(train_data_filename, train_label_filename, dev_data_filename,
-                                    dev_label_filename, train_feature_dir, dev_feature_dir, 
+                                    dev_label_filename, train_feature_dir, dev_feature_dir,
                                     model_dir, feats_and_args, folds=num_folds)
 
 
@@ -82,8 +82,9 @@ def wrangle_params(args, model_num):
         kwargs['regularizer'] = args['model_' + model_num]['regularizer_cnn_' + model_num][0]
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_cnn_' + model_num][1]
         kwargs['learning_rate'] = args['model_' + model_num]['learning_rate_' + model_num]
+        # kwargs['kernel_sizes'] = []
         # for i in xrange(args['model_' + model_num]['num_kernels_' + model_num][0]):
-        #     kwargs['kernel_size_' + i] = args['model_' + model_num]['num_kernels_' + model_num][1]
+        #     kwargs['kernel_sizes'].append(args['model_' + model_num]['num_kernels_' + model_num][1])
 
 
     features = {}

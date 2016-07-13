@@ -48,7 +48,7 @@ def get_cnn_model(model_num):
             'delta_' + model_num: hp.choice('delta_' + model_num, [True, False]),
             'flex_' + model_num: hp.quniform('flex_' + model_num, 0, 15, 1),
             'filters_' + model_num: hp.quniform('filters_' + model_num, 100, 600,1),
-            'num_kernels_' + model_num: hp.quniform('num_kernels_' + model_num, 1, 5, 1),
+            # 'num_kernels_' + model_num: hp.quniform('num_kernels_' + model_num, 1, 5, 1),
             'kernel_size_1_' + model_num: hp.quniform('kernel_size_1_' + model_num, 1, 30, 1),
             'kernel_size_2_' + model_num: hp.quniform('kernel_size_2_' + model_num, 1, 30, 1),
             'kernel_size_3_' + model_num: hp.quniform('kernel_size_3_' + model_num, 1, 30, 1),
@@ -60,13 +60,14 @@ def get_cnn_model(model_num):
             'regularizer_cnn_' + model_num: hp.choice('regularizer_cnn_' + model_num, [
                 (None, 0.0),
                 ('l1', hp.loguniform('l1_strength_cnn_' + model_num, 0,100)),
-                ('l2', hp.loguniform('l2_strength_cnn_' + model_num, 0,100))
+                ('l2', hp.loguniform('l2_strength_cnn_' + model_num, 0,100)),
+                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, 2,6))
             ]),
-            'learning_rate_' + model_num: .0025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 100)
+            'learning_rate_' + model_num: .0025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 1000)
         }
     # doesn't work yet :(
     # print hyperparams['num_kernels_' + model_num]
-    # for i in xrange(hyperparams['num_kernels_' + model_num]):
+    # for i in xrange(int(hyperparams['num_kernels_' + model_num])):
     #     hyperparams['kernel_' + i + '_' + model_num] = hp.quniform('kernel_size_' + i + '_'
     #                                                    + model_num, 1, 10, 1)
     return hyperparams
