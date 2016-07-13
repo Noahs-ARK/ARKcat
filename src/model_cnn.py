@@ -7,15 +7,16 @@ import os,sys
 import scipy
 
 class Model_CNN:
-    def __init__(self, params, n_labels, indices_to_words):
+    def __init__(self, params, n_labels, indices_to_words, model_dir):
         self.hp = params
         self.num_labels = n_labels
         self.indices_to_words = indices_to_words
+        self.model_dir = model_dir
 
     #also need dev set--split off in here??
     def train(self, train_X, train_Y):
         print 'train_X type:', type(train_X[0][0])
-
+        print 'still needs debug!!!'
         self.params = {
                 'model_num' : self.hp['model_num'],
                 'FLEX' : self.hp['flex'],
@@ -37,6 +38,7 @@ class Model_CNN:
                 'KERNEL_SIZES' : [self.hp['kernel_size_1'],
                                   self.hp['kernel_size_2'],
                                   self.hp['kernel_size_3']],
+                # 'KERNEL_SIZES' : self.hp['kernel_sizes']
                 #'USE_DELTA' : self.hp['delta'],
 
                 'WORD_VECTOR_LENGTH' : 300,
@@ -46,12 +48,10 @@ class Model_CNN:
                 'epoch' : 1,
                 'l2-loss' : tf.constant(0)
         }
-        for kernel_size in params['KERNEL_SIZES']:
-            kernel_size = weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']])
         self.key_array, self.vocab = dict_to_array(self.indices_to_words, self.params)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
-        self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array)
+        self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
 
     #one-hot array
     def predict(self, test_X, measure = 'predict'):
