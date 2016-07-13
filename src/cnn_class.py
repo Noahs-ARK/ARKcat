@@ -10,6 +10,9 @@ class CNN:
         self.input_y = tf.placeholder(tf.float32, [batch_size, params['CLASSES']])#, name='input_y')
         self.dropout = tf.placeholder(tf.float32)#, name='dropout')
 
+        for var in tf.all_variables():
+            print var.name
+
         word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32),
                                       trainable = params['UPDATE_WORD_VECS'], name='word_embeddings')
         if params['USE_DELTA']:
@@ -24,6 +27,9 @@ class CNN:
         weights = []
         biases = []
         name_counter = 1
+
+        for var in tf.all_variables():
+            print var.name
         #loop over KERNEL_SIZES, each time initializing a slice
         for kernel_size in params['KERNEL_SIZES']:
             W = weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']], 'W_%i' %name_counter)
@@ -47,6 +53,8 @@ class CNN:
             slices.append(pooled)
             weights.append(W)
             biases.append(b)
+        for var in tf.all_variables():
+            print var.name
         self.h_pool = tf.concat(3, slices)
         self.h_pool_drop = tf.nn.dropout(self.h_pool, self.dropout)
         self.h_pool_flat = tf.reshape(self.h_pool_drop, [batch_size, -1])
@@ -71,6 +79,8 @@ class CNN:
             self.reg_loss += custom_loss(W, params)
         for b in biases:
             self.reg_loss += custom_loss(b, params)
+        for var in tf.all_variables():
+            print var.name
         self.reg_loss += custom_loss(W_fc, params)
         self.reg_loss += custom_loss(b_fc, params)
         self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])

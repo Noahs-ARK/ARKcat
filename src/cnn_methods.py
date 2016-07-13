@@ -3,7 +3,6 @@ import sys, re
 import random, math
 import numpy as np
 import os.path
-from run import *
 
 #initializes weights, random with stddev of .1
 def weight_variable(shape, name):

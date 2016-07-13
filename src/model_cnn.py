@@ -46,7 +46,6 @@ class Model_CNN:
                 'EPOCHS' : 15,
                 #set by program-do not change!
                 'epoch' : 1,
-                'l2-loss' : tf.constant(0)
         }
         self.key_array, self.vocab = dict_to_array(self.indices_to_words, self.params)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)

@@ -31,17 +31,14 @@ def main(params, train_X, train_Y, key_array, model_dir):
             #                       'W_fc': W_fc,
             #                       'b_fc': b_fc})
             saver = tf.train.Saver(tf.all_variables())
-            file_path = cnn_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], 0)
-            checkpoint = saver.save(sess, cnn_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], 0))
-            reader = tf.train.NewCheckpointReader(cnn_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], 0))
+            path = saver.save(sess, cnn_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], 0))
+            reader = tf.train.NewCheckpointReader(path)
             print(reader.debug_string().decode("utf-8"))
-            best_dev_accuracy = cnn_eval.float_entropy(file_path, saver, val_X, val_Y, key_array, params)
+            best_dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
             timelog.write( '\ndebug acc %g' %best_dev_accuracy)
             timelog.write('\n%g'%time.clock())
-
-            for i in range(params['EPOCHS']):
+            for epoch in range(params['EPOCHS']):
                 print 'debug%i' %params['epoch']
-                params['epoch'] = i + 1
                 batches_x, batches_y = scramble_batches(params, train_X, train_Y)
                 for j in range(len(batches_x)):
                     feed_dict = {cnn.input_x: batches_x[j], cnn.input_y: batches_y[j],
@@ -50,16 +47,16 @@ def main(params, train_X, train_Y, key_array, model_dir):
                     #apply l2 clipping to weights and biases
                     if params['REGULARIZER'] == 'l2_clip':
                         cnn.clip_vars(params)
-                timelog.write('\n\nepoch %i initial time %g' %(params['epoch'], time.clock()))
+                timelog.write('\n\nepoch %i initial time %g' %(epoch, time.clock()))
                 timelog.write('\nCPU usage: %g'
                             %(resource.getrusage(resource.RUSAGE_SELF).ru_utime +
                             resource.getrusage(resource.RUSAGE_SELF).ru_stime))
                 timelog.write('\nmemory usage: %g' %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
-                checkpoint = saver.save(sess, cnn_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], params['epoch']))
+                checkpoint = saver.save(sess, cnn_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], epoch))
                 dev_accuracy = cnn_eval.float_entropy(checkpoint, val_X, val_Y, key_array, params)
                 timelog.write('\ndev accuracy: %g'%dev_accuracy)
                 if dev_accuracy > best_dev_accuracy:
-                    checkpoint = saver.save(sess, 'temp/cnn_' + params['model_num'], global_step = params['epoch'])
+                    checkpoint = saver.save(sess, 'temp/cnn_' + params['model_num'], global_step = epoch)
                     best_dev_accuracy = dev_accuracy
                     if dev_accuracy < best_dev_accuracy - .02:
                         #early stop if accuracy drops significantly

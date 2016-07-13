@@ -13,11 +13,11 @@ def test_batch(test_X, params, embed_keys):
         test_X = test_X[1:]
     return all_x
 
-def float_entropy(path, checkpoint, val_x, val_y, key_array, params):
-    pred = evaluate(path, checkpoint, val_x, val_y, key_array, params, 'cross_entropy')
+def float_entropy(path, val_x, val_y, key_array, params):
+    pred = evaluate(path, val_x, val_y, key_array, params, 'cross_entropy')
     return np.mean(np.asarray(pred))
 
-def evaluate(path, checkpoint, val_x, val_y, key_array, params, measure):
+def evaluate(path, val_x, val_y, key_array, params, measure):
     # print 'got here'
     with tf.Graph().as_default():
     #     with sess.as_default():
