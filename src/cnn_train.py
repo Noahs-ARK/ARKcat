@@ -8,7 +8,8 @@ import inspect_checkpoint
 
 def main(params, train_X, train_Y, key_array, model_dir):
     val_X, val_Y, train_X, train_Y = separate_train_and_val(train_X, train_Y)
-    cnn_dir = model_dir
+    cnn_dir = '../output/temp'
+    print cnn_dir
     with tf.Graph().as_default():
         with open(cnn_dir + 'train_log', 'a') as timelog:
         #with open('train_log', 'a') as timelog:
@@ -31,14 +32,13 @@ def main(params, train_X, train_Y, key_array, model_dir):
             #                       'W_fc': W_fc,
             #                       'b_fc': b_fc})
             saver = tf.train.Saver(tf.all_variables())
-            path = saver.save(sess, cnn_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], 0))
+            path = saver.save(sess, model_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], 0))
             reader = tf.train.NewCheckpointReader(path)
             print(reader.debug_string().decode("utf-8"))
             best_dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
             timelog.write( '\ndebug acc %g' %best_dev_accuracy)
             timelog.write('\n%g'%time.clock())
             for epoch in range(params['EPOCHS']):
-                print 'debug%i' %params['epoch']
                 batches_x, batches_y = scramble_batches(params, train_X, train_Y)
                 for j in range(len(batches_x)):
                     feed_dict = {cnn.input_x: batches_x[j], cnn.input_y: batches_y[j],
@@ -53,15 +53,15 @@ def main(params, train_X, train_Y, key_array, model_dir):
                             resource.getrusage(resource.RUSAGE_SELF).ru_stime))
                 timelog.write('\nmemory usage: %g' %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
                 checkpoint = saver.save(sess, cnn_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], epoch))
-                dev_accuracy = cnn_eval.float_entropy(checkpoint, val_X, val_Y, key_array, params)
+                dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
                 timelog.write('\ndev accuracy: %g'%dev_accuracy)
                 if dev_accuracy > best_dev_accuracy:
-                    checkpoint = saver.save(sess, 'temp/cnn_' + params['model_num'], global_step = epoch)
+                    path = saver.save(sess, model_dir + '/cnn_' + params['model_num'], global_step = epoch)
                     best_dev_accuracy = dev_accuracy
                     if dev_accuracy < best_dev_accuracy - .02:
                         #early stop if accuracy drops significantly
-                        return checkpoint
-            return checkpoint
+                        return path
+            return path
 
 if __name__ == "__main__":
     main()

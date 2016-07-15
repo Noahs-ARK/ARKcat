@@ -21,7 +21,7 @@ class Model_CNN:
                 'model_num' : self.hp['model_num'],
                 'FLEX' : self.hp['flex'],
                 'FILTERS' : self.hp['filters'],
-                'FILTERS' : 1,
+                'FILTERS' : 2,
                 'ACTIVATION_FN' : self.hp['activation_fn'],
                 'REGULARIZER' : self.hp['regularizer'],
                 'REG_STRENGTH' : self.hp['reg_strength'],
@@ -43,22 +43,25 @@ class Model_CNN:
 
                 'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
-                'EPOCHS' : 15,
-                #set by program-do not change!
-                'epoch' : 1,
+                'EPOCHS' : 2,
         }
-        self.key_array, self.vocab = dict_to_array(self.indices_to_words, self.params)
+        self.vocab = text_processing(self.indices_to_words.itervalues())
+        self.key_array = dict_to_array(self.vocab, self.params)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
         self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
 
     #one-hot array
-    def predict(self, test_X, measure = 'predict'):
+    def predict(self, test_X, indices_to_words=None, measure = 'predict'):
         print 'test_X type:', type(test_X[0])
+        if indices_to_words is not None:
+            self.vocab, self.key_array = process_test_vocab(self.vocab, self.key_array, indices_to_words, self.params)
         test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
         return cnn_eval.main(self.model, self.params, test_X, self.key_array,
                         measure)
 
     #softmax array
-    def predict_prob(self, test_X):
-        return self.predict(test_X, measure = 'scores')
+    def predict_prob(self, test_X, indices_to_words=None):
+        print 'debug types', type(test_X), type(indices_to_words)
+        print 'debug contents', test_X, indices_to_words
+        return self.predict(test_X, indices_to_words=indices_to_words, measure = 'scores')

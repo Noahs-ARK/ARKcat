@@ -3,6 +3,9 @@ import sys, re
 import random, math
 import numpy as np
 import os.path
+# defunct
+# def python_updir(dir_str):
+#     return dir_str[:dir_str.rfind('/', 0, dir_str.rfind('/'))] + '/'
 
 #initializes weights, random with stddev of .1
 def weight_variable(shape, name):
@@ -178,11 +181,27 @@ def init_word_vecs(key_array, vocab, params):
                 key_array[vocab.index(line[0])] = vector
     return key_array
 
-def dict_to_array(d, params):
-    vocab = []
-    for word in d.itervalues():
-        word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
-        vocab.append(str(word))
+def text_processing(iter_of_strings):
+    list_of_strings = []
+    for string in iter_of_strings:
+        list_of_strings.append(re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", string))
+    return list_of_strings
+
+def process_test_vocab(vocab, key_array, new_vocab_key, params):
+    test_X_key = {}
+    new_vocab_key = {v:k for k,v in new_vocab_key}
+    print new_vocab_key
+    test_vocab_list = text_processing(new_vocab_key.iterkeys())
+    for word in test_vocab_list:
+        if word not in vocab:
+            add_vocab_list.append(word)
+    new_key_array = dict_to_array(add_vocab_list, params)
+    vocab.extend(add_vocab_list)
+    for word in test_vocab_list:
+        test_X_key[word] = vocab.index(word)
+    return vocab, np.concatenate((key_array, new_key_array), axis = 0)
+
+def dict_to_array(vocab, params):
     key_array = [[] for item in range(len(vocab))]
     #DEBUG: add filepath in user input
     if params['USE_WORD2VEC']:
@@ -191,44 +210,11 @@ def dict_to_array(d, params):
         if key_array[i] == []:
             key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
     key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
-    return np.asarray(key_array), vocab
+    return np.asarray(key_array)
 
 def separate_train_and_val(train_X, train_Y):
     shuffle_in_unison(train_X, train_Y)
     val_split = len(train_X)/10
     return train_X[val_split:], train_Y[val_split:], train_X[:val_split], train_Y[:val_split]
-
-# def cnn_save_model()
-# #see run.save_model
-#     feature_list = result['model'].feats_and_params[0]['feats']
-#     model_hyperparams = result['model'].feats_and_params[0]['params']
-#     #STUPID FILENAMES TOO LONG
-#     short_name = {'model_type':'mdl', 'regularizer':'rg', 'converg_tol':'cvrg','alpha':'alpha',
-#                   'eta':'eta', 'gamma':'gamma', 'max_depth':'dpth', 'min_child_weight':'mn_wght',
-#                   'max_delta_step':'mx_stp', 'subsample':'smpl', 'reg_strength':'rg_str',
-#                   'num_round':'rnds', 'lambda':'lmbda', 'ngram_range':'ngrms', 'binary':'bnry',
-#                   'use_idf':'idf', 'stop_words':'st_wrd', 'word_vector_init' : 'wv_init',
-#                   'word_vector_update' : 'upd', 'delta': 'delta', 'flex': 'flex',
-#                   'kernel_size_1':'ks1', 'kernel_size_2' :'ks2', 'kernel_size_3': 'ks3',
-#                   'filters': 'fltrs', 'dropout': 'dropout', 'batch_size' : 'batch_size',
-#                   'activation_fn': 'actvn_fn', 'regularizer':'rg', 'reg_strength':'rg_str',
-#                   'learning_rate': 'learn_rt'}
-#
-#     # to save the model after each iteration
-#     feature_string = ''
-#     for feat, value in feature_list.items():
-#         feature_string = feature_string + short_name[feat] + '=' + str(value) + ';'
-#     for hparam in model_hyperparams:
-#         cur_hparam = None
-#         #DEBUGGING
-#         if hparam == 'folds':
-#             continue
-#         if isinstance(model_hyperparams[hparam], float):
-#             cur_hparam = str(round(model_hyperparams[hparam]*1000)/1000)
-#         else:
-#             cur_hparam = str(model_hyperparams[hparam])
-#         feature_string = feature_string + short_name[hparam] + '=' + cur_hparam + ';'
-#     feature_string = feature_string[:-1]
-
 
 if __name__ == "__main__": main()

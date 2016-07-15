@@ -25,22 +25,28 @@ def evaluate(path, val_x, val_y, key_array, params, measure):
             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
                                           intra_op_parallelism_threads=1,
                                           use_per_session_threads=True))
-            for var in tf.all_variables():
-                print var.name
             saver = tf.train.Saver()
             saver.restore(sess, path)
-            if measure == 'cross_entropy':
-                evaluation = cnn.cross_entropy
-            elif measure == 'predict':
-                evaluation = cnn.predictions
-            else:
-                evaluation = cnn.scores
+            # if measure == 'cross_entropy':
+            #     evaluation = cnn.cross_entropy
+            # elif measure == 'predict':
+            #     evaluation = cnn.predictions
+            # else:
+            #     evaluation = cnn.scores
             pred = []
             while len(val_x) > 0:
                 feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis = 0),
                              cnn.input_y: np.expand_dims(val_y[0], axis = 0),
                              cnn.dropout: 1.0}
-                pred.append(evaluation.eval(feed_dict=feed_dict, session = sess))
+                if measure == 'cross_entropy':
+                    output = cnn.cross_entropy.eval(feed_dict=feed_dict, session = sess).tolist()
+                elif measure == 'predict':
+                    integer = cnn.predictions.eval(feed_dict=feed_dict, session = sess).tolist()
+                    output = [0] * params['CLASSES']
+                    output[integer] = 1
+                else:
+                    output = cnn.scores.eval(feed_dict=feed_dict, session = sess).tolist()[0]
+                pred.append(output)
                 val_x = val_x[1:]
                 val_y = val_y[1:]
             return pred
