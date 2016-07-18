@@ -14,7 +14,7 @@ def weight_variable(shape, name):
 
 #initializes biases, all at .1
 def bias_variable(shape, name):
-      initial = tf.zeros(shape=shape)
+      initial = tf.truncated_normal(shape, stddev=0.05)
       return tf.Variable(initial, name=name)
 
 def get_max_length(list_of_examples):
@@ -145,17 +145,32 @@ def pad_one(list_of_word_vecs, max_length, params):
         right += 1
     return np.asarray(([0] * left) + list_of_word_vecs.tolist() + ([0] * right))
 
-def to_dense(input_X):
+def to_dense(input_X, test_key = None):
     max_length = 0
     dense = []
     for example in input_X:
         example_transform = example[0].nonzero()[1]
         example_transform = example_transform.tolist()
         for word in example_transform:
+            if test_key is not None:
+                print 'test_key', test_key
+                word = test_key[word]
             word += 1
         max_length = max(max_length, len(example_transform))
         dense.append(np.asarray(example_transform))
     return dense, max_length
+
+# def to_dense(input_X):
+#     max_length = 0
+#     dense = []
+#     for example in input_X:
+#         example_transform = example[0].nonzero()[1]
+#         example_transform = example_transform.tolist()
+#         for word in example_transform:
+#             word += 1
+#         max_length = max(max_length, len(example_transform))
+#         dense.append(np.asarray(example_transform))
+#     return dense, max_length
 
 def custom_loss(W, params):
         if params['REGULARIZER'] == 'l1':
@@ -181,25 +196,28 @@ def init_word_vecs(key_array, vocab, params):
                 key_array[vocab.index(line[0])] = vector
     return key_array
 
-def text_processing(iter_of_strings):
-    list_of_strings = []
-    for string in iter_of_strings:
-        list_of_strings.append(re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", string))
-    return list_of_strings
-
+#test_vocab_key converts vocab indices in test_X to vocab indices in the union of train and test vocab
+#new vocab key: words to indices
 def process_test_vocab(vocab, key_array, new_vocab_key, params):
+    print 'debug types', type(new_vocab_key)
     test_X_key = {}
-    new_vocab_key = {v:k for k,v in new_vocab_key}
-    print new_vocab_key
-    test_vocab_list = text_processing(new_vocab_key.iterkeys())
-    for word in test_vocab_list:
+    # print new_vocab_key.iteritems()
+    # new_vocab_key = [(v, k) for (k, v) in new_vocab_key.iteritems()]
+    # print new_vocab_key[:10]
+    # new_vocab_key = dict(zip(new_vocab_key.values(), new_vocab_key.keys()))
+    new_vocab_key = {v:k for k,v in new_vocab_key.iteritems()}
+    add_vocab_list = []
+    #either word in vocab, or word in add_vocab_list, in which case it should also be in vocab
+    for word in new_vocab_key.iterkeys():
         if word not in vocab:
             add_vocab_list.append(word)
     new_key_array = dict_to_array(add_vocab_list, params)
     vocab.extend(add_vocab_list)
-    for word in test_vocab_list:
-        test_X_key[word] = vocab.index(word)
-    return vocab, np.concatenate((key_array, new_key_array), axis = 0)
+    print len(vocab)
+    print len(new_vocab_key)
+    for word in new_vocab_key.iterkeys():
+        test_X_key[new_vocab_key[word]] = vocab.index(word)
+    return vocab, np.concatenate((key_array, new_key_array), axis = 0), new_vocab_key
 
 def dict_to_array(vocab, params):
     key_array = [[] for item in range(len(vocab))]
@@ -211,6 +229,28 @@ def dict_to_array(vocab, params):
             key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
     key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
     return np.asarray(key_array)
+
+# def dict_to_array2(d, params):
+#     vocab = []
+#     for word in d.iterkeys():
+#         word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
+#         vocab.append(str(word))
+#     key_array = [[] for item in range(len(vocab))]
+#     #DEBUG: add filepath in user input
+#     if params['USE_WORD2VEC']:
+#         key_array = init_word_vecs(key_array, vocab, params)
+#     for i in range(len(key_array)):
+#         if key_array[i] == []:
+#             key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
+#     key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
+#     return np.asarray(key_array), vocab
+
+def get_vocab(indices_to_words):
+    vocab = [None] * len(indices_to_words)
+    for key in indices_to_words:
+        vocab[key] = indices_to_words[key]
+    return vocab
+
 
 def separate_train_and_val(train_X, train_Y):
     shuffle_in_unison(train_X, train_Y)

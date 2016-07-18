@@ -35,19 +35,15 @@ class CNN:
             W = weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']], 'W_%i' %name_counter)
             b = bias_variable([params['FILTERS']], 'b_%i' %name_counter)
             name_counter += 1
-            #convolve: each neuron iterates by 1 filter, 1 word
             conv = tf.nn.conv2d(embedding_output, W, strides=[1, 1, 1, 1], padding="SAME")
-            #apply bias and activation fn
             if params['ACTIVATION_FN'] == 'relu':
                 activ = tf.nn.relu(tf.nn.bias_add(conv, b))
             elif params['ACTIVATION_FN'] == 'elu':
                 activ = tf.nn.elu(tf.nn.bias_add(conv, b))
-            elif params['ACTIVATION_FN'] == 'tanh':
-                activ = tf.nn.tanh(tf.nn.bias_add(conv, b))
+            # elif params['ACTIVATION_FN'] == 'tanh':
+            #     activ = tf.nn.tanh(tf.nn.bias_add(conv, b))
             else:
                 activ = conv
-            #max pool; each neuron sees 1 filter and returns max over a sentence
-
             pooled = tf.nn.max_pool(activ, ksize=[1, params['MAX_LENGTH'], 1, 1],
                 strides=[1, params['MAX_LENGTH'], 1, 1], padding='SAME') #name='max_pool')
             slices.append(pooled)

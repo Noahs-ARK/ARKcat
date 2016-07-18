@@ -6,10 +6,24 @@ import cnn_eval
 import time, resource
 import inspect_checkpoint
 
+#random val set empty???
 def main(params, train_X, train_Y, key_array, model_dir):
-    val_X, val_Y, train_X, train_Y = separate_train_and_val(train_X, train_Y)
-    cnn_dir = '../output/temp'
-    print cnn_dir
+
+    for example in train_X:
+        if not example.size:
+            print 'yikes'
+
+    train_X, train_Y, val_X, val_Y = separate_train_and_val(train_X, train_Y)
+
+    # print len (train_X), len (val_X), len(train_X) + len(val_X)
+    for example in train_X:
+        if not example.size:
+            print 'yikes--train split'
+    for example in train_X:
+        if not example.size:
+            print 'yikes--val split'
+            
+    cnn_dir = '../output/temp/'
     with tf.Graph().as_default():
         with open(cnn_dir + 'train_log', 'a') as timelog:
         #with open('train_log', 'a') as timelog:
@@ -23,18 +37,10 @@ def main(params, train_X, train_Y, key_array, model_dir):
             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
                                   intra_op_parallelism_threads=1, use_per_session_threads=True))
             sess.run(tf.initialize_all_variables())
-        # with sess.as_default():
-            # saver = tf.train.Saver(var_list =
-            #                       {'word_embeddings': word_embeddings,
-            #                       'W_delta': W_delta,
-            #                       'W_1': W_1, 'W_2': W_2, 'W_3': W_3,
-            #                       'b_1': b_1, 'b_2': b_2, 'b_3': b_3,
-            #                       'W_fc': W_fc,
-            #                       'b_fc': b_fc})
             saver = tf.train.Saver(tf.all_variables())
-            path = saver.save(sess, model_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], 0))
-            reader = tf.train.NewCheckpointReader(path)
-            print(reader.debug_string().decode("utf-8"))
+            path = saver.save(sess, cnn_dir + 'cnn_eval_%s_epoch%i' %(params['model_num'], 0))
+            # reader = tf.train.NewCheckpointReader(path)
+            # print(reader.debug_string().decode("utf-8"))
             best_dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
             timelog.write( '\ndebug acc %g' %best_dev_accuracy)
             timelog.write('\n%g'%time.clock())

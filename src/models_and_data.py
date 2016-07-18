@@ -94,7 +94,6 @@ class Data_and_Model_Manager:
             for i in range(len(example)):
                 example[i] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", example[i])
             train_X.append([vectorizer.transform(example)])
-
         index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
         return train_X, index_to_word
 

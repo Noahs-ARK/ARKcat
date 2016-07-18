@@ -38,6 +38,19 @@ def call_experiment(args):
     sys.stdout.flush()
     return result
 
+def cnn_feature_selector():
+    return {'model_': 'CNN',
+            'delta_': [True, False],
+            'flex_amt_': (0.0, 0.3),
+            'filters_': (100, 600),
+            'kernels_': (2, 20),
+            'dropout_': (0, 1),
+            'batch_size_': (10, 200),
+            'activation_fn_': ['iden', 'relu', 'elu'],
+            'l2_': (0,2),
+            'l2_clip_': (2,10)
+}
+
 #have to edit features--cnn won't take idf, for example
 def wrangle_params(args, model_num):
     kwargs = {}
@@ -68,12 +81,15 @@ def wrangle_params(args, model_num):
         kwargs['model_num'] = model_num
         # kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
         # kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
-        kwargs['word_vector_update'] = args['model_' + model_num]['word_vector_update_' + model_num]
+        # kwargs['word_vector_update'] = args['model_' + model_num]['word_vector_update_' + model_num]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
-        kwargs['flex'] = int(args['model_' + model_num]['flex_' + model_num])
-        kwargs['kernel_size_1'] = int(args['model_' + model_num]['kernel_size_1_' + model_num])
-        kwargs['kernel_size_2'] = int(args['model_' + model_num]['kernel_size_2_' + model_num])
-        kwargs['kernel_size_3'] = int(args['model_' + model_num]['kernel_size_3_' + model_num])
+        kwargs['flex'] = (args['model_' + model_num]['flex_' + model_num])[0]
+        kwargs['flex_amt'] = (args['model_' + model_num]['flex_' + model_num])[1]
+        # kwargs['kernel_size_1'] = int(args['model_' + model_num]['kernel_size_1_' + model_num])
+        # kwargs['kernel_size_2'] = int(args['model_' + model_num]['kernel_size_2_' + model_num])
+        # kwargs['kernel_size_3'] = int(args['model_' + model_num]['kernel_size_3_' + model_num])
+        kwargs['kernel_size'] = int(args['model_' + model_num]['kernel_size_' + model_num])
+        kwargs['kernel_increment'] = int(args['model_' + model_num]['kernel_increment_' + model_num])
         # kwargs['num_kernels'] = args['model_' + model_num]['num_kernels_' + model_num][0]
         kwargs['filters'] = int(args['model_' + model_num]['filters_' + model_num])
         kwargs['dropout'] = args['model_' + model_num]['dropout_' + model_num]
