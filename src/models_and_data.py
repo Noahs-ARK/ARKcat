@@ -8,11 +8,12 @@ from model_cnn import Model_CNN
 import re
 #DEBUGGING
 #import xgboost
-
+import cnn_methods
 
 class Data_and_Model_Manager:
-    def __init__(self, f_and_p, model_dir):
+    def __init__(self, f_and_p, model_dir, word2vec_filename):
         self.model_dir = model_dir
+        self.word2vec_filename = word2vec_filename
         self.feats_and_params = f_and_p
         self.trained_models = {}
         self.vectorizers = {}
@@ -28,7 +29,7 @@ class Data_and_Model_Manager:
         elif params['model_type'] == 'XGBoost':
             return Model_XGB(params, n_labels)
         elif params['model_type'] == 'CNN':
-            return Model_CNN(params, n_labels, index_to_word, self.model_dir)
+            return Model_CNN(params, n_labels, index_to_word, self.model_dir, self.word2vec_filename)
         else:
             raise TypeError("you're trying to train this kind of model (which isn't implemented):" +
                             self.hp['model_type'])
@@ -80,11 +81,18 @@ class Data_and_Model_Manager:
                 avg_dev_acc = avg_dev_acc + self.predict_acc(cur_dev_X, cur_dev_Y)/num_folds
             return {'train_acc':self.train_models(self.train[0], self.train[1]), 'dev_acc':avg_dev_acc}
 
-
+#re sub there :)
     def transform_cnn_data(self, X_raw, feat_and_param):
         feat_and_param['feats']['ngram_range'] = (1,1)
         feat_and_param['feats']['use_idf'] = False
         feat_and_param['feats']['binary'] = False
+        # for i in range(len(X_raw)):
+        #     X_raw[i] = cnn_methods.tokenize(X_raw[i])
+        #     join = ''
+        #     for word in X_raw[i]:
+        #         word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
+        #         join += word + ' '
+        #     X_raw[i] = join
         vectorizer = TfidfVectorizer(**feat_and_param['feats'])
         vectorizer.fit(X_raw)
         tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)
@@ -94,8 +102,9 @@ class Data_and_Model_Manager:
             for i in range(len(example)):
                 example[i] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", example[i])
             train_X.append([vectorizer.transform(example)])
-
         index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
+        for key in index_to_word:
+            index_to_word[key] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", index_to_word[key])
         return train_X, index_to_word
 
     def train_models(self, train_X_raw, train_Y_raw):

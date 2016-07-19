@@ -11,7 +11,7 @@ def eval_best_model_of_iter_i(models, max_iter, print_k_models_per_iter):
     ordered_models = Queue.PriorityQueue()
     test_evals = []
     dev_evals = []
-    
+
     model_counter = 0
     for model in models:
         if model[0] > max_iter:
@@ -23,10 +23,10 @@ def eval_best_model_of_iter_i(models, max_iter, print_k_models_per_iter):
         ordered_models.put((model[2]['loss'], -acc, model[2]))
         sys.stdout.write('done!\n')
         model_counter = model_counter + 1
-        
+
 
     best_dev_acc = -1
-    
+
 
     for i in range(len(models)):
         dev_acc, test_acc, model = ordered_models.get()
@@ -36,7 +36,7 @@ def eval_best_model_of_iter_i(models, max_iter, print_k_models_per_iter):
             best_dev_acc = dev_acc
         if dev_acc < best_dev_acc and i > print_k_models_per_iter:
             break
-        
+
         print('test acc: ' + str(test_acc))
         print('dev acc:  ' + str(dev_acc))
         print('hyperparams: ')
@@ -51,23 +51,24 @@ def eval_best_model(models):
         eval_best_model_of_iter_i(models, i, print_k_models_per_iter)
         print("")
         print("")
-        
-    
+
+
 def set_globals(args):
-    if len(args) < 3:
-        print("USEAGE: model_dir data_dir output_dir")
+    if len(args) < 4:
+        print("USEAGE: model_dir data_dir word2vec_filename output_dir")
         sys.exit(0)
     global model_dir, test_data, test_labels, feat_dir
     model_dir = args[0]
     test_data = args[1] + 'test.data'
     test_labels = args[1] + 'test.labels'
-    feat_dir = args[2] + 'test_features'
+    word2vec_filename = args[2]
+    feat_dir = args[3] + 'test_features'
 
 
 def main():
     parser = OptionParser()
     (options, args) = parser.parse_args()
-    
+
     set_globals(args)
     #print the args
     print("args:")
@@ -95,6 +96,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-

@@ -9,11 +9,14 @@ class CNN:
         self.input_x = tf.placeholder(tf.int32, [batch_size, None])#, name='input_x')
         self.input_y = tf.placeholder(tf.float32, [batch_size, params['CLASSES']])#, name='input_y')
         self.dropout = tf.placeholder(tf.float32)#, name='dropout')
-
-        word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32),
+        #
+        # for var in tf.all_variables():
+        #     print var.name
+        #
+        word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32), validate_shape = False,
                                       trainable = params['UPDATE_WORD_VECS'], name='word_embeddings')
         if params['USE_DELTA']:
-            W_delta = tf.Variable(tf.ones, key_array.shape[0], name='W_delta')
+            W_delta = tf.Variable(tf.ones, key_array.shape[0], validate_shape = False, name='W_delta')
             weighted_word_embeddings = tf.matmul(word_embeddings, W_delta)
             embedding_output = tf.nn.embedding_lookup(weighted_word_embeddings, self.input_x)
         else:
@@ -21,40 +24,41 @@ class CNN:
         embedding_output = tf.expand_dims(embedding_output, 2)
         #init lists for convolutional layer
         slices = []
-        weights = []
-        biases = []
+        self.weights = []
+        self.biases = []
         name_counter = 1
+
+        # for var in tf.all_variables():
+        #     print var.name
         #loop over KERNEL_SIZES, each time initializing a slice
         for kernel_size in params['KERNEL_SIZES']:
             W = weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']], 'W_%i' %name_counter)
             b = bias_variable([params['FILTERS']], 'b_%i' %name_counter)
             name_counter += 1
-            #convolve: each neuron iterates by 1 filter, 1 word
             conv = tf.nn.conv2d(embedding_output, W, strides=[1, 1, 1, 1], padding="SAME")
-            #apply bias and activation fn
             if params['ACTIVATION_FN'] == 'relu':
                 activ = tf.nn.relu(tf.nn.bias_add(conv, b))
             elif params['ACTIVATION_FN'] == 'elu':
                 activ = tf.nn.elu(tf.nn.bias_add(conv, b))
-            elif params['ACTIVATION_FN'] == 'tanh':
-                activ = tf.nn.tanh(tf.nn.bias_add(conv, b))
+            # elif params['ACTIVATION_FN'] == 'tanh':
+            #     activ = tf.nn.tanh(tf.nn.bias_add(conv, b))
             else:
                 activ = conv
-            #max pool; each neuron sees 1 filter and returns max over a sentence
-
             pooled = tf.nn.max_pool(activ, ksize=[1, params['MAX_LENGTH'], 1, 1],
                 strides=[1, params['MAX_LENGTH'], 1, 1], padding='SAME') #name='max_pool')
             slices.append(pooled)
-            weights.append(W)
-            biases.append(b)
+            self.weights.append(W)
+            self.biases.append(b)
+        # for var in tf.all_variables():
+        #     print var.name
         self.h_pool = tf.concat(3, slices)
         self.h_pool_drop = tf.nn.dropout(self.h_pool, self.dropout)
         self.h_pool_flat = tf.reshape(self.h_pool_drop, [batch_size, -1])
         #fully connected softmax layer
-        W_fc = weight_variable([len(params['KERNEL_SIZES']) * params['FILTERS'],
+        self.W_fc = weight_variable([len(params['KERNEL_SIZES']) * params['FILTERS'],
                                 params['CLASSES']], 'W_fc')
-        b_fc = bias_variable([params['CLASSES']], 'b_fc')
-        self.scores = tf.nn.softmax(tf.nn.xw_plus_b(self.h_pool_flat, W_fc, b_fc))
+        self.b_fc = bias_variable([params['CLASSES']], 'b_fc')
+        self.scores = tf.nn.softmax(tf.nn.xw_plus_b(self.h_pool_flat, self.W_fc, self.b_fc))
         self.predictions = tf.argmax(self.scores, 1)
         #define error for training steps
         self.cross_entropy = -tf.reduce_sum(self.input_y * tf.log(self.scores),
@@ -67,12 +71,14 @@ class CNN:
             self.reg_loss += custom_loss(word_embeddings, params)
         if params['USE_DELTA']:
             self.reg_loss += custom_loss(W_delta, params)
-        for W in weights:
+        for W in self.weights:
             self.reg_loss += custom_loss(W, params)
-        for b in biases:
+        for b in self.biases:
             self.reg_loss += custom_loss(b, params)
-        self.reg_loss += custom_loss(W_fc, params)
-        self.reg_loss += custom_loss(b_fc, params)
+        # for var in tf.all_variables():
+        #     print var.name
+        self.reg_loss += custom_loss(self.W_fc, params)
+        self.reg_loss += custom_loss(self.b_fc, params)
         self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])
 
     # def reinit_word_embeddings(new_key_array, params, sess):

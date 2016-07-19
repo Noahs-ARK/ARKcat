@@ -57,14 +57,15 @@ def main():
 
 
 
-def classify(train_data_filename, train_label_filename, dev_data_filename, dev_label_filename, 
-             train_feature_dir, dev_feature_dir, model_dir, feats_and_params, verbose=1, folds=-1):
-    m_and_d = Data_and_Model_Manager(feats_and_params, model_dir)
-    m_and_d.load_train_and_dev_data(train_data_filename, train_label_filename, 
+def classify(train_data_filename, train_label_filename, dev_data_filename, dev_label_filename,
+             train_feature_dir, dev_feature_dir, model_dir, word2vec_filename, feats_and_params,
+             verbose=1, folds=-1):
+    m_and_d = Data_and_Model_Manager(feats_and_params, model_dir, word2vec_filename)
+    m_and_d.load_train_and_dev_data(train_data_filename, train_label_filename,
                                     train_feature_dir, dev_data_filename, dev_label_filename,
                                     dev_feature_dir, verbose)
     acc = m_and_d.k_fold_cv(folds)
-        
+
     print('train acc: ' + str(acc['train_acc']))
     print('dev acc: ' + str(acc['dev_acc']))
     return {'loss': -acc['dev_acc'], 'status': STATUS_OK, 'model': m_and_d}
@@ -103,7 +104,7 @@ def load_features(data_filename, label_filename, feature_dir, features, verbose,
     for feature in feature_list:
         feature_description = feature
 
-        rows, columns, counts = feature_loader.load_feature(feature_description, feature_dir, 
+        rows, columns, counts = feature_loader.load_feature(feature_description, feature_dir,
                                 data_filename, items_to_load, verbose=1, vocab_source=vocab_source)
         if items is None:
             items = rows

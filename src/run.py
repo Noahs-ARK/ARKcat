@@ -25,7 +25,7 @@ def call_experiment(args):
 
     result = classify_test.classify(train_data_filename, train_label_filename, dev_data_filename,
                                     dev_label_filename, train_feature_dir, dev_feature_dir,
-                                    model_dir, feats_and_args, folds=num_folds)
+                                    model_dir, word2vec_filename, feats_and_args, folds=num_folds)
 
 
 
@@ -37,6 +37,21 @@ def call_experiment(args):
     print("\nFinished iteration " + str(trial_num) + ".\n\n\n")
     sys.stdout.flush()
     return result
+
+def cnn_feature_selector():
+    return {'model_': 'CNN',
+            'delta_': [True, False],
+            'flex_amt_': (0.0, 0.3),
+            'filters_': (100, 600),
+            'kernel_size_': (2, 15),
+            'kernel_increment_' : (0,5),
+            'kernel_num_' : (1,5),
+            'dropout_': (0.25, 0.75),
+            'batch_size_': (10, 200),
+            'activation_fn_': ['iden', 'relu', 'elu'],
+            'l2_': (-8,-2),
+            'l2_clip_': (2,10)
+}
 
 #have to edit features--cnn won't take idf, for example
 def wrangle_params(args, model_num):
@@ -68,12 +83,16 @@ def wrangle_params(args, model_num):
         kwargs['model_num'] = model_num
         # kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
         # kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
-        kwargs['word_vector_update'] = args['model_' + model_num]['word_vector_update_' + model_num]
+        # kwargs['word_vector_update'] = args['model_' + model_num]['word_vector_update_' + model_num]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
-        kwargs['flex'] = int(args['model_' + model_num]['flex_' + model_num])
-        kwargs['kernel_size_1'] = int(args['model_' + model_num]['kernel_size_1_' + model_num])
-        kwargs['kernel_size_2'] = int(args['model_' + model_num]['kernel_size_2_' + model_num])
-        kwargs['kernel_size_3'] = int(args['model_' + model_num]['kernel_size_3_' + model_num])
+        kwargs['flex'] = (args['model_' + model_num]['flex_' + model_num])[0]
+        kwargs['flex_amt'] = (args['model_' + model_num]['flex_' + model_num])[1]
+        # kwargs['kernel_size_1'] = int(args['model_' + model_num]['kernel_size_1_' + model_num])
+        # kwargs['kernel_size_2'] = int(args['model_' + model_num]['kernel_size_2_' + model_num])
+        # kwargs['kernel_size_3'] = int(args['model_' + model_num]['kernel_size_3_' + model_num])
+        kwargs['kernel_size'] = int(args['model_' + model_num]['kernel_size_' + model_num])
+        kwargs['kernel_increment'] = int(args['model_' + model_num]['kernel_increment_' + model_num])
+        kwargs['kernel_num'] = int(args['model_' + model_num]['kernel_num_' + model_num])
         # kwargs['num_kernels'] = args['model_' + model_num]['num_kernels_' + model_num][0]
         kwargs['filters'] = int(args['model_' + model_num]['filters_' + model_num])
         kwargs['dropout'] = args['model_' + model_num]['dropout_' + model_num]
@@ -111,10 +130,10 @@ def save_model(result):
                   'max_delta_step':'mx_stp', 'subsample':'smpl', 'reg_strength':'rg_str',
                   'num_round':'rnds', 'lambda':'lmbda', 'ngram_range':'ngrms', 'binary':'bnry',
                   'use_idf':'idf', 'stop_words':'st_wrd', 'word_vector_init' : 'wv_init',
-                  'word_vector_update' : 'upd', 'delta': 'delta', 'flex': 'flex',
-                  'kernel_size_1':'ks1', 'kernel_size_2' :'ks2', 'kernel_size_3': 'ks3',
-                  'filters': 'fltrs', 'dropout': 'dropout', 'batch_size' : 'batch_size',
-                  'activation_fn': 'actvn_fn', 'regularizer':'rg', 'reg_strength':'rg_str',
+                  'word_vector_update' : 'upd', 'delta': 'delta', 'flex_amt': 'flex',
+                  'kernel_size':'ks', 'kernel_increment' :'ki', 'kernel_num': 'kn',
+                  'filters': 'fltrs', 'dropout': 'drop', 'batch_size' : 'batch',
+                  'activation_fn': 'actvn', 'regularizer':'rg', 'reg_strength':'rg_str',
                   'learning_rate': 'learn_rt'}
 
     # to save the model after each iteration
@@ -124,13 +143,16 @@ def save_model(result):
     for hparam in model_hyperparams:
         cur_hparam = None
         #DEBUGGING
-        if hparam == 'folds':
+        if hparam == 'folds' or hparam == 'model_num':
             continue
         if isinstance(model_hyperparams[hparam], float):
             cur_hparam = str(round(model_hyperparams[hparam]*1000)/1000)
         else:
             cur_hparam = str(model_hyperparams[hparam])
-        feature_string = feature_string + short_name[hparam] + '=' + cur_hparam + ';'
+        try:
+            feature_string = feature_string + short_name[hparam] + '=' + cur_hparam + ';'
+        except:
+            sys.stderr.write('\nnot found ' + hparam)
     feature_string = feature_string[:-1]
     pickle.dump([trial_num, train_feature_dir, result], open(model_dir + str(trial_num) + '_' +
                                                              feature_string + '.model', 'wb'))
@@ -147,17 +169,18 @@ def set_globals():
     (options, args) = parser.parse_args()
 
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
-    global output_dir, train_feature_dir, dev_feature_dir, model_dir, log_filename, trial_num, max_iter
-    global num_models, model_types, num_folds
+    global output_dir, train_feature_dir, dev_feature_dir, model_dir, word2vec_filename, log_filename
+    global trial_num, max_iter, num_models, model_types, num_folds
 
     train_data_filename = args[0] + 'train.data'
     train_label_filename = args[0] + 'train.labels'
     dev_data_filename = args[0] + 'dev.data'
     dev_label_filename = args[0] + 'dev.labels'
-    output_dir = args[1]
-    num_models = int(args[2])
-    model_types = args[3].split('-')
-    num_folds = int(args[4])
+    word2vec_filename = args[1]
+    output_dir = args[2]
+    num_models = int(args[3])
+    model_types = args[4].split('-')
+    num_folds = int(args[5])
     print('train data filename: ',train_data_filename)
 
     train_feature_dir = output_dir + '/train_features/'
@@ -178,7 +201,6 @@ def set_globals():
         logfile.write(','.join([train_data_filename, train_label_filename, dev_data_filename,
                                 dev_label_filename, train_feature_dir, dev_feature_dir, output_dir]) + '\n')
 
-
 def printing_best(trials):
     priority_q = queue.PriorityQueue()
     losses = trials.losses()
@@ -197,16 +219,48 @@ def main():
     print("Made it to the start of main!")
     set_globals()
     trials = Trials()
+    #if bayesopt
     space = space_manager.get_space(num_models, model_types)
     best = fmin(call_experiment,
                 space=space,
                 algo=tpe.suggest,
                 max_evals=max_iter,
                 trials=trials)
+    """
+    #elif grid:
+    # space = param_grid(model_types)
+    #best = (space, model_types,...)
+    #else (rand):
+    #space = param_rand(model_types)
+    best = run_random_search(space, model_types, n_iter ...)
+    """
 
     print space_eval(space, best)
     printing_best(trials)
 
+"""
+def run_grid_search(space, model_types):
+    grid_search = GridSearchCV(clf=model_types, param_grid=space)
+    grid_search.fit(X, y)
+    report(grid_search.grid_scores_)
+
+def run_random_search(space, model_types, n_iter, ...):
+    random_search = RandomizedSearchCV(clf=model_types, param_distributions=space,
+                                       n_iter=n_iter)
+    random_search.fit(X, y)
+    return best(random_search.grid_scores_)
+
+# Utility function to report best scores
+def best(grid_scores, n_top=1):
+    top_scores = sorted(grid_scores, key=itemgetter(1), reverse=True)[:n_top]
+    for i, score in enumerate(top_scores):
+        print("Model with rank: {0}".format(i + 1))
+        print("Mean validation score: {0:.3f} (std: {1:.3f})".format(
+              score.mean_validation_score,
+              np.std(score.cv_validation_scores)))
+        print("Parameters: {0}".format(score.parameters))
+        print("")
+"""
 
 if __name__ == '__main__':
     main()
