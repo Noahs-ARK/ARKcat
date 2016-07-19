@@ -8,7 +8,7 @@ from model_cnn import Model_CNN
 import re
 #DEBUGGING
 #import xgboost
-
+import cnn_methods
 
 class Data_and_Model_Manager:
     def __init__(self, f_and_p, model_dir, word2vec_filename):
@@ -86,25 +86,25 @@ class Data_and_Model_Manager:
         feat_and_param['feats']['ngram_range'] = (1,1)
         feat_and_param['feats']['use_idf'] = False
         feat_and_param['feats']['binary'] = False
-        for i in range(len(X_raw)):
-            X_raw[i] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", X_raw[i])
+        # for i in range(len(X_raw)):
+        #     X_raw[i] = cnn_methods.tokenize(X_raw[i])
+        #     join = ''
+        #     for word in X_raw[i]:
+        #         word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
+        #         join += word + ' '
+        #     X_raw[i] = join
         vectorizer = TfidfVectorizer(**feat_and_param['feats'])
         vectorizer.fit(X_raw)
         tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)
         X_raw_tokenized = [tokenizer(ex) for ex in X_raw]
         train_X = []
         for example in X_raw_tokenized:
-            # for i in range(len(example)):
-            #     example[i] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", example[i])
+            for i in range(len(example)):
+                example[i] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", example[i])
             train_X.append([vectorizer.transform(example)])
         index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
-        # for key in index_to_word:
-        #     index_to_word[key] =  re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", index_to_word[key])
-        # for item in index_to_word.itervalues():
-        #     if not all(ord(char) < 128 for char in item):
-        #         print 'error'
-        
-        print 'data:', train_X_dense
+        for key in index_to_word:
+            index_to_word[key] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", index_to_word[key])
         return train_X, index_to_word
 
     def train_models(self, train_X_raw, train_Y_raw):

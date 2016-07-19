@@ -3,16 +3,12 @@ import sys, re
 import random, math
 import numpy as np
 import os.path
-# defunct
-# def python_updir(dir_str):
-#     return dir_str[:dir_str.rfind('/', 0, dir_str.rfind('/'))] + '/'
 
 #initializes weights, random with stddev of .1
 def weight_variable(shape, name):
   initial = tf.truncated_normal(shape, stddev=0.1)
   return tf.Variable(initial, name=name)
 
-#initializes biases, all at .1
 def bias_variable(shape, name):
       initial = tf.truncated_normal(shape, stddev=0.05)
       return tf.Variable(initial, name=name)
@@ -154,6 +150,7 @@ def to_dense(input_X, test_key = None):
         for word in example_transform:
             if test_key is not None:
                 temp_test_key = test_key
+                #debug
                 try: word = test_key[word]
                 except KeyError:
                     print 'key error', word
@@ -161,18 +158,6 @@ def to_dense(input_X, test_key = None):
         max_length = max(max_length, len(example_transform))
         dense.append(np.asarray(example_transform))
     return dense, max_length
-
-# def to_dense(input_X):
-#     max_length = 0
-#     dense = []
-#     for example in input_X:
-#         example_transform = example[0].nonzero()[1]
-#         example_transform = example_transform.tolist()
-#         for word in example_transform:
-#             word += 1
-#         max_length = max(max_length, len(example_transform))
-#         dense.append(np.asarray(example_transform))
-#     return dense, max_length
 
 def custom_loss(W, params):
         if params['REGULARIZER'] == 'l1':
@@ -202,27 +187,17 @@ def init_word_vecs(word2vec_filename, key_array, vocab, params):
 #new vocab key: words to indices
 #dublicate- test vocab 2nd time
 def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
-    print 'debug types', type(new_vocab_key)
     test_X_key = {}
-    # print new_vocab_key.iteritems()
-    # new_vocab_key = [(v, k) for (k, v) in new_vocab_key.iteritems()]
-    # print new_vocab_key[:10]
-    # new_vocab_key = dict(zip(new_vocab_key.values(), new_vocab_key.keys()))
     new_vocab_key = {v:k for k,v in new_vocab_key.iteritems()}
     add_vocab_list = []
     #either word in vocab, or word in add_vocab_list, in which case it should also be in vocab
     for key in new_vocab_key:
-        # key = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", key)
         if key not in vocab:
             add_vocab_list.append(key)
     new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params)
     vocab.extend(add_vocab_list)
-    print len(vocab)
-    print len(new_vocab_key)
-    #new_vocab_key[key] a number: good
     for key in new_vocab_key:
         test_X_key[new_vocab_key[key]] = vocab.index(key)
-    print 'test_X_key', test_X_key
     return add_vocab_list, new_key_array, test_X_key
 
 def dict_to_array(word2vec_filename, vocab, params):

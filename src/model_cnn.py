@@ -23,7 +23,7 @@ class Model_CNN:
 
     def train(self, train_X, train_Y):
         # print 'train_X type:', type(train_X[0][0])
-        print 'still needs debug!!!'
+        print 'fix later'
         self.params = {
                 'model_num' : self.hp['model_num'],
                 # 'FILTERS' : self.hp['filters'],
@@ -79,57 +79,40 @@ class Model_CNN:
         if 'numpy' not in str(type(test_X)):
             if indices_to_words is not None:
                 test_vocab, test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
-                print 'made test key'
-                print 'check test_vocab:', len(self.vocab + test_vocab)
-                test_X_new, self.params['MAX_LENGTH'] = to_dense(test_X, test_key = test_vocab_key)
-                print 'used key'
-                # print 'test_X:', test_X
-                try:
-                    for example in test_X_new[:10]:
-                        for word in example:
-                            try:
-                                print test_vocab[word],
-                            except IndexError:
-                                print 'IndexError, part 1'
-                                raise KeyError
-                        print ''
-                except KeyError:
-                    print 'indexerror 1'
-                    test_X_new, self.params['MAX_LENGTH'] = to_dense(test_X)
+                # print 'made test key'
+                # print 'check test_vocab:', len(self.vocab + test_vocab)
+                test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key = test_vocab_key)
+                # print 'used key'
 
-                for example in test_X_new[:10]:
-                    for word in example:
-                        try:
-                            print test_vocab[word],
-                        except IndexError:
-                            print 'IndexError, part 2'
-                    print ''
+                # print 'test_X:', test_X
+
+                # for example in test_X[:10]:
+                #     for word in example:
+                #         try:
+                #             print test_vocab[word],
+                #         except IndexError:
+                #             print 'IndexError'
+                #     print ''
+
                 return cnn_eval.main(self.model, self.params, test_X, np.concatenate((self.key_array, test_key_array), axis = 0),
                                 measure)
 
 
             else:
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
-                print 'no key'
-                for example in test_X[:10]:
-                    for word in example:
-                        print self.vocab[word],
-                    print ''
-        else:
-            for example in test_X[:10]:
-                for word in example:
-                    print self.vocab[word],
-                print ''
-            print 'max test_X'
-            for example in test_X:
-                print np.argmax(example)
+                # print 'no key'
+                # for example in test_X[:10]:
+                #     for word in example:
+                #         print self.vocab[word],
+                #     print ''
+        # else:
+        #     for example in test_X[:10]:
+        #         for word in example:
+        #             print self.vocab[word],
+        #         print ''
 
         return cnn_eval.main(self.model, self.params, test_X, self.key_array,
                         measure)
-
-
-        #fails :(
-
 
 
     #softmax array
