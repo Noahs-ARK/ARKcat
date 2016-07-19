@@ -14,45 +14,53 @@ import scipy
 
 
 class Model_CNN:
-    def __init__(self, params, n_labels, indices_to_words, model_dir):
+    def __init__(self, params, n_labels, indices_to_words, model_dir, word2vec_filename):
         self.hp = params
         self.num_labels = n_labels
         self.indices_to_words = indices_to_words
         self.model_dir = model_dir
+        self.word2vec_filename = word2vec_filename
 
     def train(self, train_X, train_Y):
         # print 'train_X type:', type(train_X[0][0])
         print 'still needs debug!!!'
         self.params = {
                 'model_num' : self.hp['model_num'],
-                'FILTERS' : self.hp['filters'],
+                # 'FILTERS' : self.hp['filters'],
                 'FILTERS' : 2,
                 'ACTIVATION_FN' : self.hp['activation_fn'],
                 'REGULARIZER' : self.hp['regularizer'],
                 'REG_STRENGTH' : self.hp['reg_strength'],
                 'TRAIN_DROPOUT' : self.hp['dropout'],
                 'BATCH_SIZE' : self.hp['batch_size'],
-                # 'optimizer_' + model_num: 1,# hp.choice('optimizer_' + model_num, 0, 1),
                 'LEARNING_RATE' : self.hp['learning_rate'],
-                #not implemented
+                'KERNEL_SIZES' : [],
+                # #'KERNEL_NUM' : self.hp['kernel_num'],
+                # 'KERNEL_NUM' : 1,
                 #'USE_WORD2VEC' : self.hp['use_word2vec'],
                 'USE_WORD2VEC' : False,
                 #'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
                 'UPDATE_WORD_VECS' : False,
                 'USE_DELTA' : False,
-                'KERNEL_SIZES' : [self.hp['kernel_size'],
-                                  self.hp['kernel_size'] + self.hp['kernel_increment'],
-                                  self.hp['kernel_size'] + 2 * self.hp['kernel_increment']],
+                # 'KERNEL_SIZES' : [self.hp['kernel_size'],
+                #                   self.hp['kernel_size'] + self.hp['kernel_increment'],
+                #                   self.hp['kernel_size'] + 2 * self.hp['kernel_increment']],
                 # 'KERNEL_SIZES' : self.hp['kernel_sizes']
                 #'USE_DELTA' : self.hp['delta'],
 
                 'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
-                'EPOCHS' : 2,
+                'EPOCHS' : 1,
         }
+        if self.params['REGULARIZER'] == 'l2':
+            self.params['REG_STRENGTH'] = 10 ** self.params['REG_STRENGTH']
+        # for i in range(self.hp['kernel_num']):
+
+        for i in range(1):
+            self.params['KERNEL_SIZES'].append(self.hp['kernel_size'] + i * self.hp['kernel_increment'])
         self.vocab = get_vocab(self.indices_to_words)
 
-        self.key_array = dict_to_array(self.vocab, self.params)
+        self.key_array = dict_to_array(self.word2vec_filename, self.vocab, self.params)
         # print self.vocab[:10]
         # self.key_array, self.vocab = dict_to_array2(self.indices_to_words, self.params)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
@@ -60,7 +68,7 @@ class Model_CNN:
         if self.hp['flex']:
             self.params['FLEX'] = self.hp['flex_amt'] * self.params['MAX_LENGTH']
         else:
-            self.params['FLEX'] = 0.0
+            self.params['FLEX'] = 0
         self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
 
     #one-hot array
@@ -70,27 +78,59 @@ class Model_CNN:
         print 'debug types', type(test_X), type(indices_to_words)
         if 'numpy' not in str(type(test_X)):
             if indices_to_words is not None:
-                test_vocab, test_key_array, test_vocab_key = process_test_vocab(self.vocab, self.key_array, indices_to_words, self.params)
+                test_vocab, test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
                 print 'made test key'
-                print 'check test_vocab:', len(test_vocab)
-                test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key = test_vocab_key)
+                print 'check test_vocab:', len(self.vocab + test_vocab)
+                test_X_new, self.params['MAX_LENGTH'] = to_dense(test_X, test_key = test_vocab_key)
                 print 'used key'
+                # print 'test_X:', test_X
+                try:
+                    for example in test_X_new[:10]:
+                        for word in example:
+                            try:
+                                print test_vocab[word],
+                            except IndexError:
+                                print 'IndexError, part 1'
+                                raise KeyError
+                        print ''
+                except KeyError:
+                    print 'indexerror 1'
+                    test_X_new, self.params['MAX_LENGTH'] = to_dense(test_X)
+
+                for example in test_X_new[:10]:
+                    for word in example:
+                        try:
+                            print test_vocab[word],
+                        except IndexError:
+                            print 'IndexError, part 2'
+                    print ''
+                return cnn_eval.main(self.model, self.params, test_X, np.concatenate((self.key_array, test_key_array), axis = 0),
+                                measure)
+
 
             else:
-                test_vocab, test_key_array = self.vocab, self.key_array
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
                 print 'no key'
+                for example in test_X[:10]:
+                    for word in example:
+                        print self.vocab[word],
+                    print ''
+        else:
             for example in test_X[:10]:
                 for word in example:
-                    print test_vocab[word],
+                    print self.vocab[word],
                 print ''
-        else:
-            test_vocab, test_key_array = self.vocab, self.key_array
+            print 'max test_X'
+            for example in test_X:
+                print np.argmax(example)
+
+        return cnn_eval.main(self.model, self.params, test_X, self.key_array,
+                        measure)
+
 
         #fails :(
 
-        return cnn_eval.main(self.model, self.params, test_X, test_key_array,
-                        measure)
+
 
     #softmax array
     def predict_prob(self, test_X, indices_to_words=None):

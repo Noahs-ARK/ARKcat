@@ -39,17 +39,17 @@ def call_experiment(args):
     sys.stdout.flush()
     return result
 
-def grid_search(model_types):
+def param_grid(model_types):
     feature_selector = cnn_feature_selector()
-    hyperparam_grid: {
+    hyperparam_grid = {
             'model_' + model_num: 'CNN',
             'delta_' + model_num: (feature_selector['delta_']),
             'flex_' + model_num: [(False, 0.0),
                 (True, [.15, .3])],
             'filters_' + model_num: list(feature_selector['filters_']),
-            'kernel_size_1_' + model_num: list(feature_selector['kernels_']),
-            'kernel_size_2_' + model_num: list(feature_selector['kernels_']),
-            'kernel_size_3_' + model_num: list(feature_selector['kernels_']),
+            'kernel_size_' + model_num: list(feature_selector['kernel_size_']),
+            'kernel_increment_' + model_num: list(feature_selector['kernel_increment_']),
+            'kernel_num_' + model_num: list(feature_selector['kernel_num_']),
             'dropout_' + model_num: [.25, .75],
             'batch_size_' + model_num: list(feature_selector['batch_size_']),
             # iden, relu, and tanh
@@ -67,7 +67,8 @@ def main():
     print("Made it to the start of main!")
     set_globals()
     trials = Trials()
-    space = grid_search(model_types)
+    space = grid(model_types)
+    print space
     best = fmin(call_experiment,
                 space=space,
                 algo=tpe.suggest,

@@ -49,12 +49,12 @@ def flex(input_list, params):
             if boolean_percent(15):
                 example = insert_padding(example, params['FLEX'], True)
             elif boolean_percent(15):
-                example = insert_padding(example, math.ceil(params['FLEX']/2.0), True)
+                example = insert_padding(example, int(math.ceil(params['FLEX']/2.0)), True)
             #~30% chance of padding the right
             if boolean_percent(15):
                 example = insert_padding(example, params['FLEX'], False)
             elif boolean_percent(15):
-                example = insert_padding(example, math.ceil(params['FLEX']/2.0), False)
+                example = insert_padding(example, int(math.ceil(params['FLEX']/2.0)), False)
     return input_list
 
 def insert_padding(example, tokens_to_pad, left):
@@ -153,8 +153,10 @@ def to_dense(input_X, test_key = None):
         example_transform = example_transform.tolist()
         for word in example_transform:
             if test_key is not None:
-                print 'test_key', test_key
-                word = test_key[word]
+                temp_test_key = test_key
+                try: word = test_key[word]
+                except KeyError:
+                    print 'key error', word
             word += 1
         max_length = max(max_length, len(example_transform))
         dense.append(np.asarray(example_transform))
@@ -180,9 +182,9 @@ def custom_loss(W, params):
         else:
             return 0.0
 
-def init_word_vecs(key_array, vocab, params):
+def init_word_vecs(word2vec_filename, key_array, vocab, params):
     #with open('/Users/katya/repos/tensorflow/output-short.txt', 'r') as word2vec:
-    with open('/home/katya/datasets/output.txt', 'r') as word2vec:
+    with open(word2vec_filename, 'r') as word2vec:
         word2vec.readline()
         for i in range(3000000):   #number of words in word2vec
             line = tokenize(word2vec.readline().strip())
@@ -198,7 +200,8 @@ def init_word_vecs(key_array, vocab, params):
 
 #test_vocab_key converts vocab indices in test_X to vocab indices in the union of train and test vocab
 #new vocab key: words to indices
-def process_test_vocab(vocab, key_array, new_vocab_key, params):
+#dublicate- test vocab 2nd time
+def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
     print 'debug types', type(new_vocab_key)
     test_X_key = {}
     # print new_vocab_key.iteritems()
@@ -208,22 +211,25 @@ def process_test_vocab(vocab, key_array, new_vocab_key, params):
     new_vocab_key = {v:k for k,v in new_vocab_key.iteritems()}
     add_vocab_list = []
     #either word in vocab, or word in add_vocab_list, in which case it should also be in vocab
-    for word in new_vocab_key.iterkeys():
-        if word not in vocab:
-            add_vocab_list.append(word)
-    new_key_array = dict_to_array(add_vocab_list, params)
+    for key in new_vocab_key:
+        # key = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", key)
+        if key not in vocab:
+            add_vocab_list.append(key)
+    new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params)
     vocab.extend(add_vocab_list)
     print len(vocab)
     print len(new_vocab_key)
-    for word in new_vocab_key.iterkeys():
-        test_X_key[new_vocab_key[word]] = vocab.index(word)
-    return vocab, np.concatenate((key_array, new_key_array), axis = 0), new_vocab_key
+    #new_vocab_key[key] a number: good
+    for key in new_vocab_key:
+        test_X_key[new_vocab_key[key]] = vocab.index(key)
+    print 'test_X_key', test_X_key
+    return add_vocab_list, new_key_array, test_X_key
 
-def dict_to_array(vocab, params):
+def dict_to_array(word2vec_filename, vocab, params):
     key_array = [[] for item in range(len(vocab))]
     #DEBUG: add filepath in user input
     if params['USE_WORD2VEC']:
-        key_array = init_word_vecs(key_array, vocab, params)
+        key_array = init_word_vecs(word2vec_filename, key_array, vocab, params)
     for i in range(len(key_array)):
         if key_array[i] == []:
             key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
@@ -250,7 +256,6 @@ def get_vocab(indices_to_words):
     for key in indices_to_words:
         vocab[key] = indices_to_words[key]
     return vocab
-
 
 def separate_train_and_val(train_X, train_Y):
     shuffle_in_unison(train_X, train_Y)

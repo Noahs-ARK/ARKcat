@@ -13,10 +13,10 @@ class CNN:
         # for var in tf.all_variables():
         #     print var.name
         #
-        word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32),
+        word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32), validate_shape = False,
                                       trainable = params['UPDATE_WORD_VECS'], name='word_embeddings')
         if params['USE_DELTA']:
-            W_delta = tf.Variable(tf.ones, key_array.shape[0], name='W_delta')
+            W_delta = tf.Variable(tf.ones, key_array.shape[0], validate_shape = False, name='W_delta')
             weighted_word_embeddings = tf.matmul(word_embeddings, W_delta)
             embedding_output = tf.nn.embedding_lookup(weighted_word_embeddings, self.input_x)
         else:

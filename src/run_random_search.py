@@ -40,7 +40,7 @@ def call_experiment(args):
     sys.stdout.flush()
     return result
 
-def random_search(model_types):
+def param_dist(model_types):
     feature_selector = cnn_feature_selector()
     hyperparams: {
             'model_' + model_num: 'CNN',
@@ -48,9 +48,9 @@ def random_search(model_types):
             'flex_' + model_num: random.choice([(False, 0.0),
                 (True, random.random() * feature_selector['flex_'][2])]),
             'filters_' + model_num: random.randint(feature_selector['filters_']),
-            'kernel_size_1_' + model_num: random.randint(feature_selector['kernels_']),
-            'kernel_size_2_' + model_num: random.randint(feature_selector['kernels_']),
-            'kernel_size_3_' + model_num: random.randint(feature_selector['kernels_']),
+            'kernel_size_' + model_num: random.randint(feature_selector['kernel_size_']),
+            'kernel_increment_' + model_num: random.randint(feature_selector['kernel_increment_']),
+            'kernel_num_' + model_num: random.randint(feature_selector['kernel_num_']),
             'dropout_' + model_num: random.random(),
             'batch_size_' + model_num: random.randint(feature_selector['batch_size_']),
             # iden, relu, and tanh
@@ -61,7 +61,7 @@ def random_search(model_types):
                 ('l2', (random.random() + feature_selector['l2_'][0]) * (feature_selector['l2_'][1] - feature_selector['l2_'][0])),
                 ('l2_clip', (random.random() + feature_selector['l2_clip_'][0]) * (feature_selector['l2_clip_'][1] - feature_selector['l2_clip_'][0]))
             ]),
-            'learning_rate_' + model_num: .00025 + (random.lognormalvariate(0, 1) / 1000.0)
+            'learning_rate_' + model_num: .00025 + (random.lognormalvariate(0, 1) / 370.0)
     }
 
 

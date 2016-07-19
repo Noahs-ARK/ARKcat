@@ -87,8 +87,9 @@ def get_cnn_model(model_num):
                 (True, hp.uniform('flex_amt_' + model_num, 0, 0.3))]),
             'filters_' + model_num: hp.quniform('filters_' + model_num, 100, 600,1),
             # 'num_kernels_' + model_num: hp.quniform('num_kernels_' + model_num, 1, 5, 1),
-            'kernel_size_' + model_num: hp.quniform('kernel_size_1_' + model_num, 1, 20, 1),
-            'kernel_increment_' + model_num: hp.quniform('kernel_size_2_' + model_num, 0, 5, 1),
+            'kernel_size_' + model_num: hp.quniform('kernel_size_' + model_num, 1, 20, 1),
+            'kernel_increment_' + model_num: hp.quniform('kernel_increment_' + model_num, 0, 5, 1),
+            'kernel_num_' + model_num: hp.quniform('kernel_num_' + model_num, 1, 5, 1),
             'dropout_' + model_num: hp.uniform('dropout_' + model_num, 0, 1),
             'batch_size_' + model_num: hp.quniform('batch_size_' + model_num, 10, 200, 1),
             # iden, relu, and tanh
@@ -96,10 +97,10 @@ def get_cnn_model(model_num):
             #none, clipped, or penalized
             'regularizer_cnn_' + model_num: hp.choice('regularizer_cnn_' + model_num, [
                 (None, 0.0),
-                ('l2', hp.loguniform('l2_strength_cnn_' + model_num, 0,2)),
+                ('l2', hp.uniform('l2_strength_cnn_' + model_num, -8,-2)),
                 ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, 2,6))
             ]),
-            'learning_rate_' + model_num: .00025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 1000)
+            'learning_rate_' + model_num: .00025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 370)
         }
     # doesn't work yet :(
     # print hyperparams['num_kernels_' + model_num]
