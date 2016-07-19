@@ -3,33 +3,27 @@ import tensorflow as tf
 from cnn_methods import *
 
 class CNN:
-    def __init__(self, params, key_array, batch_size = None):
+    def __init__(self, params, key_array, batch_size=None):
         if batch_size == None:
             batch_size = params['BATCH_SIZE']
         self.input_x = tf.placeholder(tf.int32, [batch_size, None])#, name='input_x')
         self.input_y = tf.placeholder(tf.float32, [batch_size, params['CLASSES']])#, name='input_y')
         self.dropout = tf.placeholder(tf.float32)#, name='dropout')
-        #
-        # for var in tf.all_variables():
-        #     print var.name
-        #
-        word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype = tf.float32), validate_shape = False,
+        word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype=tf.float32), validate_shape=False,
                                       trainable = params['UPDATE_WORD_VECS'], name='word_embeddings')
         if params['USE_DELTA']:
-            W_delta = tf.Variable(tf.ones, key_array.shape[0], validate_shape = False, name='W_delta')
+            W_delta = tf.Variable(tf.ones, key_array.shape[0], validate_shape=False, name='W_delta')
             weighted_word_embeddings = tf.matmul(word_embeddings, W_delta)
             embedding_output = tf.nn.embedding_lookup(weighted_word_embeddings, self.input_x)
         else:
             embedding_output = tf.nn.embedding_lookup(word_embeddings, self.input_x)
         embedding_output = tf.expand_dims(embedding_output, 2)
-        #init lists for convolutional layer
+
         slices = []
         self.weights = []
         self.biases = []
         name_counter = 1
 
-        # for var in tf.all_variables():
-        #     print var.name
         #loop over KERNEL_SIZES, each time initializing a slice
         for kernel_size in params['KERNEL_SIZES']:
             W = weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']], 'W_%i' %name_counter)
@@ -46,11 +40,11 @@ class CNN:
                 activ = conv
             pooled = tf.nn.max_pool(activ, ksize=[1, params['MAX_LENGTH'], 1, 1],
                 strides=[1, params['MAX_LENGTH'], 1, 1], padding='SAME') #name='max_pool')
+
             slices.append(pooled)
             self.weights.append(W)
             self.biases.append(b)
-        # for var in tf.all_variables():
-        #     print var.name
+
         self.h_pool = tf.concat(3, slices)
         self.h_pool_drop = tf.nn.dropout(self.h_pool, self.dropout)
         self.h_pool_flat = tf.reshape(self.h_pool_drop, [batch_size, -1])
@@ -75,18 +69,9 @@ class CNN:
             self.reg_loss += custom_loss(W, params)
         for b in self.biases:
             self.reg_loss += custom_loss(b, params)
-        # for var in tf.all_variables():
-        #     print var.name
         self.reg_loss += custom_loss(self.W_fc, params)
         self.reg_loss += custom_loss(self.b_fc, params)
         self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])
-
-    # def reinit_word_embeddings(new_key_array, params, sess):
-    #     with sess.as_default():
-    #         embeddings_array = np.concat((self.embeddings.eval(), new_key_array))
-    #         self.embeddings = tf.Variable(tf.convert_to_tensor(embeddings_array,
-    #                                       dtype = tf.float32),
-    #                                       trainable = params['UPDATE_WORD_VECS'])
 
     #needs debug
     def clip_vars(self, params):

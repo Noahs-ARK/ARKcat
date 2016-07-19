@@ -1,5 +1,4 @@
 
-#incorporate word vector file location??
 
 #DATASET=trees_binary
 #DATASET=convote
@@ -8,9 +7,10 @@ DATASET=$1
 W2V_LOC=$2
 NUM_MODELS=$3
 MODEL_TYPE=$4
-NUM_ITERS=$5
-SAVE_LOC=$6
-NUM_FOLDS=$7
+SEARCH_TYPE=$5
+NUM_ITERS=$6
+SAVE_LOC=$7
+NUM_FOLDS=$8
 
 echo $SAVE_LOC
 
@@ -23,11 +23,12 @@ echo $2
 echo $3
 echo $4
 echo $5
+echo $6
 echo `pwd`
 
 echo "about to run.py"
 
-python run.py $DATASET/ $W2V_LOC $SAVE_LOC $NUM_MODELS $MODEL_TYPE -m $NUM_ITERS $NUM_FOLDS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
+python run.py $DATASET/ $W2V_LOC $SAVE_LOC $NUM_MODELS $MODEL_TYPE $SEARCH_TYPE -m $NUM_ITERS $NUM_FOLDS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
 echo "done with run.py. now going to eval.py"
-python eval.py $SAVE_LOC/saved_models/ $DATASET/ $W2V_LOC $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
+python eval.py $SAVE_LOC/saved_models/ $DATASET/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
 echo "done with eval.py"

@@ -129,12 +129,12 @@ def save_model(result):
                   'eta':'eta', 'gamma':'gamma', 'max_depth':'dpth', 'min_child_weight':'mn_wght',
                   'max_delta_step':'mx_stp', 'subsample':'smpl', 'reg_strength':'rg_str',
                   'num_round':'rnds', 'lambda':'lmbda', 'ngram_range':'ngrms', 'binary':'bnry',
-                  'use_idf':'idf', 'stop_words':'st_wrd', 'word_vector_init' : 'wv_init',
-                  'word_vector_update' : 'upd', 'delta': 'delta', 'flex_amt': 'flex',
-                  'kernel_size':'ks', 'kernel_increment' :'ki', 'kernel_num': 'kn',
-                  'filters': 'fltrs', 'dropout': 'drop', 'batch_size' : 'batch',
-                  'activation_fn': 'actvn', 'regularizer':'rg', 'reg_strength':'rg_str',
-                  'learning_rate': 'learn_rt'}
+                  'use_idf':'idf', 'stop_words':'st_wrd', 'word_vector_init':'wv_init',
+                  'word_vector_update':'upd', 'delta':'delta', 'flex':'flex', 'flex_amt':'flex_amt',
+                  'kernel_size':'ks', 'kernel_increment':'ki', 'kernel_num':'kn',
+                  'filters':'fltrs', 'dropout':'drop', 'batch_size':'batch',
+                  'activation_fn':'actvn', 'regularizer':'rg', 'reg_strength':'rg_str',
+                  'learning_rate':'learn_rt'}
 
     # to save the model after each iteration
     feature_string = ''
@@ -170,7 +170,7 @@ def set_globals():
 
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, word2vec_filename, log_filename
-    global trial_num, max_iter, num_models, model_types, num_folds
+    global trial_num, max_iter, num_models, model_types, search_type, num_folds
 
     train_data_filename = args[0] + 'train.data'
     train_label_filename = args[0] + 'train.labels'
@@ -180,7 +180,8 @@ def set_globals():
     output_dir = args[2]
     num_models = int(args[3])
     model_types = args[4].split('-')
-    num_folds = int(args[5])
+    search_type = args[5]
+    num_folds = int(args[6])
     print('train data filename: ',train_data_filename)
 
     train_feature_dir = output_dir + '/train_features/'
@@ -219,32 +220,29 @@ def main():
     print("Made it to the start of main!")
     set_globals()
     trials = Trials()
-    #if bayesopt
-    space = space_manager.get_space(num_models, model_types)
-    best = fmin(call_experiment,
-                space=space,
-                algo=tpe.suggest,
-                max_evals=max_iter,
-                trials=trials)
-    """
-    #elif grid:
-    # space = param_grid(model_types)
-    #best = (space, model_types,...)
-    #else (rand):
-    #space = param_rand(model_types)
-    best = run_random_search(space, model_types, n_iter ...)
-    """
+    if search_type == 'bayesopt':
+        space = space_manager.get_space(num_models, model_types)
+        best = fmin(call_experiment,
+                    space=space,
+                    algo=tpe.suggest,
+                    max_evals=max_iter,
+                    trials=trials)
+    elif search_type == 'grid':
+        space = param_grid(model_types)
+        best = run_grid_search(space, model_types)
+    else: #search_type == 'rand'
+        space = param_dist(model_types)
+        best = run_random_search(space, model_types, max_iter)
 
     print space_eval(space, best)
     printing_best(trials)
 
-"""
 def run_grid_search(space, model_types):
     grid_search = GridSearchCV(clf=model_types, param_grid=space)
     grid_search.fit(X, y)
     report(grid_search.grid_scores_)
 
-def run_random_search(space, model_types, n_iter, ...):
+def run_random_search(space, model_types, n_iter):
     random_search = RandomizedSearchCV(clf=model_types, param_distributions=space,
                                        n_iter=n_iter)
     random_search.fit(X, y)
@@ -260,7 +258,7 @@ def best(grid_scores, n_top=1):
               np.std(score.cv_validation_scores)))
         print("Parameters: {0}".format(score.parameters))
         print("")
-"""
+
 
 if __name__ == '__main__':
     main()

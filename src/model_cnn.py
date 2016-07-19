@@ -22,7 +22,6 @@ class Model_CNN:
         self.word2vec_filename = word2vec_filename
 
     def train(self, train_X, train_Y):
-        # print 'train_X type:', type(train_X[0][0])
         print 'fix later'
         self.params = {
                 'model_num' : self.hp['model_num'],
@@ -35,17 +34,11 @@ class Model_CNN:
                 'BATCH_SIZE' : self.hp['batch_size'],
                 'LEARNING_RATE' : self.hp['learning_rate'],
                 'KERNEL_SIZES' : [],
-                # #'KERNEL_NUM' : self.hp['kernel_num'],
-                # 'KERNEL_NUM' : 1,
                 #'USE_WORD2VEC' : self.hp['use_word2vec'],
                 'USE_WORD2VEC' : False,
                 #'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
                 'UPDATE_WORD_VECS' : False,
                 'USE_DELTA' : False,
-                # 'KERNEL_SIZES' : [self.hp['kernel_size'],
-                #                   self.hp['kernel_size'] + self.hp['kernel_increment'],
-                #                   self.hp['kernel_size'] + 2 * self.hp['kernel_increment']],
-                # 'KERNEL_SIZES' : self.hp['kernel_sizes']
                 #'USE_DELTA' : self.hp['delta'],
 
                 'WORD_VECTOR_LENGTH' : 300,
@@ -55,33 +48,31 @@ class Model_CNN:
         if self.params['REGULARIZER'] == 'l2':
             self.params['REG_STRENGTH'] = 10 ** self.params['REG_STRENGTH']
         # for i in range(self.hp['kernel_num']):
-
         for i in range(1):
             self.params['KERNEL_SIZES'].append(self.hp['kernel_size'] + i * self.hp['kernel_increment'])
-        self.vocab = get_vocab(self.indices_to_words)
 
+        self.vocab = get_vocab(self.indices_to_words)
         self.key_array = dict_to_array(self.word2vec_filename, self.vocab, self.params)
-        # print self.vocab[:10]
-        # self.key_array, self.vocab = dict_to_array2(self.indices_to_words, self.params)
+
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
+
         if self.hp['flex']:
             self.params['FLEX'] = self.hp['flex_amt'] * self.params['MAX_LENGTH']
         else:
+
             self.params['FLEX'] = 0
         self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
 
     #one-hot array
     #don't need to save test key--regen each time for dev, etc
-    def predict(self, test_X, indices_to_words=None, measure = 'predict'):
-        print 'test_X type:', type(test_X[0])
-        print 'debug types', type(test_X), type(indices_to_words)
+    def predict(self, test_X, indices_to_words=None, measure='predict'):
         if 'numpy' not in str(type(test_X)):
             if indices_to_words is not None:
                 test_vocab, test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
                 # print 'made test key'
                 # print 'check test_vocab:', len(self.vocab + test_vocab)
-                test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key = test_vocab_key)
+                test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key=test_vocab_key)
                 # print 'used key'
 
                 # print 'test_X:', test_X
@@ -94,9 +85,8 @@ class Model_CNN:
                 #             print 'IndexError'
                 #     print ''
 
-                return cnn_eval.main(self.model, self.params, test_X, np.concatenate((self.key_array, test_key_array), axis = 0),
+                return cnn_eval.main(self.model, self.params, test_X, np.concatenate((self.key_array, test_key_array), axis=0),
                                 measure)
-
 
             else:
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
@@ -117,4 +107,4 @@ class Model_CNN:
 
     #softmax array
     def predict_prob(self, test_X, indices_to_words=None):
-        return self.predict(test_X, indices_to_words=indices_to_words, measure = 'scores')
+        return self.predict(test_X, indices_to_words=indices_to_words, measure='scores')

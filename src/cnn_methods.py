@@ -202,7 +202,6 @@ def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
 
 def dict_to_array(word2vec_filename, vocab, params):
     key_array = [[] for item in range(len(vocab))]
-    #DEBUG: add filepath in user input
     if params['USE_WORD2VEC']:
         key_array = init_word_vecs(word2vec_filename, key_array, vocab, params)
     for i in range(len(key_array)):
@@ -210,21 +209,6 @@ def dict_to_array(word2vec_filename, vocab, params):
             key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
     key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
     return np.asarray(key_array)
-
-# def dict_to_array2(d, params):
-#     vocab = []
-#     for word in d.iterkeys():
-#         word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
-#         vocab.append(str(word))
-#     key_array = [[] for item in range(len(vocab))]
-#     #DEBUG: add filepath in user input
-#     if params['USE_WORD2VEC']:
-#         key_array = init_word_vecs(key_array, vocab, params)
-#     for i in range(len(key_array)):
-#         if key_array[i] == []:
-#             key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
-#     key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
-#     return np.asarray(key_array), vocab
 
 def get_vocab(indices_to_words):
     vocab = [None] * len(indices_to_words)

@@ -9,7 +9,7 @@ def test_batch(test_X, params, embed_keys):
     all_x = []
     while len(output_list) > 0:
         all_x.append(np.expand_dims(sub_indices_one(input_list[0], embed_keys),
-                                    axis = 0))
+                                    axis=0))
         test_X = test_X[1:]
     return all_x
 
@@ -19,10 +19,7 @@ def float_entropy(path, val_x, val_y, key_array, params):
     return np.mean(np.asarray(pred))
 
 def evaluate(path, val_x, val_y, key_array, params, measure):
-    # print type(val_x), type(val_x[0])
-    # print len(val_x)
     with tf.Graph().as_default():
-    #     with sess.as_default():
             cnn = CNN(params, key_array, batch_size=1)
             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
                                           intra_op_parallelism_threads=1,
@@ -30,22 +27,21 @@ def evaluate(path, val_x, val_y, key_array, params, measure):
             saver = tf.train.Saver()
             saver.restore(sess, path)
             pred = []
+            
             while len(val_x) > 0:
-                feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis = 0),
-                             cnn.input_y: np.expand_dims(val_y[0], axis = 0),
+                feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis=0),
+                             cnn.input_y: np.expand_dims(val_y[0], axis=0),
                              cnn.dropout: 1.0}
+
                 if measure == 'cross_entropy':
-                    # print 'input', val_x[0], len(val_x)
-                    # print 'hpool', cnn.h_pool_flat.eval(feed_dict=feed_dict, session=sess)
-                    # print 'bfc', cnn.b_fc.eval(session=sess)
-                    output = cnn.cross_entropy.eval(feed_dict=feed_dict, session = sess).tolist()
+                    output = cnn.cross_entropy.eval(feed_dict=feed_dict, session=sess).tolist()
                 elif measure == 'predict':
-                    integer = cnn.predictions.eval(feed_dict=feed_dict, session = sess).tolist()
+                    integer = cnn.predictions.eval(feed_dict=feed_dict, session=sess).tolist()
                     output = [0] * params['CLASSES']
                     output[integer] = 1
                 else:
-                    output = cnn.scores.eval(feed_dict=feed_dict, session = sess).tolist()[0]
-                # print 'output', output
+                    output = cnn.scores.eval(feed_dict=feed_dict, session=sess).tolist()[0]
+
                 pred.append(output)
                 val_x = val_x[1:]
                 val_y = val_y[1:]

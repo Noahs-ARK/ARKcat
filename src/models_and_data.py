@@ -8,7 +8,7 @@ from model_cnn import Model_CNN
 import re
 #DEBUGGING
 #import xgboost
-import cnn_methods
+# import cnn_methods
 
 class Data_and_Model_Manager:
     def __init__(self, f_and_p, model_dir, word2vec_filename):
