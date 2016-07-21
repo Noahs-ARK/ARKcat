@@ -1,11 +1,12 @@
-from run import cnn_feature_selector
+from feature_selector import cnn_feature_selector
 
 def get_cnn_model(model_num):
     feature_selector = cnn_feature_selector()
     hyperparam_grid = [
             feature_selector['delta_'],
-            [(False, 0.0),
+            [#(False, 0.0),
                 (True, [.15, .3])],
+
             feature_selector['filters_'],
             list(feature_selector['kernel_size_']),
             list(feature_selector['kernel_increment_']),
@@ -15,7 +16,7 @@ def get_cnn_model(model_num):
             # iden, relu, and tanh
             feature_selector['activation_fn_'],
             #none, clipped, or penalized
-            [(None, 0.0),
+            [#(None, 0.0),
                 ('l2', feature_selector['l2_']),
                 ('l2_clip', feature_selector['l2_clip_'])
             ],

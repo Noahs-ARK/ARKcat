@@ -7,6 +7,7 @@ import time, resource
 import inspect_checkpoint
 
 #random val set empty???
+
 def main(params, input_X, input_Y, key_array, model_dir):
 
     for example in input_X:
@@ -36,6 +37,8 @@ def main(params, input_X, input_Y, key_array, model_dir):
             cnn = CNN(params, key_array)
             loss = cnn.cross_entropy
             loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
+            #problem: thinks loss is None
+            print loss
             train_step = cnn.optimizer.minimize(loss)
             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
                                   intra_op_parallelism_threads=1, use_per_session_threads=True))

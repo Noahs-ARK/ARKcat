@@ -1,6 +1,5 @@
 import random
-#put cnn_feature_selector in own dir???
-from run import cnn_feature_selector
+from feature_selector import cnn_feature_selector
 
 def get_cnn_model(model_num):
     feature_selector = cnn_feature_selector()
@@ -8,8 +7,7 @@ def get_cnn_model(model_num):
             'model_' + model_num: 'CNN',
             'word_vectors_' + model_num: ('word2vec', True),
             'delta_' + model_num: random.choice(feature_selector['delta_']),
-            'flex_' + model_num: random.choice([(False, 0.0),
-                (True, random.random() * feature_selector['flex_amt_'][1])]),
+            'flex_' + model_num: (True, random.random() * feature_selector['flex_amt_'][1]),
             'filters_' + model_num: random.randint(*feature_selector['filters_']),
             'kernel_size_' + model_num: random.randint(*feature_selector['kernel_size_']),
             'kernel_increment_' + model_num: random.randint(*feature_selector['kernel_increment_']),
@@ -20,7 +18,7 @@ def get_cnn_model(model_num):
             'activation_fn_' + model_num: random.choice(feature_selector['activation_fn_']),
             #none, clipped, or penalized
             'regularizer_cnn_' + model_num: random.choice([
-                (None, 0.0),
+                # (None, 0.0),
                 ('l2', (random.random() + feature_selector['l2_'][0]) * (feature_selector['l2_'][1] - feature_selector['l2_'][0])),
                 ('l2_clip', (random.random() + feature_selector['l2_clip_'][0]) * (feature_selector['l2_clip_'][1] - feature_selector['l2_clip_'][0]))
             ]),

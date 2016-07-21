@@ -1,8 +1,7 @@
-import sys, re
 import random, math
 import numpy as np
-import os.path
 
+#max length of example in minibatch
 def get_max_length(list_of_examples):
     max_length = 0
     for line in list_of_examples:
@@ -22,6 +21,7 @@ def tokenize(line):
    list_of_words.append(word.strip())
    return list_of_words
 
+#randomly adds zero padding to some examples to increase minibatch variety
 def flex(input_list, params):
     for example in input_list:
         if example.shape[0] + params['FLEX'] <= params['MAX_LENGTH']:
@@ -37,6 +37,7 @@ def flex(input_list, params):
                 example = insert_padding(example, int(math.ceil(params['FLEX']/2.0)), False)
     return input_list
 
+#inserts zero padding for flex--note this is on a np array which has already been processed for feeding into tf
 def insert_padding(example, tokens_to_pad, left):
     if left:
         example = np.concatenate((np.zeros((tokens_to_pad)), example))
@@ -57,6 +58,7 @@ def shuffle_in_unison(a, b):
     return a, b
 
 #convert x to multidimensional python list if necessary
+#MAX_EPOCH_SIZE might be useful when dealing with very large datasets
 def scramble_batches(params, x, y):
     extras = len(x) % params['BATCH_SIZE']
     x, y = shuffle_in_unison(x, y)
@@ -83,6 +85,7 @@ def scramble_batches(params, x, y):
         y = y[params['BATCH_SIZE']:]
     return batches_x, batches_y
 
+# sorts examples in input_x by length
 def sort_examples_by_length(x, y):
     lengths = []
     for i in range(len(x)):
@@ -110,6 +113,8 @@ def pad_all(list_of_examples, params):
         list_of_examples[i] = pad_one(list_of_examples[i], max_length, params)
     return list_of_examples
 
+# converts list of ints into list of one_hot vectors (np arrays)
+#for purposes of calculating cross_entropy loss
 def one_hot(train_Y, CLASSES):
     one_hot = []
     for i in range(len(train_Y)):
@@ -126,6 +131,7 @@ def pad_one(list_of_word_vecs, max_length, params):
         right += 1
     return np.asarray(([0] * left) + list_of_word_vecs.tolist() + ([0] * right))
 
+#returns nonzero entries in input_X as np array
 def to_dense(input_X, test_key = None):
     max_length = 0
     dense = []
@@ -135,20 +141,12 @@ def to_dense(input_X, test_key = None):
         for word in example_transform:
             if test_key is not None:
                 temp_test_key = test_key
-                #debug
-                try: word = test_key[word]
-                except KeyError:
-                    print 'key error', word
+                word = test_key[word]
             word += 1
         max_length = max(max_length, len(example_transform))
         dense.append(np.asarray(example_transform))
     return dense, max_length
 
-def custom_loss(W, params):
-        if params['REGULARIZER'] == 'l2':
-            return tf.sqrt(tf.scalar_mul(tf.constant(2.0), tf.nn.l2_loss(W)))
-        else:
-            return 0.0
 
 #gets word vecs from word2vec_filename. those not found will be initialized later
 def init_word_vecs(word2vec_filename, key_array, vocab, params):
@@ -167,50 +165,18 @@ def init_word_vecs(word2vec_filename, key_array, vocab, params):
                 key_array[vocab.index(line[0])] = vector
     return key_array
 
-#returns a list of new vocab, array of new word vectors for that vocab,
+#returns an array of new word vectors for that vocab,
 #and dict to link indices in test_X with indices in key_array
-#appears to successfully init new_vocab_key to correct vocab indices
 def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params, test_X):
-    # test_X_key = {}
-    # print '1st',
-    # for i in new_vocab_key.itervalues():
-    #     print i, type(i),
-    # rev_new_vocab_key = {v:k for k,v in new_vocab_key.iteritems()}
     add_vocab_list = []
-    #either word in vocab, or word in add_vocab_list, in which case it should also be in vocab
     for word in new_vocab_key.itervalues():
         if word not in vocab:
             add_vocab_list.append(word)
-    # print len(add_vocab_list), add_vocab_list
-    # print 'ist',
-    # for i in new_vocab_key.itervalues():
-    #     print i, type(i),
     new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
-    # debtest_X, params['MAX_LENGTH'] = to_dense(test_X)
-    # print '2 check_vocab:'
-    # for example in debtest_X[:10]:
-    #     for word in example:
-    #         try:
-    #             print new_vocab_key[word],
-    #         except:
-    #             print 'error'
-    #         print ''
-    # print '2nd',
-    # for i in new_vocab_key.itervalues():
-    #     print i, type(i),
     all_vocab = vocab + add_vocab_list
     for key in new_vocab_key.iterkeys():
-        # print key,value
         new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
-        # print all_vocab.index(value)
-        # print key,value
-        # print ''
-    # new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
-    # all_vocab = vocab + add_vocab_list
-    # for key in new_vocab_key:
-    #     #theoretically, index in test : index in vocab
-    #     test_X_key[new_vocab_key[key]] = all_vocab.index(key)
-    return all_vocab, new_key_array, new_vocab_key
+    return new_key_array, new_vocab_key
 
 #loads word vectors
 def dict_to_array(word2vec_filename, vocab, params, train=True):
@@ -229,7 +195,6 @@ def get_vocab(indices_to_words):
     vocab = [None] * len(indices_to_words)
     for key in indices_to_words:
         vocab[key] = indices_to_words[key]
-    print vocab[0], vocab[1], '..', vocab[len(vocab)-2], vocab[len(vocab)-1]
     return vocab
 
 def separate_train_and_val(train_X, train_Y):

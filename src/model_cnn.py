@@ -4,10 +4,23 @@ import cnn_eval
 from cnn_methods import *
 import scipy
 
+<<<<<<< HEAD
 #extant issues:
 #test all hyperparams
 #set up and test big cnn space
 #clip_vars
+=======
+#old issues: 17 empty examles in train+val, then 17 each in train and val (?)
+    #shows up as tf error at W_fc step
+    #appears to be fixed, but need to remove debug code at some point
+# dict fails
+# vocab not in concordance
+
+#extant issues:
+#test all hyperparams
+#set up and test big cnn space
+#why does cnn kernel size "change"?
+>>>>>>> 44997820dece3763a165e0d8d297c608f3b6a7cc
 
 class Model_CNN:
     def __init__(self, params, n_labels, indices_to_words, model_dir, word2vec_filename):
@@ -44,7 +57,12 @@ class Model_CNN:
         }
         if self.params['REGULARIZER'] == 'l2':
             self.params['REG_STRENGTH'] = 10 ** self.params['REG_STRENGTH']
+<<<<<<< HEAD
         for i in range(self.hp['kernel_num']):
+=======
+        # for i in range(self.hp['kernel_num']):
+        for i in range(1):
+>>>>>>> 44997820dece3763a165e0d8d297c608f3b6a7cc
             self.params['KERNEL_SIZES'].append(self.hp['kernel_size'] + i * self.hp['kernel_increment'])
 
         self.vocab = get_vocab(self.indices_to_words)
@@ -56,13 +74,21 @@ class Model_CNN:
         if self.hp['flex']:
             self.params['FLEX'] = int(self.hp['flex_amt'] * self.params['MAX_LENGTH'])
         else:
+
             self.params['FLEX'] = 0
+        print
         self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
 
+<<<<<<< HEAD
+=======
+    #one-hot array
+    #don't need to save test key--regen each time for dev, etc
+>>>>>>> 44997820dece3763a165e0d8d297c608f3b6a7cc
     def predict(self, test_X, indices_to_words=None, measure='predict'):
         if 'numpy' not in str(type(test_X)):
             #if called on dev or test
             if indices_to_words is not None:
+<<<<<<< HEAD
                 test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params, test_X)
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key=test_vocab_key)
                 return cnn_eval.main(self.model, self.params, test_X,
@@ -71,6 +97,40 @@ class Model_CNN:
             #called on train
             else:
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
+=======
+                test_vocab, test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
+                # print 'made test key'
+                # print 'check test_vocab:', len(self.vocab + test_vocab)
+                test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key=test_vocab_key)
+                # print 'used key'
+
+                # print 'test_X:', test_X
+
+                for example in test_X[:10]:
+                    for word in example:
+                        try:
+                            print test_vocab[word],
+                        except IndexError:
+                            print 'IndexError'
+                    print ''
+
+                return cnn_eval.main(self.model, self.params, test_X, np.concatenate((self.key_array, test_key_array), axis=0),
+                                measure)
+
+            else:
+                test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
+                print 'no key'
+                for example in test_X[:10]:
+                    for word in example:
+                        print self.vocab[word],
+                    print ''
+        else:
+            for example in test_X[:10]:
+                for word in example:
+                    print self.vocab[word],
+                print ''
+
+>>>>>>> 44997820dece3763a165e0d8d297c608f3b6a7cc
         return cnn_eval.main(self.model, self.params, test_X, self.key_array,
                                  measure)
 

@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-from cnn_methods import *
 
 class CNN:
     def __init__(self, params, key_array, batch_size=None):
@@ -62,18 +61,24 @@ class CNN:
                                            tf.argmax(self.input_y, 1))
         self.reg_loss = tf.constant(0.0)
         if params['UPDATE_WORD_VECS']:
-            self.reg_loss += custom_loss(word_embeddings, params)
+            self.reg_loss += self.custom_loss(word_embeddings, params)
         if params['USE_DELTA']:
-            self.reg_loss += custom_loss(W_delta, params)
+            self.reg_loss += self.custom_loss(W_delta, params)
         for W in self.weights:
-            self.reg_loss += custom_loss(W, params)
+            self.reg_loss += self.custom_loss(W, params)
         for b in self.biases:
-            self.reg_loss += custom_loss(b, params)
-        self.reg_loss += custom_loss(self.W_fc, params)
-        self.reg_loss += custom_loss(self.b_fc, params)
+            self.reg_loss += self.custom_loss(b, params)
+        self.reg_loss += self.custom_loss(self.W_fc, params)
+        self.reg_loss += self.custom_loss(self.b_fc, params)
         self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])
 
-    #still not working :(
+    def custom_loss(self, W, params):
+            if params['REGULARIZER'] == 'l2':
+                return tf.sqrt(tf.scalar_mul(tf.constant(2.0), tf.nn.l2_loss(W)))
+            else:
+                return 0.0
+
+    #still not working :()
     def clip_vars(self, params):
         for W in self.weights:
             W = tf.clip_by_average_norm(W, params['REG_STRENGTH'])
