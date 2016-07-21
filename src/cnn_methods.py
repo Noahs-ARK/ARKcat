@@ -1,28 +1,12 @@
-import tensorflow as tf
 import sys, re
 import random, math
 import numpy as np
 import os.path
 
-#initializes weights, random with stddev of .1
-def weight_variable(shape, name):
-  initial = tf.truncated_normal(shape, stddev=0.1)
-  return tf.Variable(initial, name=name)
-
-def bias_variable(shape, name):
-      initial = tf.truncated_normal(shape, stddev=0.05)
-      return tf.Variable(initial, name=name)
-
 def get_max_length(list_of_examples):
     max_length = 0
     for line in list_of_examples:
         max_length = max(max_length, len(line))
-    return max_length
-
-def get_max_numpy(list_of_examples):
-    max_length = 0
-    for line in list_of_examples:
-        max_length = max(max_length, line.shape[0])
     return max_length
 
 #takes a line of text, returns an array of strings where ecah string is a word
@@ -60,6 +44,7 @@ def insert_padding(example, tokens_to_pad, left):
         example = np.concatenate((example, np.zeros((tokens_to_pad))))
     return example
 
+#returns a boolean true in percent of cases
 def boolean_percent(percent):
     return random.randrange(100) < percent
 
@@ -160,13 +145,12 @@ def to_dense(input_X, test_key = None):
     return dense, max_length
 
 def custom_loss(W, params):
-        if params['REGULARIZER'] == 'l1':
-            return tf.sqrt(tf.reduce_sum(tf.abs(W)))
-        elif params['REGULARIZER'] == 'l2':
+        if params['REGULARIZER'] == 'l2':
             return tf.sqrt(tf.scalar_mul(tf.constant(2.0), tf.nn.l2_loss(W)))
         else:
             return 0.0
 
+#gets word vecs from word2vec_filename. those not found will be initialized later
 def init_word_vecs(word2vec_filename, key_array, vocab, params):
     #with open('/Users/katya/repos/tensorflow/output-short.txt', 'r') as word2vec:
     with open(word2vec_filename, 'r') as word2vec:
@@ -183,42 +167,82 @@ def init_word_vecs(word2vec_filename, key_array, vocab, params):
                 key_array[vocab.index(line[0])] = vector
     return key_array
 
-#test_vocab_key converts vocab indices in test_X to vocab indices in the union of train and test vocab
-#new vocab key: words to indices
-#dublicate- test vocab 2nd time
-def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
-    test_X_key = {}
-    new_vocab_key = {v:k for k,v in new_vocab_key.iteritems()}
+#returns a list of new vocab, array of new word vectors for that vocab,
+#and dict to link indices in test_X with indices in key_array
+#appears to successfully init new_vocab_key to correct vocab indices
+def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params, test_X):
+    # test_X_key = {}
+    # print '1st',
+    # for i in new_vocab_key.itervalues():
+    #     print i, type(i),
+    # rev_new_vocab_key = {v:k for k,v in new_vocab_key.iteritems()}
     add_vocab_list = []
     #either word in vocab, or word in add_vocab_list, in which case it should also be in vocab
-    for key in new_vocab_key:
-        if key not in vocab:
-            add_vocab_list.append(key)
-    new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params)
-    vocab.extend(add_vocab_list)
-    for key in new_vocab_key:
-        test_X_key[new_vocab_key[key]] = vocab.index(key)
-    return add_vocab_list, new_key_array, test_X_key
+    for word in new_vocab_key.itervalues():
+        if word not in vocab:
+            add_vocab_list.append(word)
+    # print len(add_vocab_list), add_vocab_list
+    # print 'ist',
+    # for i in new_vocab_key.itervalues():
+    #     print i, type(i),
+    new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
+    # debtest_X, params['MAX_LENGTH'] = to_dense(test_X)
+    # print '2 check_vocab:'
+    # for example in debtest_X[:10]:
+    #     for word in example:
+    #         try:
+    #             print new_vocab_key[word],
+    #         except:
+    #             print 'error'
+    #         print ''
+    # print '2nd',
+    # for i in new_vocab_key.itervalues():
+    #     print i, type(i),
+    all_vocab = vocab + add_vocab_list
+    for key in new_vocab_key.iterkeys():
+        # print key,value
+        new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
+        # print all_vocab.index(value)
+        # print key,value
+        # print ''
+    # new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
+    # all_vocab = vocab + add_vocab_list
+    # for key in new_vocab_key:
+    #     #theoretically, index in test : index in vocab
+    #     test_X_key[new_vocab_key[key]] = all_vocab.index(key)
+    return all_vocab, new_key_array, new_vocab_key
 
-def dict_to_array(word2vec_filename, vocab, params):
+#loads word vectors
+def dict_to_array(word2vec_filename, vocab, params, train=True):
     key_array = [[] for item in range(len(vocab))]
     if params['USE_WORD2VEC']:
         key_array = init_word_vecs(word2vec_filename, key_array, vocab, params)
     for i in range(len(key_array)):
         if key_array[i] == []:
             key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
-    key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
+    if train:
+        key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
     return np.asarray(key_array)
 
+#saves vocab from TfidfVectorizer in list. indices in self.vocab will match those in key_array
 def get_vocab(indices_to_words):
     vocab = [None] * len(indices_to_words)
     for key in indices_to_words:
         vocab[key] = indices_to_words[key]
+    print vocab[0], vocab[1], '..', vocab[len(vocab)-2], vocab[len(vocab)-1]
     return vocab
 
 def separate_train_and_val(train_X, train_Y):
     shuffle_in_unison(train_X, train_Y)
     val_split = len(train_X)/10
     return train_X[val_split:], train_Y[val_split:], train_X[:val_split], train_Y[:val_split]
+
+#transforms indices_to_words to needed form
+def fix_indices(indices_to_words):
+    for key in indices_to_words:
+        key += 1
+    #dummy key so that len() matches
+    indices_to_words[0] = None
+    return indices_to_words
 
 if __name__ == "__main__": main()

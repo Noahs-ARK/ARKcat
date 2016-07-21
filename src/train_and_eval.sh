@@ -13,8 +13,11 @@ SAVE_LOC=$7
 NUM_FOLDS=$8
 
 echo $SAVE_LOC
-
-rm -rf $SAVE_LOC
+#prevent accidental overwrites
+if [$SAVE_LOC != '../output/']
+  then
+    rm -rf $SAVE_LOC
+fi
 echo "making the dir to save output..."
 mkdir -p $SAVE_LOC /
 

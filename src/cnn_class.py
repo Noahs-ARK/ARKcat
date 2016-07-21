@@ -26,8 +26,8 @@ class CNN:
 
         #loop over KERNEL_SIZES, each time initializing a slice
         for kernel_size in params['KERNEL_SIZES']:
-            W = weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']], 'W_%i' %name_counter)
-            b = bias_variable([params['FILTERS']], 'b_%i' %name_counter)
+            W = self.weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']], 'W_%i' %name_counter)
+            b = self.bias_variable([params['FILTERS']], 'b_%i' %name_counter)
             name_counter += 1
             conv = tf.nn.conv2d(embedding_output, W, strides=[1, 1, 1, 1], padding="SAME")
             if params['ACTIVATION_FN'] == 'relu':
@@ -49,9 +49,9 @@ class CNN:
         self.h_pool_drop = tf.nn.dropout(self.h_pool, self.dropout)
         self.h_pool_flat = tf.reshape(self.h_pool_drop, [batch_size, -1])
         #fully connected softmax layer
-        self.W_fc = weight_variable([len(params['KERNEL_SIZES']) * params['FILTERS'],
+        self.W_fc = self.weight_variable([len(params['KERNEL_SIZES']) * params['FILTERS'],
                                 params['CLASSES']], 'W_fc')
-        self.b_fc = bias_variable([params['CLASSES']], 'b_fc')
+        self.b_fc = self.bias_variable([params['CLASSES']], 'b_fc')
         self.scores = tf.nn.softmax(tf.nn.xw_plus_b(self.h_pool_flat, self.W_fc, self.b_fc))
         self.predictions = tf.argmax(self.scores, 1)
         #define error for training steps
@@ -73,7 +73,7 @@ class CNN:
         self.reg_loss += custom_loss(self.b_fc, params)
         self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])
 
-    #needs debug
+    #still not working :(
     def clip_vars(self, params):
         for W in self.weights:
             W = tf.clip_by_average_norm(W, params['REG_STRENGTH'])
@@ -81,3 +81,13 @@ class CNN:
             b = tf.clip_by_average_norm(b, params['REG_STRENGTH'])
         self.W_fc = tf.clip_by_average_norm(self.W_fc, params['REG_STRENGTH'])
         self.b_fc = tf.clip_by_average_norm(self.b_fc, params['REG_STRENGTH'])
+
+    #initializes weights, random with stddev of .1
+    def weight_variable(self, shape, name):
+      initial = tf.truncated_normal(shape, stddev=0.1)
+      return tf.Variable(initial, name=name)
+
+    #init biases with stddev or .05
+    def bias_variable(self, shape, name):
+          initial = tf.truncated_normal(shape, stddev=0.05)
+          return tf.Variable(initial, name=name)

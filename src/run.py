@@ -7,9 +7,11 @@ import Queue as queue
 from optparse import OptionParser
 import numpy as np
 from hyperopt import fmin, tpe, hp, Trials, space_eval
+from sklearn.grid_search import GridSearchCV#, RandomizedSearchCV
 
 import classify_test
 import space_manager
+
 
 def call_experiment(args):
     global trial_num
@@ -79,21 +81,16 @@ def wrangle_params(args, model_num):
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_xgb_' + model_num][1]
         kwargs['num_round'] = int(args['model_' + model_num]['num_round_' + model_num])
     elif model == 'CNN':
-        #???
-        kwargs['model_num'] = model_num
-        # kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
-        # kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
-        # kwargs['word_vector_update'] = args['model_' + model_num]['word_vector_update_' + model_num]
+        print args['model_' + model_num]['regularizer_cnn_' + model_num][0]
+        print args['model_' + model_num]['regularizer_cnn_' + model_num][1]
+        kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
+        kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
         kwargs['flex'] = (args['model_' + model_num]['flex_' + model_num])[0]
         kwargs['flex_amt'] = (args['model_' + model_num]['flex_' + model_num])[1]
-        # kwargs['kernel_size_1'] = int(args['model_' + model_num]['kernel_size_1_' + model_num])
-        # kwargs['kernel_size_2'] = int(args['model_' + model_num]['kernel_size_2_' + model_num])
-        # kwargs['kernel_size_3'] = int(args['model_' + model_num]['kernel_size_3_' + model_num])
         kwargs['kernel_size'] = int(args['model_' + model_num]['kernel_size_' + model_num])
         kwargs['kernel_increment'] = int(args['model_' + model_num]['kernel_increment_' + model_num])
         kwargs['kernel_num'] = int(args['model_' + model_num]['kernel_num_' + model_num])
-        # kwargs['num_kernels'] = args['model_' + model_num]['num_kernels_' + model_num][0]
         kwargs['filters'] = int(args['model_' + model_num]['filters_' + model_num])
         kwargs['dropout'] = args['model_' + model_num]['dropout_' + model_num]
         kwargs['batch_size'] = int(args['model_' + model_num]['batch_size_' + model_num])
@@ -101,10 +98,6 @@ def wrangle_params(args, model_num):
         kwargs['regularizer'] = args['model_' + model_num]['regularizer_cnn_' + model_num][0]
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_cnn_' + model_num][1]
         kwargs['learning_rate'] = args['model_' + model_num]['learning_rate_' + model_num]
-        # kwargs['kernel_sizes'] = []
-        # for i in xrange(args['model_' + model_num]['num_kernels_' + model_num][0]):
-        #     kwargs['kernel_sizes'].append(args['model_' + model_num]['num_kernels_' + model_num][1])
-
 
     features = {}
     features['ngram_range'] = args['features_' + model_num]['nmin_to_max_' + model_num]
@@ -220,33 +213,34 @@ def main():
     print("Made it to the start of main!")
     set_globals()
     trials = Trials()
-    if search_type == 'bayesopt':
-        space = space_manager.get_space(num_models, model_types)
+    space = space_manager.get_space(num_models, model_types, search_type)
+    if search_type == 'grid_search':
+        best = run_grid_search(space, model_types)
+    else:
         best = fmin(call_experiment,
                     space=space,
                     algo=tpe.suggest,
                     max_evals=max_iter,
                     trials=trials)
-    elif search_type == 'grid':
-        space = param_grid(model_types)
-        best = run_grid_search(space, model_types)
-    else: #search_type == 'rand'
-        space = param_dist(model_types)
-        best = run_random_search(space, model_types, max_iter)
+    # #need a classify_test method
+    # elif search_type == 'grid_search':
+    #     best = run_grid_search(space, model_types)
+    # else: #search_type == 'random_search'
+    #     best = run_random_search(space, model_types, max_iter)
 
     print space_eval(space, best)
     printing_best(trials)
 
 def run_grid_search(space, model_types):
-    grid_search = GridSearchCV(clf=model_types, param_grid=space)
+    grid_search = GridSearchCV(model_types, param_grid=space)
     grid_search.fit(X, y)
     report(grid_search.grid_scores_)
 
-def run_random_search(space, model_types, n_iter):
-    random_search = RandomizedSearchCV(clf=model_types, param_distributions=space,
-                                       n_iter=n_iter)
-    random_search.fit(X, y)
-    return best(random_search.grid_scores_)
+# def run_random_search(space, model_types, n_iter):
+#     random_search = RandomizedSearchCV(model_types, param_distributions=space,
+#                                        n_iter=n_iter)
+#     random_search.fit(X, y)
+#     return best(random_search.grid_scores_)
 
 # Utility function to report best scores
 def best(grid_scores, n_top=1):

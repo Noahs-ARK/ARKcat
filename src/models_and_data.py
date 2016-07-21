@@ -8,7 +8,6 @@ from model_cnn import Model_CNN
 import re
 #DEBUGGING
 #import xgboost
-# import cnn_methods
 
 class Data_and_Model_Manager:
     def __init__(self, f_and_p, model_dir, word2vec_filename):
@@ -59,6 +58,7 @@ class Data_and_Model_Manager:
     def k_fold_cv(self, num_folds):
         if num_folds == 1 and len(self.dev[0]) > 0:
             train_acc = self.train_models(self.train[0], self.train[1])
+
             dev_acc = self.predict_acc(self.dev[0], self.dev[1])
             return {'train_acc':train_acc, 'dev_acc':dev_acc}
         else:
@@ -77,7 +77,6 @@ class Data_and_Model_Manager:
                 cur_dev_X = [self.train[0][i] for i in dev_indxs]
                 cur_dev_Y = [self.train[1][i] for i in dev_indxs]
                 self.train_models(cur_train_X, cur_train_Y)
-
                 avg_dev_acc = avg_dev_acc + self.predict_acc(cur_dev_X, cur_dev_Y)/num_folds
             return {'train_acc':self.train_models(self.train[0], self.train[1]), 'dev_acc':avg_dev_acc}
 
