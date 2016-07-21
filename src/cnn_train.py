@@ -7,32 +7,32 @@ import time, resource
 import inspect_checkpoint
 
 #random val set empty???
-def main(params, train_X, train_Y, key_array, model_dir):
-    #
-    # for example in train_X:
-    #     if not example.size:
-    #         print 'yikes'
-    #
-    train_X, train_Y, val_X, val_Y = separate_train_and_val(train_X, train_Y)
+def main(params, input_X, input_Y, key_array, model_dir):
 
-    # print len (train_X), len (val_X), len(train_X) + len(val_X)
-    # for example in train_X:
-    #     if not example.size:
-    #         print 'yikes--train split'
-    # for example in train_X:
-    #     if not example.size:
-    #         print 'yikes--val split'
-    #
+    for example in input_X:
+        if not example.size:
+            print 'yikes'
+
+    train_X, train_Y, val_X, val_Y = separate_train_and_val(input_X, input_Y)
+
+    print len (train_X), len (val_X), len(train_X) + len(val_X)
+    for example in train_X:
+        if not example.size:
+            print 'yikes--train split'
+    for example in val_X:
+        if not example.size:
+            print 'yikes--val split'
+
     cnn_dir = '../output/temp/'
     with tf.Graph().as_default():
         with open(cnn_dir + 'train_log', 'a') as timelog:
             timelog.write('\n\n\nNew Model:')
-            # for example in train_X:
-            #     if np.count_nonzero(example) == 0:
-            #         print 'error: zero entry'
-            #     else:
-            #         # print 'maximum', np.amax(example)
-            #         print 'shape', example.shape
+            for example in train_X:
+                if np.count_nonzero(example) == 0:
+                    print 'error: zero entry'
+                else:
+                    # print 'maximum', np.amax(example)
+                    print 'shape', example.shape
             cnn = CNN(params, key_array)
             loss = cnn.cross_entropy
             loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)

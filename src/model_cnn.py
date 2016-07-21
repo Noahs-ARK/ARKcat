@@ -1,18 +1,13 @@
 import numpy as np
-import tensorflow as tf
 import cnn_train
 import cnn_eval
 from cnn_methods import *
-import os,sys
 import scipy
-
-#old issues:
-# dict fails
-# vocab not in concordance
 
 #extant issues:
 #test all hyperparams
 #set up and test big cnn space
+#clip_vars
 
 class Model_CNN:
     def __init__(self, params, n_labels, indices_to_words, model_dir, word2vec_filename):
@@ -45,12 +40,11 @@ class Model_CNN:
 
                 'WORD_VECTOR_LENGTH' : 3,
                 'CLASSES' : self.num_labels,
-                'EPOCHS' : 1,
+                'EPOCHS' : 2,
         }
         if self.params['REGULARIZER'] == 'l2':
             self.params['REG_STRENGTH'] = 10 ** self.params['REG_STRENGTH']
-        # for i in range(self.hp['kernel_num']):
-        for i in range(2):
+        for i in range(self.hp['kernel_num']):
             self.params['KERNEL_SIZES'].append(self.hp['kernel_size'] + i * self.hp['kernel_increment'])
 
         self.vocab = get_vocab(self.indices_to_words)
@@ -62,76 +56,23 @@ class Model_CNN:
         if self.hp['flex']:
             self.params['FLEX'] = int(self.hp['flex_amt'] * self.params['MAX_LENGTH'])
         else:
-
             self.params['FLEX'] = 0
         self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
 
-    #don't need to save test key--regen each time for dev, etc
-    #debug: test_vocab ultimately unneccessary
     def predict(self, test_X, indices_to_words=None, measure='predict'):
         if 'numpy' not in str(type(test_X)):
             #if called on dev or test
             if indices_to_words is not None:
-                debtest_X, self.params['MAX_LENGTH'] = to_dense(test_X)
-                print '1st check_vocab:'
-                for example in debtest_X[:10]:
-                    for word in example:
-                        try:
-                            print indices_to_words[word],
-                        except:
-                            print 'error'
-                    print ''
-
-                test_vocab, test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params, test_X)
-                # print 'test_vocab_key', max(test_vocab_key.iterkeys(), key=(lambda key: test_vocab_key[key]))
-                try:
-                    print test_vocab_key[1:5]
-                except:
-                    print  'fail'
-                print 'train vocab', len(self.vocab)
-                print 'comb vocab', (len(test_vocab))
-                print 'np', len (self.key_array)
-                print 'np', np.concatenate((self.key_array, test_key_array), axis=0).shape
+                test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params, test_X)
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key=test_vocab_key)
-                for example in test_X[:10]:
-                    for word in example:
-                        try:
-                            print '|',(test_vocab)[word-1],(test_vocab)[word],(test_vocab)[word+1],'|',
-                        except IndexError:
-                            print 'IndexError'
-                    print ''
-                return cnn_eval.main(self.model, self.params, test_X, np.concatenate((self.key_array, test_key_array), axis=0),
-                                measure)
+                return cnn_eval.main(self.model, self.params, test_X,
+                                     np.concatenate((self.key_array, test_key_array), axis=0),
+                                     measure)
             #called on train
             else:
-                print '2nd cat exists'
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
-        #         print 'no key'
-                for example in test_X[:10]:
-                    for word in example:
-                        try:
-                            print '|',(self.vocab)[word-1],(self.vocab)[word],(self.vocab)[word+1],'|',
-                        except IndexError:
-                            print 'IndexError'
-                    print ''
-
-                return cnn_eval.main(self.model, self.params, test_X, np.concatenate((self.key_array), axis=0),
-                                measure)
-        #called on train
-        else:
-                if indices_to_words:
-                    print 'error; 4th cat exists'
-                else:
-                    print '3rd'
-                for example in test_X[:10]:
-                    for word in example:
-                        try:
-                            print '|',(self.vocab)[word-1],(self.vocab)[word],(self.vocab)[word+1],'|',
-                        except IndexError:
-                            print 'IndexError'
-                    print ''
-                return cnn_eval.main(self.model, self.params, test_X, self.key_array,
-                        measure)
+        return cnn_eval.main(self.model, self.params, test_X, self.key_array,
+                                 measure)
 
 
     #softmax array
