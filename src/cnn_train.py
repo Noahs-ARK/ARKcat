@@ -7,7 +7,7 @@ import time, resource
 import inspect_checkpoint
 
 #random val set empty???
-
+#cutting 1st word --aha!
 def main(params, input_X, input_Y, key_array, model_dir):
 
     for example in input_X:
@@ -31,9 +31,9 @@ def main(params, input_X, input_Y, key_array, model_dir):
             for example in train_X:
                 if np.count_nonzero(example) == 0:
                     print 'error: zero entry'
-                else:
+                # else:
                     # print 'maximum', np.amax(example)
-                    print 'shape', example.shape
+                    # print 'shape', example.shape
             cnn = CNN(params, key_array)
             loss = cnn.cross_entropy
             loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)

@@ -80,18 +80,10 @@ class Data_and_Model_Manager:
                 avg_dev_acc = avg_dev_acc + self.predict_acc(cur_dev_X, cur_dev_Y)/num_folds
             return {'train_acc':self.train_models(self.train[0], self.train[1]), 'dev_acc':avg_dev_acc}
 
-#re sub there :)
     def transform_cnn_data(self, X_raw, feat_and_param):
         feat_and_param['feats']['ngram_range'] = (1,1)
         feat_and_param['feats']['use_idf'] = False
         feat_and_param['feats']['binary'] = False
-        # for i in range(len(X_raw)):
-        #     X_raw[i] = cnn_methods.tokenize(X_raw[i])
-        #     join = ''
-        #     for word in X_raw[i]:
-        #         word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
-        #         join += word + ' '
-        #     X_raw[i] = join
         vectorizer = TfidfVectorizer(**feat_and_param['feats'])
         vectorizer.fit(X_raw)
         tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)

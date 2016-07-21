@@ -1,13 +1,5 @@
 from hyperopt import fmin, tpe, hp, Trials, space_eval
 
-def get_space(num_models, model_types):
-    space = {}
-
-
-    for i in range(num_models):
-        add_model(str(i), space, model_types)
-    return space
-
 def get_linear_model(model_num):
     return {
         'model_' + model_num: 'LR',

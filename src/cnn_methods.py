@@ -176,6 +176,17 @@ def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params, test_X):
     all_vocab = vocab + add_vocab_list
     for key in new_vocab_key.iterkeys():
         new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
+    for example in test_X[:10]:
+        for word in example:
+            try:
+                print new_vocab_key[word],
+                print all_vocab[new_vocab_key[word]],
+            except IndexError:
+                print 'IndexError'
+            except KeyError:
+                print 'KeyError'
+        print ''
+
     return new_key_array, new_vocab_key
 
 #loads word vectors

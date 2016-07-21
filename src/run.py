@@ -90,6 +90,11 @@ def wrangle_params(args, model_num):
     features['use_idf'] = args['features_' + model_num]['use_idf_' + model_num]
     features['stop_words'] = args['features_' + model_num]['st_wrd_' + model_num]
 
+    #note to Jesse: code in
+    #passing English will break CNN because some examples become null
+    if model == 'CNN':
+        features['stop_words'] = None
+        features['binary'] = False
 
     print kwargs
     print features

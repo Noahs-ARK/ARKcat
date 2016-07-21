@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow as tf
 
+#problem: need to discard cnn btwn models
+#else gets error when shape of vars doesn't match :()
 class CNN:
     def __init__(self, params, key_array, batch_size=None):
         if batch_size == None:
