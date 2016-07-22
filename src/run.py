@@ -205,7 +205,12 @@ def main():
     trials = Trials()
     space = space_manager.get_space(num_models, model_types, search_type)
     if search_type == 'grid_search':
-        best = run_grid_search(space, model_types)
+        global_vars = (train_data_filename, train_label_filename, dev_data_filename,
+                       dev_label_filename, output_dir, train_feature_dir,
+                       dev_feature_dir, model_dir, word2vec_filename, log_filename,
+                       trial_num, max_iter, num_models, model_types, search_type,
+                       num_folds)
+        best = execute_grid_search.run_grid_search(space, model_types, global_vars)
     else:
         best = fmin(call_experiment,
                     space=space,
@@ -220,28 +225,6 @@ def main():
 
     print space_eval(space, best)
     printing_best(trials)
-
-def run_grid_search(space, model_types):
-    grid_search = GridSearchCV(model_types, param_grid=space)
-    grid_search.fit(X, y)
-    report(grid_search.grid_scores_)
-
-# def run_random_search(space, model_types, n_iter):
-#     random_search = RandomizedSearchCV(model_types, param_distributions=space,
-#                                        n_iter=n_iter)
-#     random_search.fit(X, y)
-#     return best(random_search.grid_scores_)
-
-# Utility function to report best scores
-def best(grid_scores, n_top=1):
-    top_scores = sorted(grid_scores, key=itemgetter(1), reverse=True)[:n_top]
-    for i, score in enumerate(top_scores):
-        print("Model with rank: {0}".format(i + 1))
-        print("Mean validation score: {0:.3f} (std: {1:.3f})".format(
-              score.mean_validation_score,
-              np.std(score.cv_validation_scores)))
-        print("Parameters: {0}".format(score.parameters))
-        print("")
 
 
 if __name__ == '__main__':

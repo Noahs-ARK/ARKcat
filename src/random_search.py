@@ -1,6 +1,7 @@
 import random
 from feature_selector import cnn_feature_selector
 
+#random searches for a CNN
 def get_cnn_model(model_num):
     feature_selector = cnn_feature_selector()
     param_dist = {

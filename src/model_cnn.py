@@ -63,10 +63,33 @@ class Model_CNN:
         self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
 
     def predict(self, test_X, indices_to_words=None, measure='predict'):
+        # print 'nested train_labels (called pred again)'
+        # try:
+        #     print test_X[0]
+        #     try:
+        #         print test_X[0][0]
+        #         try:
+        #             print test_X[0][0][0]
+        #             try:
+        #                 print test_X[0][0][0][0]
+        #             except:
+        #                 print '3'
+        #                 pass
+        #         except:
+        #             print '2'
+        #             pass
+        #     except:
+        #         print '1'
+        #         pass
+        # except:
+        #     print 'none'
+            pass
         if 'numpy' not in str(type(test_X)):
             #if called on dev or test
             if indices_to_words is not None:
-                test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params, test_X)
+                # print vocab_debug(test_X[0:10], indices_to_words)
+
+                placeholder, test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key=test_vocab_key)
                 return cnn_eval.main(self.model, self.params, test_X,
                                      np.concatenate((self.key_array, test_key_array), axis=0),

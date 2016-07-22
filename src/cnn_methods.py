@@ -167,7 +167,7 @@ def init_word_vecs(word2vec_filename, key_array, vocab, params):
 
 #returns an array of new word vectors for that vocab,
 #and dict to link indices in test_X with indices in key_array
-def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params, test_X):
+def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
     add_vocab_list = []
     for word in new_vocab_key.itervalues():
         if word not in vocab:
@@ -176,19 +176,45 @@ def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params, test_X):
     all_vocab = vocab + add_vocab_list
     for key in new_vocab_key.iterkeys():
         new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
-    for example in test_X[:10]:
-        for word in example:
-            try:
-                print new_vocab_key[word],
-                print all_vocab[new_vocab_key[word]],
-            except IndexError:
-                print 'IndexError'
-            except KeyError:
-                print 'KeyError'
-        print ''
-
-    return new_key_array, new_vocab_key
-
+    return all_vocab, new_key_array, new_vocab_key
+    #     add_vocab_list = []
+#     for word in new_vocab_key.itervalues():
+#         if word not in vocab:
+#             add_vocab_list.append(word)
+#     new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
+#     all_vocab = vocab + add_vocab_list
+#     for key in new_vocab_key.iterkeys():
+#         new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
+#     try:
+#         for example in test_X[:10]:
+#             for word in example:
+#                 try:
+#                     print new_vocab_key[word],
+#                     print all_vocab[new_vocab_key[word]],
+#                 except IndexError:
+#                     print 'IndexError'
+#             print ''
+#     except KeyError:
+#         print 'KeyError'
+#         print 'word', word
+#         print 'new_vocab_key.popitem', new_vocab_key.popitem()
+#         print ''
+#         test_X = rm_empty_dim(test_X)
+#         print 'rm dim'
+#         for example in test_X:
+#             for word in example:
+#                 try:
+#                     print new_vocab_key[word],
+#                     print all_vocab[new_vocab_key[word]],
+#                 except IndexError:
+#                     print 'IndexError'
+#             print ''
+#
+#     print 'len vocab', len(all_vocab)
+#     print 'len array', new_key_array.shape
+#
+#     return new_key_array, new_vocab_key
+#
 #loads word vectors
 def dict_to_array(word2vec_filename, vocab, params, train=True):
     key_array = [[] for item in range(len(vocab))]
@@ -220,5 +246,20 @@ def fix_indices(indices_to_words):
     #dummy key so that len() matches
     indices_to_words[0] = None
     return indices_to_words
+
+def rm_empty_dim(test_X):
+    for i in range(len(test_X)):
+        test_X[i] = test_X[i][0]
+
+def vocab_debug(debug_X, indices_to_words):
+    if 'numpy' not in str(type(debug_X[0])):
+        debug2_X, l = to_dense(debug_X)
+    for example in debug2_X[:10]:
+        for word in example:
+            try:
+                print indices_to_words[word],
+            except IndexError:
+                print 'IndexError'
+        print ''
 
 if __name__ == "__main__": main()

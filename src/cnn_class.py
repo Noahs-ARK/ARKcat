@@ -74,13 +74,16 @@ class CNN:
         self.reg_loss += self.custom_loss(self.b_fc, params)
         self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])
 
+    #calculates l1 and l2 losses for feeding to optimizer
     def custom_loss(self, W, params):
-            if params['REGULARIZER'] == 'l2':
-                return tf.sqrt(tf.scalar_mul(tf.constant(2.0), tf.nn.l2_loss(W)))
-            else:
-                return 0.0
+        if params['REGULARIZER'] == 'l1':
+            return tf.sqrt(tf.reduce_sum(tf.abs(W)))
+        elif params['REGULARIZER'] == 'l2':
+            return tf.sqrt(tf.scalar_mul(tf.constant(2.0), tf.nn.l2_loss(W)))
+        else:
+            return 0.0
 
-    #still not working :()
+    #still not working :(
     def clip_vars(self, params):
         for W in self.weights:
             W = tf.clip_by_average_norm(W, params['REG_STRENGTH'])
