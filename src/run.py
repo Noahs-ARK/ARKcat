@@ -7,7 +7,8 @@ import Queue as queue
 from optparse import OptionParser
 import numpy as np
 from hyperopt import fmin, tpe, hp, Trials, space_eval
-from sklearn.grid_search import GridSearchCV#, RandomizedSearchCV
+# from sklearn.grid_search import GridSearchCV#, RandomizedSearchCV
+import itertools
 
 import classify_test
 import space_manager
@@ -66,8 +67,8 @@ def wrangle_params(args, model_num):
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_xgb_' + model_num][1]
         kwargs['num_round'] = int(args['model_' + model_num]['num_round_' + model_num])
     elif model == 'CNN':
-        print args['model_' + model_num]['regularizer_cnn_' + model_num][0]
-        print args['model_' + model_num]['regularizer_cnn_' + model_num][1]
+        # print args['model_' + model_num]['regularizer_cnn_' + model_num][0]
+        # print args['model_' + model_num]['regularizer_cnn_' + model_num][1]
         kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
         kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
@@ -204,25 +205,19 @@ def main():
     set_globals()
     trials = Trials()
     space = space_manager.get_space(num_models, model_types, search_type)
-    if search_type == 'grid_search':
-        global_vars = (train_data_filename, train_label_filename, dev_data_filename,
-                       dev_label_filename, output_dir, train_feature_dir,
-                       dev_feature_dir, model_dir, word2vec_filename, log_filename,
-                       trial_num, max_iter, num_models, model_types, search_type,
-                       num_folds)
-        best = execute_grid_search.run_grid_search(space, model_types, global_vars)
-    else:
-        best = fmin(call_experiment,
+    # if search_type == 'grid_search':
+    #     # global_vars = (train_data_filename, train_label_filename, dev_data_filename,
+    #     #                dev_label_filename, output_dir, train_feature_dir,
+    #     #                dev_feature_dir, model_dir, word2vec_filename, log_filename,
+    #     #                trial_num, max_iter, num_models, model_types, search_type,
+    #     #                num_folds)
+    #     # best = execute_grid_search.run_grid_search(space, model_types, global_vars)
+    # else:
+    best = fmin(call_experiment,
                     space=space,
                     algo=tpe.suggest,
                     max_evals=max_iter,
                     trials=trials)
-    # #need a classify_test method
-    # elif search_type == 'grid_search':
-    #     best = run_grid_search(space, model_types)
-    # else: #search_type == 'random_search'
-    #     best = run_random_search(space, model_types, max_iter)
-
     print space_eval(space, best)
     printing_best(trials)
 

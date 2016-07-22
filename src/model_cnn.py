@@ -19,27 +19,27 @@ class Model_CNN:
     def train(self, train_X, train_Y):
         print 'fix later'
         self.params = {
-                # 'FILTERS' : self.hp['filters'],
-                'FILTERS' : 2,
+                'FILTERS' : self.hp['filters'],
+                # 'FILTERS' : 2,
                 'ACTIVATION_FN' : self.hp['activation_fn'],
-                #'REGULARIZER' : self.hp['regularizer'],
-                'REGULARIZER' : 'l2_clip',
-                #'REG_STRENGTH' : self.hp['reg_strength'],
-                'REG_STRENGTH' : 2.0,
+                'REGULARIZER' : self.hp['regularizer'],
+                # 'REGULARIZER' : 'l2_clip',
+                'REG_STRENGTH' : self.hp['reg_strength'],
+                # 'REG_STRENGTH' : 2.0,
                 'TRAIN_DROPOUT' : self.hp['dropout'],
                 'BATCH_SIZE' : self.hp['batch_size'],
                 'LEARNING_RATE' : self.hp['learning_rate'],
                 'KERNEL_SIZES' : [],
-                #'USE_WORD2VEC' : self.hp['use_word2vec'],
-                'USE_WORD2VEC' : False,
-                #'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
-                'UPDATE_WORD_VECS' : False,
-                'USE_DELTA' : False,
-                #'USE_DELTA' : self.hp['delta'],
+                'USE_WORD2VEC' : self.hp['word_vector_init'],
+                # 'USE_WORD2VEC' : False,
+                'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
+                # 'UPDATE_WORD_VECS' : False,
+                # 'USE_DELTA' : False,
+                'USE_DELTA' : self.hp['delta'],
 
-                'WORD_VECTOR_LENGTH' : 3,
+                'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
-                'EPOCHS' : 2,
+                'EPOCHS' : 5,
         }
         if self.params['REGULARIZER'] == 'l2':
             self.params['REG_STRENGTH'] = 10 ** self.params['REG_STRENGTH']
@@ -83,7 +83,7 @@ class Model_CNN:
         #         pass
         # except:
         #     print 'none'
-            pass
+        #     pass
         if 'numpy' not in str(type(test_X)):
             #if called on dev or test
             if indices_to_words is not None:
