@@ -6,6 +6,8 @@ from model_xgb import Model_XGB
 from model_lr import Model_LR
 from model_cnn import Model_CNN
 import re
+#need this for simultaneous computation on Stampede, 16 nodes at a time
+import multiprocessing as mp
 #DEBUGGING
 #import xgboost
 
@@ -97,6 +99,9 @@ class Data_and_Model_Manager:
         for key in index_to_word:
             index_to_word[key] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", index_to_word[key])
         return train_X, index_to_word
+
+    # def train_many(n_processes):
+    #     ...
 
     def train_models(self, train_X_raw, train_Y_raw):
         if len(train_X_raw) == 0:

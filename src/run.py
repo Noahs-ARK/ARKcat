@@ -7,8 +7,6 @@ import Queue as queue
 from optparse import OptionParser
 import numpy as np
 from hyperopt import fmin, tpe, hp, Trials, space_eval
-# from sklearn.grid_search import GridSearchCV#, RandomizedSearchCV
-import itertools
 
 import classify_test
 import space_manager
@@ -155,7 +153,7 @@ def set_globals():
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, word2vec_filename, log_filename
     global trial_num, max_iter, num_models, model_types, search_type, num_folds
-
+    print args[:6]
     train_data_filename = args[0] + 'train.data'
     train_label_filename = args[0] + 'train.labels'
     dev_data_filename = args[0] + 'dev.data'
@@ -166,8 +164,6 @@ def set_globals():
     model_types = args[4].split('-')
     search_type = args[5]
     num_folds = int(args[6])
-    print('train data filename: ',train_data_filename)
-
     train_feature_dir = output_dir + '/train_features/'
     dev_feature_dir = output_dir + '/dev_train_features/'
     model_dir = output_dir + '/saved_models/'

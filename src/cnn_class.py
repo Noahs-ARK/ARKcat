@@ -1,36 +1,57 @@
 import numpy as np
 import tensorflow as tf
 
+#defines the architecture of a CNN
+
 #problem: need to discard cnn btwn models
 #else gets error when shape of vars doesn't match :()
+# also raise error when only one model, but diff error: TypeError: 'NoneType' object is not iterable for optimizer (loss fn)
+#why do all models start w/same params? check to see if this is an error
+#del unnecessary selfs
 class CNN:
-    def __init__(self, params, key_array, batch_size=None):
+    def __init__(self, params, key_array, batch_size=None, train=True):
         if batch_size == None:
             batch_size = params['BATCH_SIZE']
-        self.input_x = tf.placeholder(tf.int32, [batch_size, None])#, name='input_x')
+        self.input_x = tf.placeholder(tf.int32, [batch_size, None])#, name='input_x') tf.ones([batch_size, params['MAX_LENGTH']], dtype=tf.int32)
         self.input_y = tf.placeholder(tf.float32, [batch_size, params['CLASSES']])#, name='input_y')
         self.dropout = tf.placeholder(tf.float32)#, name='dropout')
-        word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype=tf.float32), validate_shape=False,
-                                      trainable = params['UPDATE_WORD_VECS'], name='word_embeddings')
-        if params['USE_DELTA']:
-            W_delta = tf.Variable(tf.ones, key_array.shape[0], validate_shape=False, name='W_delta')
-            weighted_word_embeddings = tf.matmul(word_embeddings, W_delta)
-            embedding_output = tf.nn.embedding_lookup(weighted_word_embeddings, self.input_x)
-        else:
-            embedding_output = tf.nn.embedding_lookup(word_embeddings, self.input_x)
-        embedding_output = tf.expand_dims(embedding_output, 2)
+        #not responsible--was working previously!!
+        print self.input_x
+        #ends up with not-1 3rd dim, undef
+        # if train:
+        self.word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype=tf.float32),
+                                          trainable=params['UPDATE_WORD_VECS'], name='word_embeddings')
+        self.word_embeddings_new = tf.placeholder(tf.float32, [None, key_array.shape[1]])
+        # print self.word_embeddings
+        self.W_delta = tf.Variable(tf.ones(shape=(key_array.shape[0], 1)),
+                                          trainable=params['USE_DELTA'], dtype=tf.float32, name='W_delta')
+        print self.W_delta
+        self.stacked_W_delta = tf.concat(1, [self.W_delta] * params['WORD_VECTOR_LENGTH'])
+        print self.stacked_W_delta
+        self.weighted_word_embeddings = tf.mul(self.word_embeddings, self.stacked_W_delta)
+        self.word_embeddings_comb = tf.concat(0, [self.weighted_word_embeddings, self.word_embeddings_new])
 
+        print self.weighted_word_embeddings
+        # self.weighted_word_embeddings = tf.convert_to_tensor(key_array, dtype=tf.float32)
+        #
+        embedding_output = tf.nn.embedding_lookup(self.word_embeddings_comb, self.input_x)
+        print embedding_output
+        embedding_output_expanded = tf.expand_dims(embedding_output, 2)
+        # embedding_output = tf.expand_dims(tf.pack([tf.convert_to_tensor(key_array[0:params['MAX_LENGTH']], dtype=tf.float32)] * batch_size), 2)
+        print embedding_output_expanded
         slices = []
         self.weights = []
         self.biases = []
-        name_counter = 1
+
+        #problem is that ist thru 3rd dims are undefined, when they should be batch_size, 1, 1
 
         #loop over KERNEL_SIZES, each time initializing a slice
-        for kernel_size in params['KERNEL_SIZES']:
-            W = self.weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']], 'W_%i' %name_counter)
-            b = self.bias_variable([params['FILTERS']], 'b_%i' %name_counter)
-            name_counter += 1
-            conv = tf.nn.conv2d(embedding_output, W, strides=[1, 1, 1, 1], padding="SAME")
+        for i, kernel_size in enumerate(params['KERNEL_SIZES']):
+            W = self.weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']], 'W_%i' %i)
+            # W = self.weight_variable([kernel_size, 1, 1, params['FILTERS']], 'W_%i' %name_counter)
+            b = self.bias_variable([params['FILTERS']], 'b_%i' %i)
+            conv = tf.nn.conv2d(embedding_output_expanded, W, strides=[1, 1, 1, 1], padding="SAME")
+            # conv = tf.nn.conv2d(tf.cast(self.input_x, dtype=tf.float32), W, strides=[1, 1, 1, 1], padding="SAME")
             if params['ACTIVATION_FN'] == 'relu':
                 activ = tf.nn.relu(tf.nn.bias_add(conv, b))
             elif params['ACTIVATION_FN'] == 'elu':
@@ -45,8 +66,10 @@ class CNN:
             slices.append(pooled)
             self.weights.append(W)
             self.biases.append(b)
-
+            print pooled,
+        #remember, 3 is the dimension, not #slices in any way!!!
         self.h_pool = tf.concat(3, slices)
+        print self.h_pool #shape ???2360
         self.h_pool_drop = tf.nn.dropout(self.h_pool, self.dropout)
         self.h_pool_flat = tf.reshape(self.h_pool_drop, [batch_size, -1])
         #fully connected softmax layer
@@ -55,24 +78,26 @@ class CNN:
         self.b_fc = self.bias_variable([params['CLASSES']], 'b_fc')
         self.scores = tf.nn.softmax(tf.nn.xw_plus_b(self.h_pool_flat, self.W_fc, self.b_fc))
         self.predictions = tf.argmax(self.scores, 1)
+        print self.predictions #shape = 101
         #define error for training steps
         self.cross_entropy = -tf.reduce_sum(self.input_y * tf.log(self.scores),
                                        reduction_indices=[1])
         #define accuracy for evaluation
         self.correct_prediction = tf.equal(self.predictions,
                                            tf.argmax(self.input_y, 1))
-        self.reg_loss = tf.constant(0.0)
-        if params['UPDATE_WORD_VECS']:
-            self.reg_loss += self.custom_loss(word_embeddings, params)
-        if params['USE_DELTA']:
-            self.reg_loss += self.custom_loss(W_delta, params)
-        for W in self.weights:
-            self.reg_loss += self.custom_loss(W, params)
-        for b in self.biases:
-            self.reg_loss += self.custom_loss(b, params)
-        self.reg_loss += self.custom_loss(self.W_fc, params)
-        self.reg_loss += self.custom_loss(self.b_fc, params)
-        self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])
+        if train:
+            self.reg_loss = tf.constant(0.0)
+            if params['UPDATE_WORD_VECS']:
+                self.reg_loss += self.custom_loss(self.word_embeddings, params)
+            if params['USE_DELTA']:
+                self.reg_loss += self.custom_loss(self.W_delta, params)
+            for W in self.weights:
+                self.reg_loss += self.custom_loss(W, params)
+            for b in self.biases:
+                self.reg_loss += self.custom_loss(b, params)
+            self.reg_loss += self.custom_loss(self.W_fc, params)
+            self.reg_loss += self.custom_loss(self.b_fc, params)
+            self.optimizer = tf.train.AdamOptimizer(params['LEARNING_RATE'])
 
     #calculates l1 and l2 losses for feeding to optimizer
     def custom_loss(self, W, params):

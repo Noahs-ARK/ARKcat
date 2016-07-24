@@ -1,6 +1,8 @@
 import random, math
 import numpy as np
 
+#assorted snippets of code used by model_cnn, cnn_train, and cnn_eval
+
 #max length of example in minibatch
 def get_max_length(list_of_examples):
     max_length = 0
@@ -36,6 +38,7 @@ def flex(input_list, params):
             elif boolean_percent(15):
                 example = insert_padding(example, int(math.ceil(params['FLEX']/2.0)), False)
     return input_list
+
 
 #inserts zero padding for flex--note this is on a np array which has already been processed for feeding into tf
 def insert_padding(example, tokens_to_pad, left):
@@ -155,14 +158,20 @@ def init_word_vecs(word2vec_filename, key_array, vocab, params):
         word2vec.readline()
         for i in range(3000000):   #number of words in word2vec
             line = tokenize(word2vec.readline().strip())
-            #turn into floats
-            if line[0] in vocab:
-                vector = []
-                for word in line[1:]:
-                    vector.append(float(word))
-                if len(vector) != params['WORD_VECTOR_LENGTH']:
-                    raise ValueError
-                key_array[vocab.index(line[0])] = vector
+            #check to see if it contains nonAscii (which would break the if statement)
+            try:
+                line[0].decode('ascii')
+            except UnicodeDecodeError:
+                pass
+            #turns word vectors into floats and appends to key array
+            else:
+                if line[0] in vocab:
+                    vector = []
+                    for word in line[1:]:
+                        vector.append(float(word))
+                    if len(vector) != params['WORD_VECTOR_LENGTH']:
+                        raise ValueError
+                    key_array[vocab.index(line[0])] = vector
     return key_array
 
 #returns an array of new word vectors for that vocab,
