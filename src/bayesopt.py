@@ -1,5 +1,7 @@
 from hyperopt import fmin, tpe, hp, Trials, space_eval
 
+#uses Bayesian optimization to choose parameters of model
+
 def get_linear_model(model_num):
     return {
         'model_' + model_num: 'LR',
@@ -62,14 +64,15 @@ def get_cnn_model(model_num):
             'model_' + model_num: 'CNN',
             'word_vectors_' + model_num: ('word2vec', True),
             'delta_' + model_num: hp.choice('delta_' + model_num, [True, False]),
-            'flex_' + model_num: hp.choice('flex_' + model_num, [
+            'flex_' + model_num: (True, .15), #hp.choice('flex_' + model_num, [
                 # (False, 0.0),
-                (True, hp.uniform('flex_amt_' + model_num, 0, 0.3))]),
+                # (True, hp.uniform('flex_amt_' + model_num, 0, 0.3))]),
             'filters_' + model_num: hp.quniform('filters_' + model_num, 100, 600,1),
             'kernel_size_' + model_num: hp.quniform('kernel_size_' + model_num, 1, 20, 1),
             'kernel_increment_' + model_num: hp.quniform('kernel_increment_' + model_num, 0, 5, 1),
             'kernel_num_' + model_num: hp.quniform('kernel_num_' + model_num, 1, 5, 1),
-            'dropout_' + model_num: hp.uniform('dropout_' + model_num, 0, 1),
+            # 'dropout_' + model_num: hp.uniform('dropout_' + model_num, 0, 1),
+            'dropout_' + model_num: .5,
             'batch_size_' + model_num: hp.quniform('batch_size_' + model_num, 10, 200, 1),
             # iden, relu, and elu
             'activation_fn_' + model_num: hp.choice('activation_fn_' + model_num, ['iden', 'relu', 'elu']),
@@ -79,6 +82,8 @@ def get_cnn_model(model_num):
                 ('l2', hp.uniform('l2_strength_cnn_' + model_num, -8,-2)),
                 ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, 2,6))
             ]),
-            'learning_rate_' + model_num: .00025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 370)
+            # 'learning_rate_' + model_num: .00025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 370)
+            'learning_rate_' + model_num: .001
+
         }
     return hyperparams

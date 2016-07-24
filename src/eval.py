@@ -65,6 +65,7 @@ def set_globals(args):
 
 
 def main():
+    print "got to eval"
     parser = OptionParser()
     (options, args) = parser.parse_args()
 
@@ -89,8 +90,6 @@ def main():
         model_counter = model_counter + 1
 
     eval_best_model(models)
-
-
 
 
 if __name__ == '__main__':

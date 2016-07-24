@@ -4,6 +4,7 @@ import cnn_eval
 from cnn_methods import *
 import scipy
 
+
 #extant issues:
 #test all hyperparams
 #set up and test big cnn space
@@ -23,15 +24,17 @@ class Model_CNN:
                 # 'FILTERS' : 2,
                 'ACTIVATION_FN' : self.hp['activation_fn'],
                 'REGULARIZER' : self.hp['regularizer'],
-                # 'REGULARIZER' : 'l2_clip',
                 'REG_STRENGTH' : self.hp['reg_strength'],
-                # 'REG_STRENGTH' : 2.0,
+                # 'REGULARIZER' : 'l2',
+                # 'REG_STRENGTH' : -8.0,
+                # 'REGULARIZER': 'l2_clip',
+                # 'REG_STRENGTH': 2.0,
                 'TRAIN_DROPOUT' : self.hp['dropout'],
                 'BATCH_SIZE' : self.hp['batch_size'],
                 'LEARNING_RATE' : self.hp['learning_rate'],
                 'KERNEL_SIZES' : [],
-                'USE_WORD2VEC' : self.hp['word_vector_init'],
-                # 'USE_WORD2VEC' : False,
+                # 'USE_WORD2VEC' : self.hp['word_vector_init'],
+                'USE_WORD2VEC' : False,
                 'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
                 # 'UPDATE_WORD_VECS' : False,
                 # 'USE_DELTA' : False,
@@ -60,7 +63,7 @@ class Model_CNN:
             self.params['FLEX'] = int(self.hp['flex_amt'] * self.params['MAX_LENGTH'])
         else:
             self.params['FLEX'] = 0
-        self.model = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
+        self.best_epoch_path, self.key_array = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
 
     def predict(self, test_X, indices_to_words=None, measure='predict'):
         # print 'nested train_labels (called pred again)'
@@ -91,17 +94,16 @@ class Model_CNN:
 
                 placeholder, test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key=test_vocab_key)
-                return cnn_eval.main(self.model, self.params, test_X,
-                                     np.concatenate((self.key_array, test_key_array), axis=0),
-                                     measure)
+                return cnn_eval.main(self.best_epoch_path, self.params, test_X,
+                                     self.key_array, measure, test_key_array)
 
             #called on train
             else:
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
 
 
-        return cnn_eval.main(self.model, self.params, test_X, self.key_array,
-                                 measure)
+        return cnn_eval.main(self.best_epoch_path, self.params, test_X, self.key_array,
+                                 measure, np.zeros([0, key_array.shape[1]]))
 
 
     #softmax array
