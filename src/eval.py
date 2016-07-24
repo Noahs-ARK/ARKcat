@@ -54,18 +54,18 @@ def eval_best_model(models):
 
 
 def set_globals(args):
-    if len(args) < 4:
-        print("USEAGE: model_dir data_dir word2vec_filename output_dir")
+    if len(args) < 3:
+        print("USEAGE: model_dir data_dir output_dir")
         sys.exit(0)
     global model_dir, test_data, test_labels, feat_dir
     model_dir = args[0]
     test_data = args[1] + 'test.data'
     test_labels = args[1] + 'test.labels'
-    word2vec_filename = args[2]
-    feat_dir = args[3] + 'test_features'
+    feat_dir = args[2] + 'test_features'
 
 
 def main():
+    print "got to eval"
     parser = OptionParser()
     (options, args) = parser.parse_args()
 
@@ -90,8 +90,6 @@ def main():
         model_counter = model_counter + 1
 
     eval_best_model(models)
-
-
 
 
 if __name__ == '__main__':

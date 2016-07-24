@@ -11,6 +11,7 @@ from hyperopt import fmin, tpe, hp, Trials, space_eval
 import classify_test
 import space_manager
 
+
 def call_experiment(args):
     global trial_num
     trial_num = trial_num + 1
@@ -38,21 +39,6 @@ def call_experiment(args):
     sys.stdout.flush()
     return result
 
-def cnn_feature_selector():
-    return {'model_': 'CNN',
-            'delta_': [True, False],
-            'flex_amt_': (0.0, 0.3),
-            'filters_': (100, 600),
-            'kernel_size_': (2, 15),
-            'kernel_increment_' : (0,5),
-            'kernel_num_' : (1,5),
-            'dropout_': (0.25, 0.75),
-            'batch_size_': (10, 200),
-            'activation_fn_': ['iden', 'relu', 'elu'],
-            'l2_': (-8,-2),
-            'l2_clip_': (2,10)
-}
-
 #have to edit features--cnn won't take idf, for example
 def wrangle_params(args, model_num):
     kwargs = {}
@@ -79,21 +65,16 @@ def wrangle_params(args, model_num):
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_xgb_' + model_num][1]
         kwargs['num_round'] = int(args['model_' + model_num]['num_round_' + model_num])
     elif model == 'CNN':
-        #???
-        kwargs['model_num'] = model_num
-        # kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
-        # kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
-        # kwargs['word_vector_update'] = args['model_' + model_num]['word_vector_update_' + model_num]
+        # print args['model_' + model_num]['regularizer_cnn_' + model_num][0]
+        # print args['model_' + model_num]['regularizer_cnn_' + model_num][1]
+        kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
+        kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
         kwargs['flex'] = (args['model_' + model_num]['flex_' + model_num])[0]
         kwargs['flex_amt'] = (args['model_' + model_num]['flex_' + model_num])[1]
-        # kwargs['kernel_size_1'] = int(args['model_' + model_num]['kernel_size_1_' + model_num])
-        # kwargs['kernel_size_2'] = int(args['model_' + model_num]['kernel_size_2_' + model_num])
-        # kwargs['kernel_size_3'] = int(args['model_' + model_num]['kernel_size_3_' + model_num])
         kwargs['kernel_size'] = int(args['model_' + model_num]['kernel_size_' + model_num])
         kwargs['kernel_increment'] = int(args['model_' + model_num]['kernel_increment_' + model_num])
         kwargs['kernel_num'] = int(args['model_' + model_num]['kernel_num_' + model_num])
-        # kwargs['num_kernels'] = args['model_' + model_num]['num_kernels_' + model_num][0]
         kwargs['filters'] = int(args['model_' + model_num]['filters_' + model_num])
         kwargs['dropout'] = args['model_' + model_num]['dropout_' + model_num]
         kwargs['batch_size'] = int(args['model_' + model_num]['batch_size_' + model_num])
@@ -101,10 +82,6 @@ def wrangle_params(args, model_num):
         kwargs['regularizer'] = args['model_' + model_num]['regularizer_cnn_' + model_num][0]
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_cnn_' + model_num][1]
         kwargs['learning_rate'] = args['model_' + model_num]['learning_rate_' + model_num]
-        # kwargs['kernel_sizes'] = []
-        # for i in xrange(args['model_' + model_num]['num_kernels_' + model_num][0]):
-        #     kwargs['kernel_sizes'].append(args['model_' + model_num]['num_kernels_' + model_num][1])
-
 
     features = {}
     features['ngram_range'] = args['features_' + model_num]['nmin_to_max_' + model_num]
@@ -112,6 +89,11 @@ def wrangle_params(args, model_num):
     features['use_idf'] = args['features_' + model_num]['use_idf_' + model_num]
     features['stop_words'] = args['features_' + model_num]['st_wrd_' + model_num]
 
+    #note to Jesse: code in
+    #passing English will break CNN because some examples become null
+    if model == 'CNN':
+        features['stop_words'] = None
+        features['binary'] = False
 
     print kwargs
     print features
@@ -129,12 +111,12 @@ def save_model(result):
                   'eta':'eta', 'gamma':'gamma', 'max_depth':'dpth', 'min_child_weight':'mn_wght',
                   'max_delta_step':'mx_stp', 'subsample':'smpl', 'reg_strength':'rg_str',
                   'num_round':'rnds', 'lambda':'lmbda', 'ngram_range':'ngrms', 'binary':'bnry',
-                  'use_idf':'idf', 'stop_words':'st_wrd', 'word_vector_init' : 'wv_init',
-                  'word_vector_update' : 'upd', 'delta': 'delta', 'flex_amt': 'flex',
-                  'kernel_size':'ks', 'kernel_increment' :'ki', 'kernel_num': 'kn',
-                  'filters': 'fltrs', 'dropout': 'drop', 'batch_size' : 'batch',
-                  'activation_fn': 'actvn', 'regularizer':'rg', 'reg_strength':'rg_str',
-                  'learning_rate': 'learn_rt'}
+                  'use_idf':'idf', 'stop_words':'st_wrd', 'word_vector_init':'wv_init',
+                  'word_vector_update':'upd', 'delta':'delta', 'flex':'flex', 'flex_amt':'flex_amt',
+                  'kernel_size':'ks', 'kernel_increment':'ki', 'kernel_num':'kn',
+                  'filters':'fltrs', 'dropout':'drop', 'batch_size':'batch',
+                  'activation_fn':'actvn', 'regularizer':'rg', 'reg_strength':'rg_str',
+                  'learning_rate':'learn_rt'}
 
     # to save the model after each iteration
     feature_string = ''
@@ -170,8 +152,8 @@ def set_globals():
 
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, word2vec_filename, log_filename
-    global trial_num, max_iter, num_models, model_types, num_folds
-
+    global trial_num, max_iter, num_models, model_types, search_type, num_folds
+    print args[:6]
     train_data_filename = args[0] + 'train.data'
     train_label_filename = args[0] + 'train.labels'
     dev_data_filename = args[0] + 'dev.data'
@@ -180,9 +162,8 @@ def set_globals():
     output_dir = args[2]
     num_models = int(args[3])
     model_types = args[4].split('-')
-    num_folds = int(args[5])
-    print('train data filename: ',train_data_filename)
-
+    search_type = args[5]
+    num_folds = int(args[6])
     train_feature_dir = output_dir + '/train_features/'
     dev_feature_dir = output_dir + '/dev_train_features/'
     model_dir = output_dir + '/saved_models/'
@@ -219,48 +200,23 @@ def main():
     print("Made it to the start of main!")
     set_globals()
     trials = Trials()
-    #if bayesopt
-    space = space_manager.get_space(num_models, model_types)
+    space = space_manager.get_space(num_models, model_types, search_type)
+    # if search_type == 'grid_search':
+    #     # global_vars = (train_data_filename, train_label_filename, dev_data_filename,
+    #     #                dev_label_filename, output_dir, train_feature_dir,
+    #     #                dev_feature_dir, model_dir, word2vec_filename, log_filename,
+    #     #                trial_num, max_iter, num_models, model_types, search_type,
+    #     #                num_folds)
+    #     # best = execute_grid_search.run_grid_search(space, model_types, global_vars)
+    # else:
     best = fmin(call_experiment,
-                space=space,
-                algo=tpe.suggest,
-                max_evals=max_iter,
-                trials=trials)
-    """
-    #elif grid:
-    # space = param_grid(model_types)
-    #best = (space, model_types,...)
-    #else (rand):
-    #space = param_rand(model_types)
-    best = run_random_search(space, model_types, n_iter ...)
-    """
-
+                    space=space,
+                    algo=tpe.suggest,
+                    max_evals=max_iter,
+                    trials=trials)
     print space_eval(space, best)
     printing_best(trials)
 
-"""
-def run_grid_search(space, model_types):
-    grid_search = GridSearchCV(clf=model_types, param_grid=space)
-    grid_search.fit(X, y)
-    report(grid_search.grid_scores_)
-
-def run_random_search(space, model_types, n_iter, ...):
-    random_search = RandomizedSearchCV(clf=model_types, param_distributions=space,
-                                       n_iter=n_iter)
-    random_search.fit(X, y)
-    return best(random_search.grid_scores_)
-
-# Utility function to report best scores
-def best(grid_scores, n_top=1):
-    top_scores = sorted(grid_scores, key=itemgetter(1), reverse=True)[:n_top]
-    for i, score in enumerate(top_scores):
-        print("Model with rank: {0}".format(i + 1))
-        print("Mean validation score: {0:.3f} (std: {1:.3f})".format(
-              score.mean_validation_score,
-              np.std(score.cv_validation_scores)))
-        print("Parameters: {0}".format(score.parameters))
-        print("")
-"""
 
 if __name__ == '__main__':
     main()
