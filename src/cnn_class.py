@@ -15,30 +15,21 @@ class CNN:
         self.input_x = tf.placeholder(tf.int32, [batch_size, None])#, name='input_x') tf.ones([batch_size, params['MAX_LENGTH']], dtype=tf.int32)
         self.input_y = tf.placeholder(tf.float32, [batch_size, params['CLASSES']])#, name='input_y')
         self.dropout = tf.placeholder(tf.float32)#, name='dropout')
-        #not responsible--was working previously!!
-        print self.input_x
-        #ends up with not-1 3rd dim, undef
-        # if train:
         self.word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype=tf.float32),
                                           trainable=params['UPDATE_WORD_VECS'], name='word_embeddings')
         self.word_embeddings_new = tf.placeholder(tf.float32, [None, key_array.shape[1]])
         # print self.word_embeddings
         self.W_delta = tf.Variable(tf.ones(shape=(key_array.shape[0], 1)),
                                           trainable=params['USE_DELTA'], dtype=tf.float32, name='W_delta')
-        print self.W_delta
         self.stacked_W_delta = tf.concat(1, [self.W_delta] * params['WORD_VECTOR_LENGTH'])
-        print self.stacked_W_delta
         self.weighted_word_embeddings = tf.mul(self.word_embeddings, self.stacked_W_delta)
         self.word_embeddings_comb = tf.concat(0, [self.weighted_word_embeddings, self.word_embeddings_new])
 
-        print self.weighted_word_embeddings
         # self.weighted_word_embeddings = tf.convert_to_tensor(key_array, dtype=tf.float32)
         #
         embedding_output = tf.nn.embedding_lookup(self.word_embeddings_comb, self.input_x)
-        print embedding_output
         embedding_output_expanded = tf.expand_dims(embedding_output, 2)
         # embedding_output = tf.expand_dims(tf.pack([tf.convert_to_tensor(key_array[0:params['MAX_LENGTH']], dtype=tf.float32)] * batch_size), 2)
-        print embedding_output_expanded
         slices = []
         self.weights = []
         self.biases = []
@@ -66,10 +57,7 @@ class CNN:
             slices.append(pooled)
             self.weights.append(W)
             self.biases.append(b)
-            print pooled,
-        #remember, 3 is the dimension, not #slices in any way!!!
         self.h_pool = tf.concat(3, slices)
-        print self.h_pool #shape ???2360
         self.h_pool_drop = tf.nn.dropout(self.h_pool, self.dropout)
         self.h_pool_flat = tf.reshape(self.h_pool_drop, [batch_size, -1])
         #fully connected softmax layer
@@ -78,7 +66,6 @@ class CNN:
         self.b_fc = self.bias_variable([params['CLASSES']], 'b_fc')
         self.scores = tf.nn.softmax(tf.nn.xw_plus_b(self.h_pool_flat, self.W_fc, self.b_fc))
         self.predictions = tf.argmax(self.scores, 1)
-        print self.predictions #shape = 101
         #define error for training steps
         self.cross_entropy = -tf.reduce_sum(self.input_y * tf.log(self.scores),
                                        reduction_indices=[1])
@@ -108,7 +95,6 @@ class CNN:
         else:
             return 0.0
 
-    #still not working :(
     def clip_vars(self, params):
         for W in self.weights:
             W = tf.clip_by_average_norm(W, params['REG_STRENGTH'])

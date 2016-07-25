@@ -7,8 +7,7 @@ import time, resource
 import inspect_checkpoint
 
 def l2_loss_float(W):
-    return tf.cast(tf.scalar_mul(tf.convert_to_tensor(2.0), tf.nn.l2_loss(W)), tf.float32_ref)
-
+    return tf.scalar_mul(tf.convert_to_tensor(2.0), tf.nn.l2_loss(W))
 
 def main(params, input_X, input_Y, key_array, model_dir):
 
@@ -18,33 +17,15 @@ def main(params, input_X, input_Y, key_array, model_dir):
     with tf.Graph().as_default():
         with open(cnn_dir + 'train_log', 'a') as timelog:
             timelog.write('\n\n\nNew Model:')
-            max_index = 0
-            for example in train_X:
-                if np.count_nonzero(example) == 0:
-                    print 'error: zero entry'
-                max_index = max(np.amax(example), max_index)
-            # print 'max index', max_index
-            # print key_array.shape
-                # else:
-                    # print 'maximum', np.amax(example)
-                    # print 'shape', example.shape
             cnn = CNN(params, key_array)
             loss = cnn.cross_entropy
-
-            #it's not this part
-            # loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
-            #problem: thinks loss is None
-            # print loss
-            #not the optimizer
-            grads_and_vars = cnn.optimizer.compute_gradients(cnn.cross_entropy)
-            # print grads_and_vars
-            cnn.optimizer.apply_gradients(grads_and_vars)
+            loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
             train_step = cnn.optimizer.minimize(loss)
             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
                                   intra_op_parallelism_threads=1, use_per_session_threads=True))
             sess.run(tf.initialize_all_variables())
             saver = tf.train.Saver(tf.all_variables())
-            path = saver.save(sess, cnn_dir + 'cnn_eval_epoch%i' %0)
+            path = saver.save(sess, cnn_dir + 'cnn_eval_epoch%i_%s' %(0, model_dir))
             # reader = tf.train.NewCheckpointReader(path)
             # print(reader.debug_string().decode("utf-8"))
             best_dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
@@ -90,7 +71,7 @@ def main(params, input_X, input_Y, key_array, model_dir):
                             %(resource.getrusage(resource.RUSAGE_SELF).ru_utime +
                             resource.getrusage(resource.RUSAGE_SELF).ru_stime))
                 timelog.write('\nmemory usage: %g' %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
-                checkpoint = saver.save(sess, cnn_dir + 'cnn_eval_epoch%i' %epoch)
+                checkpoint = saver.save(sess, cnn_dir + 'cnn_eval_epoch%i_%s' %(epoch, model_dir))
                 dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
                 timelog.write('\ndev accuracy: %g'%dev_accuracy)
                 if dev_accuracy > best_dev_accuracy:

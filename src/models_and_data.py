@@ -127,7 +127,6 @@ class Data_and_Model_Manager:
         preds = self.convert_probs_to_preds(probs)
         return metrics.accuracy_score(train_Y, preds)
 
-
     def convert_labels(self, train_Y_old):
         new_Y = []
         for y in train_Y_old:

@@ -56,9 +56,9 @@ def evaluate(path, val_x, val_y, key_array, params, measure, new_key_embeds):
                 val_y = val_y[1:]
             return pred
 
-def main(checkpoint, params, test_X, key_array, measure):
+def main(checkpoint, params, test_X, key_array, measure, new_key_embeds):
     test_Y_filler = [np.zeros(params['CLASSES'])] * len(test_X)
-    pred = evaluate(checkpoint, test_X, test_Y_filler, key_array, params, measure=measure)
+    pred = evaluate(checkpoint, test_X, test_Y_filler, key_array, params, measure, new_key_embeds)
     return pred
 
 if __name__ == "__main__":
