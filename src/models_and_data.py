@@ -6,9 +6,10 @@ from model_xgb import Model_XGB
 from model_lr import Model_LR
 from model_cnn import Model_CNN
 import re
+#need this for simultaneous computation on Stampede, 16 nodes at a time
+import multiprocessing as mp
 #DEBUGGING
 #import xgboost
-import cnn_methods
 
 class Data_and_Model_Manager:
     def __init__(self, f_and_p, model_dir, word2vec_filename):
@@ -59,6 +60,7 @@ class Data_and_Model_Manager:
     def k_fold_cv(self, num_folds):
         if num_folds == 1 and len(self.dev[0]) > 0:
             train_acc = self.train_models(self.train[0], self.train[1])
+
             dev_acc = self.predict_acc(self.dev[0], self.dev[1])
             return {'train_acc':train_acc, 'dev_acc':dev_acc}
         else:
@@ -77,22 +79,13 @@ class Data_and_Model_Manager:
                 cur_dev_X = [self.train[0][i] for i in dev_indxs]
                 cur_dev_Y = [self.train[1][i] for i in dev_indxs]
                 self.train_models(cur_train_X, cur_train_Y)
-
                 avg_dev_acc = avg_dev_acc + self.predict_acc(cur_dev_X, cur_dev_Y)/num_folds
             return {'train_acc':self.train_models(self.train[0], self.train[1]), 'dev_acc':avg_dev_acc}
 
-#re sub there :)
     def transform_cnn_data(self, X_raw, feat_and_param):
         feat_and_param['feats']['ngram_range'] = (1,1)
         feat_and_param['feats']['use_idf'] = False
         feat_and_param['feats']['binary'] = False
-        # for i in range(len(X_raw)):
-        #     X_raw[i] = cnn_methods.tokenize(X_raw[i])
-        #     join = ''
-        #     for word in X_raw[i]:
-        #         word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
-        #         join += word + ' '
-        #     X_raw[i] = join
         vectorizer = TfidfVectorizer(**feat_and_param['feats'])
         vectorizer.fit(X_raw)
         tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)
@@ -106,6 +99,9 @@ class Data_and_Model_Manager:
         for key in index_to_word:
             index_to_word[key] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", index_to_word[key])
         return train_X, index_to_word
+
+    # def train_many(n_processes):
+    #     ...
 
     def train_models(self, train_X_raw, train_Y_raw):
         if len(train_X_raw) == 0:
@@ -130,7 +126,6 @@ class Data_and_Model_Manager:
             probs[i] = cur_model.predict_prob(train_X)
         preds = self.convert_probs_to_preds(probs)
         return metrics.accuracy_score(train_Y, preds)
-
 
     def convert_labels(self, train_Y_old):
         new_Y = []
