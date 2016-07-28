@@ -41,4 +41,8 @@ def lr_feature_selector():
     'reg_strength_list': range(-5,6),
     #converges to
     'converge': [-10, -1],
-    'converge_as_list': range(-10,0)}
+    'converge_as_list': range(-10,0),
+    'nmin_to_max_': [(1,1),(1,2),(1,3),(2,2),(2,3)],
+    'binary_': [True, False],
+    'use_idf_': [True, False],
+    'st_wrd_': [None, 'english']}

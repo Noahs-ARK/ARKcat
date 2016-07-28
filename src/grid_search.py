@@ -35,7 +35,11 @@ class grid_search():
         feature_selector = lr_feature_selector()
         linear_list = [feature_selector['regularizer'],
             feature_selector['reg_strength_list'],
-            feature_selector['converge_as_list']]
+            feature_selector['converge_as_list'],
+            feature_selector['nmin_to_max_'],
+            feature_selector['binary_'],
+            feature_selector['use_idf_'],
+            feature_selector['st_wrd_']]
         self.enumerate_models_list = list(itertools.product(*linear_list))
         self.convert_to_dict()
 
@@ -66,15 +70,8 @@ class grid_search():
         for model in self.enumerate_models_list:
             model_num = str(model_counter)
             if self.model_type == 'cnn':
-                if len(model) != 12:
-                    print len(model)
-                    print model
-                    raise ValueError
                 hyperparam_grid = self.cnn_get_grid(model_num, model)
             else:
-                if len(model) != 3:
-                    print len(model)
-                    raise ValueError
                 hyperparam_grid = self.linear_get_grid(model_num, model)
             model_counter += 1
             list_of_models.append(hyperparam_grid)
@@ -102,8 +99,11 @@ class grid_search():
         return {'model_' + model_num:
                 {'model_' + model_num: 'LR',
                 'regularizer_lr_' + model_num: (model[0], math.exp(model[1])),
-                'converg_tol_' + model_num: math.exp(model[2]),
-                'features_' + model_num: self.get_feats(model_num)}}
+                'converg_tol_' + model_num: math.exp(model[2])},
+            'features_' + model_num: {'nmin_to_max_' + model_num: model[3],
+                    'binary_' + model_num: model[4],
+                    'use_idf_' + model_num: model[5],
+                    'st_wrd_' + model_num: model[6]}}
 
     def get_feats(self, model_num):
         if self.model_type == 'cnn':
@@ -111,11 +111,6 @@ class grid_search():
                     'binary_' + model_num: False,
                     'use_idf_' + model_num: False,
                     'st_wrd_' + model_num: None}
-        else: #model type is linear
-            return {'nmin_to_max_' + model_num: [(1,1),(1,2),(1,3),(2,2),(2,3)],
-                    'binary_' + model_num: [True, False],
-                    'use_idf_' + model_num: [True, False],
-                    'st_wrd_' + model_num: [None, 'english']}
 
     def pop_model(self, num_models):
         models = self.grid.pop(0)
