@@ -210,14 +210,8 @@ def main():
     print model_types
     if search_type == 'grid_search':
         grid_space = get_grid(model_types)
-        print grid_space.enumerate_models_list
-        grid_space.convert_to_dict()
-        print grid_space.grid
-        print grid_space.debug
-        print grid_space.debug1
-        print grid_space.debug2
-        print grid_space.models_debug
         space = grid_space.pop_model(num_models)
+        print space
     else:
         space = space_manager.get_space(num_models, model_types, search_type)
     print type(space)

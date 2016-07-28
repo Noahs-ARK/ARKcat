@@ -63,7 +63,6 @@ class grid_search():
     def convert_to_dict(self):
         model_counter = 0
         list_of_models = []
-        self.debug = 0
         for model in self.enumerate_models_list:
             model_num = str(model_counter)
             if self.model_type == 'cnn':
@@ -71,9 +70,7 @@ class grid_search():
                     print len(model)
                     print model
                     raise ValueError
-                self.debug1 = 0
                 hyperparam_grid = self.cnn_get_grid(model_num, model)
-                self.debug2 = 0
             else:
                 if len(model) != 3:
                     print len(model)
@@ -81,13 +78,12 @@ class grid_search():
                 hyperparam_grid = self.linear_get_grid(model_num, model)
             model_counter += 1
             list_of_models.append(hyperparam_grid)
-            self.models_debug = list_of_models
-        self.grid = list_of_models.reverse()
+        self.grid = list_of_models
 
     def cnn_get_grid(self, model_num, model):
         return {'model_' + model_num:
                     {'model_' + model_num: 'CNN',
-                    # 'word_vectors_' + model_num: (model[0], model[1]),
+                    'word_vectors_' + model_num: ('word2vec', True),
                     'regularizer_cnn_' + model_num: (model[0], model[1]),
                     'delta_' + model_num: model[2],
                     'flex_' + model_num: (True, model[3]),
@@ -122,7 +118,7 @@ class grid_search():
                     'st_wrd_' + model_num: [None, 'english']}
 
     def pop_model(self, num_models):
-        models = self.grid.pop()
+        models = self.grid.pop(0)
         for i in range(num_models-1):
             models.update(self.grid.pop())
         return models
