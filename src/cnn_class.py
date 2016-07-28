@@ -19,11 +19,14 @@ class CNN:
                                           trainable=params['UPDATE_WORD_VECS'], name='word_embeddings')
         self.word_embeddings_new = tf.placeholder(tf.float32, [None, key_array.shape[1]])
         # print self.word_embeddings
-        self.W_delta = tf.Variable(tf.ones(shape=(key_array.shape[0], 1)),
-                                          trainable=params['USE_DELTA'], dtype=tf.float32, name='W_delta')
-        self.stacked_W_delta = tf.concat(1, [self.W_delta] * params['WORD_VECTOR_LENGTH'])
-        self.weighted_word_embeddings = tf.mul(self.word_embeddings, self.stacked_W_delta)
-        self.word_embeddings_comb = tf.concat(0, [self.weighted_word_embeddings, self.word_embeddings_new])
+        if params['USE_DELTA']:
+            self.W_delta = tf.Variable(tf.ones(shape=(key_array.shape[0], 1)),
+                                              trainable=params['USE_DELTA'], dtype=tf.float32, name='W_delta')
+            self.stacked_W_delta = tf.concat(1, [self.W_delta] * params['WORD_VECTOR_LENGTH'])
+            self.weighted_word_embeddings = tf.mul(self.word_embeddings, self.stacked_W_delta)
+            self.word_embeddings_comb = tf.concat(0, [self.weighted_word_embeddings, self.word_embeddings_new])
+        else:
+            self.word_embeddings_comb = tf.concat(0, [self.word_embeddings, self.word_embeddings_new])
 
         # self.weighted_word_embeddings = tf.convert_to_tensor(key_array, dtype=tf.float32)
         #
@@ -47,8 +50,10 @@ class CNN:
                 activ = tf.nn.relu(tf.nn.bias_add(conv, b))
             elif params['ACTIVATION_FN'] == 'elu':
                 activ = tf.nn.elu(tf.nn.bias_add(conv, b))
-            # elif params['ACTIVATION_FN'] == 'tanh':
-            #     activ = tf.nn.tanh(tf.nn.bias_add(conv, b))
+            elif params['ACTIVATION_FN'] == 'tanh':
+                activ = tf.tanh(tf.nn.bias_add(conv, b))
+            elif params['ACTIVATION_FN'] == 'sigmoid':
+                activ = tf.sigmoid(tf.nn.bias_add(conv, b))
             else:
                 activ = conv
             pooled = tf.nn.max_pool(activ, ksize=[1, params['MAX_LENGTH'], 1, 1],

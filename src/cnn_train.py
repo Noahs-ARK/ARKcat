@@ -13,9 +13,8 @@ def main(params, input_X, input_Y, key_array, model_dir):
 
     train_X, train_Y, val_X, val_Y = separate_train_and_val(input_X, input_Y)
 
-    cnn_dir = '../output/temp/'
     with tf.Graph().as_default():
-        with open(cnn_dir + 'train_log', 'a') as timelog:
+        with open(model_dir + 'train_log', 'a') as timelog:
             timelog.write('\n\n\nNew Model:')
             cnn = CNN(params, key_array)
             loss = cnn.cross_entropy
@@ -25,7 +24,7 @@ def main(params, input_X, input_Y, key_array, model_dir):
                                   intra_op_parallelism_threads=1, use_per_session_threads=True))
             sess.run(tf.initialize_all_variables())
             saver = tf.train.Saver(tf.all_variables())
-            path = saver.save(sess, cnn_dir + 'cnn_eval_epoch%i_%s' %(0, model_dir))
+            path = saver.save(sess, model_dir + 'cnn_eval_epoch%i' %0)
             # reader = tf.train.NewCheckpointReader(path)
             # print(reader.debug_string().decode("utf-8"))
             best_dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
@@ -71,16 +70,23 @@ def main(params, input_X, input_Y, key_array, model_dir):
                             %(resource.getrusage(resource.RUSAGE_SELF).ru_utime +
                             resource.getrusage(resource.RUSAGE_SELF).ru_stime))
                 timelog.write('\nmemory usage: %g' %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
-                checkpoint = saver.save(sess, cnn_dir + 'cnn_eval_epoch%i_%s' %(epoch, model_dir))
+                path = saver.save(sess, model_dir + 'cnn_eval_epoch%i' %(epoch))
                 dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
                 timelog.write('\ndev accuracy: %g'%dev_accuracy)
                 if dev_accuracy > best_dev_accuracy:
-                    path = saver.save(sess, model_dir + '/cnn', global_step=epoch)
+                    timelog.write('\nnew best model, epoch %i'%epoch)
+                    path_final = saver.save(sess, model_dir + 'cnn_final', global_step=epoch)
                     best_dev_accuracy = dev_accuracy
-                    if dev_accuracy < best_dev_accuracy - .02:
-                        #early stop if accuracy drops significantly
-                        return path, cnn.weighted_word_embeddings.eval(session=sess)
-            return path, cnn.weighted_word_embeddings.eval(session=sess)
+                elif dev_accuracy < best_dev_accuracy - .02:
+                    #early stop if accuracy drops significantly
+                    try:
+                        return path_final, cnn.word_embeddings.eval(session=sess)
+                    except UnboundLocalError: #path_final does not exist because initial dev accuracy highest
+                        return model_dir + 'cnn_eval_epoch0', cnn.word_embeddings.eval(session=sess)
+            try:
+                return path_final, cnn.word_embeddings.eval(session=sess)
+            except UnboundLocalError: #path_final does not exist because initial dev accuracy highest
+                return model_dir + 'cnn_eval_epoch0', cnn.word_embeddings.eval(session=sess)
 
 if __name__ == "__main__":
     main()

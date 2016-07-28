@@ -6,10 +6,12 @@ import Queue as queue
 
 from optparse import OptionParser
 import numpy as np
-from hyperopt import fmin, tpe, hp, Trials, space_eval
+from hyperopt import fmin, tpe, hp, Trials, space_eval#, MongoTrials (for parallel search)
 
 import classify_test
 import space_manager
+from grid_search import *
+
 
 
 def call_experiment(args):
@@ -199,8 +201,28 @@ def printing_best(trials):
 def main():
     print("Made it to the start of main!")
     set_globals()
+    # if search_type == 'bayesopt':
+    #     trials = Trials()
+    # else:
+    #     trials = MongoTrials()
     trials = Trials()
-    space = space_manager.get_space(num_models, model_types, search_type)
+    print trials
+    print model_types
+    if search_type == 'grid_search':
+        grid_space = get_grid(model_types)
+        print grid_space.enumerate_models_list
+        grid_space.convert_to_dict()
+        print grid_space.grid
+        print grid_space.debug
+        print grid_space.debug1
+        print grid_space.debug2
+        print grid_space.models_debug
+        space = grid_space.pop_model(num_models)
+    else:
+        space = space_manager.get_space(num_models, model_types, search_type)
+    print type(space)
+    print space
+    # raise RuntimeError
     # if search_type == 'grid_search':
     #     # global_vars = (train_data_filename, train_label_filename, dev_data_filename,
     #     #                dev_label_filename, output_dir, train_feature_dir,

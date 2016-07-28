@@ -3,7 +3,8 @@ import cnn_train
 import cnn_eval
 from cnn_methods import *
 import scipy
-
+#debug
+import tensorflow as tf
 
 #extant issues:
 #test all hyperparams
@@ -16,12 +17,12 @@ class Model_CNN:
         self.indices_to_words = fix_indices(indices_to_words)
         self.model_dir = model_dir
         self.word2vec_filename = word2vec_filename
+        self.set_params()
 
-    def train(self, train_X, train_Y):
-        print 'fix later'
+    def set_params(self):
         self.params = {
-                'FILTERS' : self.hp['filters'],
-                # 'FILTERS' : 2,
+                # 'FILTERS' : self.hp['filters'],
+                'FILTERS' : 2,
                 'ACTIVATION_FN' : self.hp['activation_fn'],
                 'REGULARIZER' : self.hp['regularizer'],
                 'REG_STRENGTH' : self.hp['reg_strength'],
@@ -33,12 +34,12 @@ class Model_CNN:
                 'BATCH_SIZE' : self.hp['batch_size'],
                 'LEARNING_RATE' : self.hp['learning_rate'],
                 'KERNEL_SIZES' : [],
-                'USE_WORD2VEC' : self.hp['word_vector_init'],
-                # 'USE_WORD2VEC' : False,
-                'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
-                # 'UPDATE_WORD_VECS' : False,
-                # 'USE_DELTA' : False,
-                'USE_DELTA' : self.hp['delta'],
+                # 'USE_WORD2VEC' : self.hp['word_vector_init'],
+                'USE_WORD2VEC' : False,
+                # 'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
+                'UPDATE_WORD_VECS' : False,
+                'USE_DELTA' : False,
+                # 'USE_DELTA' : self.hp['delta'],
 
                 'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
@@ -49,6 +50,7 @@ class Model_CNN:
         for i in range(self.hp['kernel_num']):
             self.params['KERNEL_SIZES'].append(self.hp['kernel_size'] + i * self.hp['kernel_increment'])
 
+    def train(self, train_X, train_Y):
         self.vocab = get_vocab(self.indices_to_words)
         self.key_array = dict_to_array(self.word2vec_filename, self.vocab, self.params)
         print 'shape', (train_X[0][0]).shape
@@ -63,7 +65,13 @@ class Model_CNN:
             self.params['FLEX'] = int(self.hp['flex_amt'] * self.params['MAX_LENGTH'])
         else:
             self.params['FLEX'] = 0
+        #rethink this
         self.best_epoch_path, self.key_array = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
+
+    def print_checkpoint(self):
+        reader = tf.train.NewCheckpointReader(self.best_epoch_path)
+        return reader.debug_string().decode("utf-8")
+
 
     def predict(self, test_X, indices_to_words=None, measure='predict'):
         # print 'nested train_labels (called pred again)'
@@ -100,7 +108,6 @@ class Model_CNN:
             #called on train
             else:
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
-
 
         return cnn_eval.main(self.best_epoch_path, self.params, test_X, self.key_array,
                                  measure, np.zeros([0, self.key_array.shape[1]]))

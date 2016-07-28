@@ -7,9 +7,12 @@ from model_lr import Model_LR
 from model_cnn import Model_CNN
 import re
 #need this for simultaneous computation on Stampede, 16 nodes at a time
-import multiprocessing as mp
+# import multiprocessing as mp
 #DEBUGGING
 #import xgboost
+#debug
+import tensorflow as tf
+
 
 class Data_and_Model_Manager:
     def __init__(self, f_and_p, model_dir, word2vec_filename):
@@ -142,6 +145,11 @@ class Data_and_Model_Manager:
         for i, feat_and_param in self.feats_and_params.items():
             if feat_and_param['params']['model_type'] == 'CNN':
                 test_X, index_to_word  = self.transform_cnn_data(test_X_raw, feat_and_param)
+                print self.trained_models[i].params
+                print self.trained_models[i].best_epoch_path
+                reader = tf.train.NewCheckpointReader(self.trained_models[i].best_epoch_path)
+                print reader.debug_string().decode("utf-8")
+
                 pred_probs[i] = self.trained_models[i].predict_prob(test_X, index_to_word)
             else:
                 test_X = self.vectorizers[i].transform(test_X_raw)
