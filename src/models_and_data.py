@@ -6,8 +6,6 @@ from model_xgb import Model_XGB
 from model_lr import Model_LR
 from model_cnn import Model_CNN
 import re
-#need this for simultaneous computation on Stampede, 16 nodes at a time
-# import multiprocessing as mp
 #DEBUGGING
 #import xgboost
 #debug
@@ -27,7 +25,7 @@ class Data_and_Model_Manager:
         self.num_labels = 0
 
 
-    def init_model(self, params, n_labels, index_to_word = None):
+    def init_model(self, params, n_labels, index_to_word=None):
         if params['model_type'] == 'LR':
             return Model_LR(params, n_labels)
         elif params['model_type'] == 'XGBoost':
@@ -103,9 +101,6 @@ class Data_and_Model_Manager:
             index_to_word[key] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", index_to_word[key])
         return train_X, index_to_word
 
-    # def train_many(n_processes):
-    #     ...
-
     def train_models(self, train_X_raw, train_Y_raw):
         if len(train_X_raw) == 0:
             raise IOError("problem! the training set is empty.")
@@ -145,10 +140,10 @@ class Data_and_Model_Manager:
         for i, feat_and_param in self.feats_and_params.items():
             if feat_and_param['params']['model_type'] == 'CNN':
                 test_X, index_to_word  = self.transform_cnn_data(test_X_raw, feat_and_param)
-                print self.trained_models[i].params
-                print self.trained_models[i].best_epoch_path
-                reader = tf.train.NewCheckpointReader(self.trained_models[i].best_epoch_path)
-                print reader.debug_string().decode("utf-8")
+                # print self.trained_models[i].params
+                # print self.trained_models[i].best_epoch_path
+                # reader = tf.train.NewCheckpointReader(self.trained_models[i].best_epoch_path)
+                # print reader.debug_string().decode("utf-8")
 
                 pred_probs[i] = self.trained_models[i].predict_prob(test_X, index_to_word)
             else:

@@ -61,7 +61,11 @@ class grid_search():
                     [.001]]
         l2 = [['l2'], list(feature_selector['l2_']) + feature_selector['l2_extras']] + general
         l2_clip = [['l2_clip'], list(feature_selector['l2_clip_']) + feature_selector['clip_extras']] + general
-        self.enumerate_models_list = list(itertools.product(*l2)) + list(itertools.product(*l2_clip))
+        if feature_selector['no_reg']:
+            no_reg = [[None] + [0.0] + general]
+            self.enumerate_models_list = list(itertools.product(*l2)) + list(itertools.product(*l2_clip)) + list(itertools.product(*no_reg))
+        else:
+            self.enumerate_models_list = list(itertools.product(*l2)) + list(itertools.product(*l2_clip))
         self.convert_to_dict()
 
     def convert_to_dict(self):

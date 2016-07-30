@@ -67,8 +67,7 @@ def wrangle_params(args, model_num):
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_xgb_' + model_num][1]
         kwargs['num_round'] = int(args['model_' + model_num]['num_round_' + model_num])
     elif model == 'CNN':
-        # print args['model_' + model_num]['regularizer_cnn_' + model_num][0]
-        # print args['model_' + model_num]['regularizer_cnn_' + model_num][1]
+        kwargs['model_num'] = model_num + '_' + str(trial_num)
         kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
         kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
@@ -201,30 +200,12 @@ def printing_best(trials):
 def main():
     print("Made it to the start of main!")
     set_globals()
-    # if search_type == 'bayesopt':
-    #     trials = Trials()
-    # else:
-    #     trials = MongoTrials()
     trials = Trials()
-    print trials
-    print model_types
     if search_type == 'grid_search':
         grid_space = get_grid(model_types)
         space = grid_space.pop_model(num_models)
-        print space
     else:
         space = space_manager.get_space(num_models, model_types, search_type)
-    print type(space)
-    print space
-    # raise RuntimeError
-    # if search_type == 'grid_search':
-    #     # global_vars = (train_data_filename, train_label_filename, dev_data_filename,
-    #     #                dev_label_filename, output_dir, train_feature_dir,
-    #     #                dev_feature_dir, model_dir, word2vec_filename, log_filename,
-    #     #                trial_num, max_iter, num_models, model_types, search_type,
-    #     #                num_folds)
-    #     # best = execute_grid_search.run_grid_search(space, model_types, global_vars)
-    # else:
     best = fmin(call_experiment,
                     space=space,
                     algo=tpe.suggest,

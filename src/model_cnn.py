@@ -12,6 +12,7 @@ import tensorflow as tf
 #clip_vars
 class Model_CNN:
     def __init__(self, params, n_labels, indices_to_words, model_dir, word2vec_filename):
+        self.train_counter = 0
         self.hp = params
         self.num_labels = n_labels
         self.indices_to_words = fix_indices(indices_to_words)
@@ -21,8 +22,9 @@ class Model_CNN:
 
     def set_params(self):
         self.params = {
-                # 'FILTERS' : self.hp['filters'],
-                'FILTERS' : 2,
+                'FILTERS' : self.hp['filters'],
+                'MODEL_NUM': self.hp['model_num'],
+                # 'FILTERS' : 2,
                 'ACTIVATION_FN' : self.hp['activation_fn'],
                 'REGULARIZER' : self.hp['regularizer'],
                 'REG_STRENGTH' : self.hp['reg_strength'],
@@ -33,17 +35,18 @@ class Model_CNN:
                 'TRAIN_DROPOUT' : self.hp['dropout'],
                 'BATCH_SIZE' : self.hp['batch_size'],
                 'LEARNING_RATE' : self.hp['learning_rate'],
+                # 'KERNEL_SIZES' : [3, 4, 5],
                 'KERNEL_SIZES' : [],
                 # 'USE_WORD2VEC' : self.hp['word_vector_init'],
                 'USE_WORD2VEC' : False,
-                # 'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
-                'UPDATE_WORD_VECS' : False,
+                'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
+                # 'UPDATE_WORD_VECS' : False,
                 'USE_DELTA' : False,
                 # 'USE_DELTA' : self.hp['delta'],
 
                 'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
-                'EPOCHS' : 5,
+                'EPOCHS' : 10,
         }
         if self.params['REGULARIZER'] == 'l2':
             self.params['REG_STRENGTH'] = 10 ** self.params['REG_STRENGTH']
@@ -51,56 +54,22 @@ class Model_CNN:
             self.params['KERNEL_SIZES'].append(self.hp['kernel_size'] + i * self.hp['kernel_increment'])
 
     def train(self, train_X, train_Y):
+        self.train_counter += 1
         self.vocab = get_vocab(self.indices_to_words)
         self.key_array = dict_to_array(self.word2vec_filename, self.vocab, self.params)
-        print 'shape', (train_X[0][0]).shape
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
-        print 'shape2', (train_X[0].shape)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
-        for example in train_X[:10]:
-            for word in example:
-                print self.vocab[word],
-            print ''
         if self.hp['flex']:
             self.params['FLEX'] = int(self.hp['flex_amt'] * self.params['MAX_LENGTH'])
         else:
             self.params['FLEX'] = 0
-        #rethink this
-        self.best_epoch_path, self.key_array = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir)
-
-    def print_checkpoint(self):
-        reader = tf.train.NewCheckpointReader(self.best_epoch_path)
-        return reader.debug_string().decode("utf-8")
-
+        self.best_epoch_path, self.key_array = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir, self.train_counter)
 
     def predict(self, test_X, indices_to_words=None, measure='predict'):
-        # print 'nested train_labels (called pred again)'
-        # try:
-        #     print test_X[0]
-        #     try:
-        #         print test_X[0][0]
-        #         try:
-        #             print test_X[0][0][0]
-        #             try:
-        #                 print test_X[0][0][0][0]
-        #             except:
-        #                 print '3'
-        #                 pass
-        #         except:
-        #             print '2'
-        #             pass
-        #     except:
-        #         print '1'
-        #         pass
-        # except:
-        #     print 'none'
-        #     pass
         if 'numpy' not in str(type(test_X)):
             #if called on dev or test
             if indices_to_words is not None:
-                # print vocab_debug(test_X[0:10], indices_to_words)
-
-                placeholder, test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
+                test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key=test_vocab_key)
                 return cnn_eval.main(self.best_epoch_path, self.params, test_X,
                                      self.key_array, measure, test_key_array)

@@ -63,8 +63,7 @@ def get_cnn_model_big(model_num):
             }
 
 def get_cnn_model(model_num):
-    hyperparams = {
-            'model_' + model_num: 'CNN',
+    return {'model_' + model_num: 'CNN',
             'word_vectors_' + model_num: ('word2vec', True),
             'delta_' + model_num: True,
             'flex_' + model_num: (True, .15), #hp.choice('flex_' + model_num, [
@@ -88,6 +87,24 @@ def get_cnn_model(model_num):
             ]),
             # 'learning_rate_' + model_num: .00025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 370)
             'learning_rate_' + model_num: .001
-
         }
-    return hyperparams
+
+def get_cnn_yk(model_num):
+    return {'model_' + model_num: 'CNN',
+            'word_vectors_' + model_num: ('word2vec', True),
+            'delta_' + model_num: False,
+            'flex_' + model_num: (True, .15),
+            'filters_' + model_num: 100,
+            'kernel_size_' + model_num: 3,
+            'kernel_increment_' + model_num: 1,
+            'kernel_num_' + model_num: 3,
+            'dropout_' + model_num: hp.uniform('dropout_' + model_num, 0, 1),
+            'batch_size_' + model_num: 50,
+            'activation_fn_' + model_num: 'relu',
+            'regularizer_cnn_' + model_num: hp.choice('regularizer_cnn_' + model_num, [
+                (None, 0.0),
+                ('l2', hp.uniform('l2_strength_cnn_' + model_num, -4, -1)),
+                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, 1,5))
+            ]),
+            'learning_rate_' + model_num: .001
+        }

@@ -4,14 +4,6 @@ import bayesopt, grid_search, random_search
 #grid search disregards # models, uses only type of model_types[0]
 def get_space(num_models, model_types, search_type):
     space = {}
-    # if search_type == 'grid_search':
-    #     if model_types[0] == 'cnn':
-    #         return grid_search.get_cnn_model()
-    #     else:
-    #         print 'grid search not implemented for model type'
-    #         return []
-    # if search_type == 'grid_search':
-    #     num_models = 1
     search_module = __import__(search_type)
     for i in range(num_models):
         add_model(str(i), space, model_types, search_module)

@@ -185,45 +185,8 @@ def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
     all_vocab = vocab + add_vocab_list
     for key in new_vocab_key.iterkeys():
         new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
-    return all_vocab, new_key_array, new_vocab_key
-    #     add_vocab_list = []
-#     for word in new_vocab_key.itervalues():
-#         if word not in vocab:
-#             add_vocab_list.append(word)
-#     new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
-#     all_vocab = vocab + add_vocab_list
-#     for key in new_vocab_key.iterkeys():
-#         new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
-#     try:
-#         for example in test_X[:10]:
-#             for word in example:
-#                 try:
-#                     print new_vocab_key[word],
-#                     print all_vocab[new_vocab_key[word]],
-#                 except IndexError:
-#                     print 'IndexError'
-#             print ''
-#     except KeyError:
-#         print 'KeyError'
-#         print 'word', word
-#         print 'new_vocab_key.popitem', new_vocab_key.popitem()
-#         print ''
-#         test_X = rm_empty_dim(test_X)
-#         print 'rm dim'
-#         for example in test_X:
-#             for word in example:
-#                 try:
-#                     print new_vocab_key[word],
-#                     print all_vocab[new_vocab_key[word]],
-#                 except IndexError:
-#                     print 'IndexError'
-#             print ''
-#
-#     print 'len vocab', len(all_vocab)
-#     print 'len array', new_key_array.shape
-#
-#     return new_key_array, new_vocab_key
-#
+    return new_key_array, new_vocab_key
+
 #loads word vectors
 def dict_to_array(word2vec_filename, vocab, params, train=True):
     key_array = [[] for item in range(len(vocab))]

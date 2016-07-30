@@ -3,10 +3,8 @@ import tensorflow as tf
 
 #defines the architecture of a CNN
 
-#problem: need to discard cnn btwn models
-#else gets error when shape of vars doesn't match :()
+#problem:
 # also raise error when only one model, but diff error: TypeError: 'NoneType' object is not iterable for optimizer (loss fn)
-#why do all models start w/same params? check to see if this is an error
 #del unnecessary selfs
 class CNN:
     def __init__(self, params, key_array, batch_size=None, train=True):

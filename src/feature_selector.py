@@ -12,7 +12,8 @@ def cnn_feature_selector():
             'l2_': (-8,-2),
             'l2_clip_': (2,10),
             'l2_extras': [],
-            'clip_extras': []
+            'clip_extras': [],
+            'no_reg': False
     }
 
 def yoon_kim_cnn():
@@ -29,7 +30,8 @@ def yoon_kim_cnn():
             'l2_': (-4, -1),
             'l2_clip_': (1,5),
             'l2_extras': [-3, -2],
-            'clip_extras': [3]
+            'clip_extras': [3],
+            'no_reg': True
     }
 
 
