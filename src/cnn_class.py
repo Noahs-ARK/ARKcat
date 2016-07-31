@@ -10,24 +10,21 @@ class CNN:
     def __init__(self, params, key_array, batch_size=None, train=True):
         if batch_size == None:
             batch_size = params['BATCH_SIZE']
-        self.input_x = tf.placeholder(tf.int32, [batch_size, None])#, name='input_x') tf.ones([batch_size, params['MAX_LENGTH']], dtype=tf.int32)
-        self.input_y = tf.placeholder(tf.float32, [batch_size, params['CLASSES']])#, name='input_y')
-        self.dropout = tf.placeholder(tf.float32)#, name='dropout')
+        self.input_x = tf.placeholder(tf.int32, [batch_size, None], name='input_x') #tf.ones([batch_size, params['MAX_LENGTH']], dtype=tf.int32)
+        self.input_y = tf.placeholder(tf.float32, [batch_size, params['CLASSES']], name='input_y')
+        self.dropout = tf.placeholder(tf.float32, name='dropout')
         self.word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype=tf.float32),
                                           trainable=params['UPDATE_WORD_VECS'], name='word_embeddings')
         self.word_embeddings_new = tf.placeholder(tf.float32, [None, key_array.shape[1]])
         # print self.word_embeddings
         if params['USE_DELTA']:
-            self.W_delta = tf.Variable(tf.ones(shape=(key_array.shape[0], 1)),
+            W_delta = tf.Variable(tf.ones(shape=(key_array.shape[0], 1)),
                                               trainable=params['USE_DELTA'], dtype=tf.float32, name='W_delta')
-            self.stacked_W_delta = tf.concat(1, [self.W_delta] * params['WORD_VECTOR_LENGTH'])
-            self.weighted_word_embeddings = tf.mul(self.word_embeddings, self.stacked_W_delta)
-            self.word_embeddings_comb = tf.concat(0, [self.weighted_word_embeddings, self.word_embeddings_new])
+            stacked_W_delta = tf.concat(1, [W_delta] * params['WORD_VECTOR_LENGTH'])
+            weighted_word_embeddings = tf.mul(self.word_embeddings, stacked_W_delta)
+            self.word_embeddings_comb = tf.concat(0, [weighted_word_embeddings, self.word_embeddings_new])
         else:
             self.word_embeddings_comb = tf.concat(0, [self.word_embeddings, self.word_embeddings_new])
-
-        # self.weighted_word_embeddings = tf.convert_to_tensor(key_array, dtype=tf.float32)
-        #
         embedding_output = tf.nn.embedding_lookup(self.word_embeddings_comb, self.input_x)
         embedding_output_expanded = tf.expand_dims(embedding_output, 2)
         # embedding_output = tf.expand_dims(tf.pack([tf.convert_to_tensor(key_array[0:params['MAX_LENGTH']], dtype=tf.float32)] * batch_size), 2)
@@ -35,15 +32,11 @@ class CNN:
         self.weights = []
         self.biases = []
 
-        #problem is that ist thru 3rd dims are undefined, when they should be batch_size, 1, 1
-
         #loop over KERNEL_SIZES, each time initializing a slice
         for i, kernel_size in enumerate(params['KERNEL_SIZES']):
             W = self.weight_variable([kernel_size, 1, params['WORD_VECTOR_LENGTH'], params['FILTERS']], 'W_%i' %i)
-            # W = self.weight_variable([kernel_size, 1, 1, params['FILTERS']], 'W_%i' %name_counter)
             b = self.bias_variable([params['FILTERS']], 'b_%i' %i)
             conv = tf.nn.conv2d(embedding_output_expanded, W, strides=[1, 1, 1, 1], padding="SAME")
-            # conv = tf.nn.conv2d(tf.cast(self.input_x, dtype=tf.float32), W, strides=[1, 1, 1, 1], padding="SAME")
             if params['ACTIVATION_FN'] == 'relu':
                 activ = tf.nn.relu(tf.nn.bias_add(conv, b))
             elif params['ACTIVATION_FN'] == 'elu':

@@ -72,6 +72,10 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                             print l2_loss_float(cnn.b_fc).eval(session=sess)
                         else:
                             cnn.clip_vars(params)
+                    if j == (len(batches_x) - 2):
+                        print 'debug w_embeds:', cnn.word_embeddings.eval(session=sess)
+                        print 'debug weights:', cnn.weights[0].eval(session=sess)
+                        print cnn.biases[0].eval(session=sess)
                 timelog.write('\n\nepoch %i initial time %g' %(epoch, time.clock()))
                 timelog.write('\nCPU usage: %g'
                             %(resource.getrusage(resource.RUSAGE_SELF).ru_utime +
@@ -80,7 +84,7 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                 path = saver.save(sess, model_dir + 'temp_cnn_eval_epoch%i' %(epoch))
                 dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
                 timelog.write('\ndev accuracy: %g'%dev_accuracy)
-                if dev_accuracy > best_dev_accuracy:
+                if dev_accuracy < best_dev_accuracy:
                     timelog.write('\nnew best model, epoch %i'%epoch)
                     #remove old best epoch save if exists
                     try:
@@ -90,16 +94,19 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                     path_final = saver.save(sess, model_dir + params['MODEL_NUM'] + '/cnn_final', global_step=epoch)
                     best_dev_accuracy = dev_accuracy
                     word_embeddings = cnn.word_embeddings.eval(session=sess)
-                # elif dev_accuracy < best_dev_accuracy - .02:
-                #     #remove any old chkpt files
-                #     for past_epoch in range(epoch + 1):
-                #         remove_chkpt_files(model_dir + 'temp_cnn_eval_epoch%i' %(past_epoch))
-                #     #early stop if accuracy drops significantly
-                #     try:
-                #         return path_final, word_embeddings
-                #     except UnboundLocalError: #path_final does not exist because initial dev accuracy highest
-                #         path_final = saver.save(sess, model_dir + params['MODEL_NUM'] + '/cnn_final', global_step=epoch)
-                #         return path_final, cnn.word_embeddings.eval(session=sess)
+                elif dev_accuracy > best_dev_accuracy + .05:
+                    #remove any old chkpt files
+                    for past_epoch in range(epoch + 1):
+                        try:
+                            remove_chkpt_files(model_dir + 'temp_cnn_eval_epoch%i' %(past_epoch))
+                        except (UnboundLocalError, OSError):
+                            pass
+                    #early stop if accuracy drops significantly
+                    try:
+                        return path_final, word_embeddings
+                    except (UnboundLocalError, ValueError): #path_final does not exist because initial dev accuracy highest
+                        path_final = saver.save(sess, model_dir + params['MODEL_NUM'] + '/cnn_final', global_step=epoch)
+                        return path_final, cnn.word_embeddings.eval(session=sess)
             #remove any old chkpt files
             for past_epoch in range(epoch + 1):
                 try:
@@ -108,7 +115,7 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                     pass
             try:
                 return path_final, word_embeddings
-            except UnboundLocalError: #path_final does not exist because initial dev accuracy highest
+            except (UnboundLocalError, ValueError): #path_final does not exist because initial dev accuracy highest
                 path_final = saver.save(sess, model_dir + params['MODEL_NUM'] + '/cnn_final', global_step=epoch)
                 return path_final, cnn.word_embeddings.eval(session=sess)
 

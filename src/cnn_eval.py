@@ -26,16 +26,6 @@ def evaluate(path, val_x, val_y, key_array, params, measure, new_key_embeds):
             saver = tf.train.Saver()
             saver.restore(sess, path)
             pred = []
-            # try:
-            #     print 'delta', cnn.W_delta.eval(session=sess)
-            #     print cnn.stacked_W_delta.eval(session=sess)
-            # except:
-            #     pass
-            # try:
-            #     print 'wordembeds', cnn.weighted_word_embeddings.eval(session=sess)
-            # except:
-            #     pass
-            # print 'l2 loss', tf.nn.l2_loss(cnn.weights[0]).eval(session=sess)
             while len(val_x) > 0:
                 feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis=0),
                              cnn.input_y: np.expand_dims(val_y[0], axis=0),

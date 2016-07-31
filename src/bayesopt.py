@@ -86,7 +86,7 @@ def get_cnn_model(model_num):
                 ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, 2,6))
             ]),
             # 'learning_rate_' + model_num: .00025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 370)
-            'learning_rate_' + model_num: .001
+            'learning_rate_' + model_num: .0075
         }
 
 def get_cnn_yk(model_num):
