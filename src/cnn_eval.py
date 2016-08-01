@@ -23,6 +23,15 @@ def evaluate(path, val_x, val_y, key_array, params, measure, new_key_embeds):
             sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
                                           intra_op_parallelism_threads=1,
                                           use_per_session_threads=True))
+            # print 'begin eval'
+            # min_index = 5
+            # max_index = 5
+            # for i in range(len(val_x)):
+            #     max_index = max(max_index, np.amax(val_x[i]))
+            #     min_index = min(min_index, np.amin(val_x[i]))
+            # print "max, min", max_index, min_index
+            # print val_x[len(val_x) - 1]
+            #
             saver = tf.train.Saver()
             saver.restore(sess, path)
             pred = []
@@ -31,7 +40,8 @@ def evaluate(path, val_x, val_y, key_array, params, measure, new_key_embeds):
                              cnn.input_y: np.expand_dims(val_y[0], axis=0),
                              cnn.dropout: 1.0,
                              cnn.word_embeddings_new: new_key_embeds}
-
+                # if len(val_x) < 2:
+                #     print cnn.embedding_output.eval(feed_dict=feed_dict, session=sess)[:,:,:2]
                 if measure == 'cross_entropy':
                     output = cnn.cross_entropy.eval(feed_dict=feed_dict, session=sess).tolist()
                 elif measure == 'predict':

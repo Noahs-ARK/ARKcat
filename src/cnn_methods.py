@@ -141,15 +141,13 @@ def to_dense(input_X, test_key = None):
     for example in input_X:
         example_transform = example[0].nonzero()[1]
         example_transform = example_transform.tolist()
-        for word in example_transform:
+        for i in range(len(example_transform)):
             if test_key is not None:
-                temp_test_key = test_key
-                word = test_key[word]
-            word += 1
+                example_transform[i] = test_key[example_transform[i]]
+            example_transform[i] += 1
         max_length = max(max_length, len(example_transform))
         dense.append(np.asarray(example_transform))
     return dense, max_length
-
 
 #gets word vecs from word2vec_filename. those not found will be initialized later
 def init_word_vecs(word2vec_filename, key_array, vocab, params):
@@ -185,7 +183,7 @@ def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
     all_vocab = vocab + add_vocab_list
     for key in new_vocab_key.iterkeys():
         new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
-    return new_key_array, new_vocab_key
+    return all_vocab, new_key_array, new_vocab_key
 
 #loads word vectors
 def dict_to_array(word2vec_filename, vocab, params, train=True):
@@ -219,19 +217,41 @@ def fix_indices(indices_to_words):
     indices_to_words[0] = None
     return indices_to_words
 
-def rm_empty_dim(test_X):
-    for i in range(len(test_X)):
-        test_X[i] = test_X[i][0]
+def vocab_debug(debug_X, indices_to_words, vocab):
+    # if 'numpy' not in str(type(debug_X[0])):
+    #     debug2_X, l = to_dense(debug_X)
+    #     min_index = 5
+    #     max_index = 5
+    #     for i in range(len(debug2_X)):
+    #         max_index = max(max_index, np.amax(debug2_X[i]))
+    #         min_index = min(min_index, np.amin(debug2_X[i]))
+    #     print "max, min", max_index, min_index
+    #     for example in debug2_X[:10]:
+    #         for word in example:
+    #             try:
+    #                 print vocab[indices_to_words[word]],
+    #             except IndexError:
+    #                 print 'IndexError'
+    #         print ''
+    # else:
+    min_index = 5
+    max_index = 5
+    for i in range(len(debug_X)):
+        max_index = max(max_index, np.amax(debug_X[i]))
+        min_index = min(min_index, np.amin(debug_X[i]))
+    print "max, min", max_index, min_index
 
-def vocab_debug(debug_X, indices_to_words):
-    if 'numpy' not in str(type(debug_X[0])):
-        debug2_X, l = to_dense(debug_X)
-    for example in debug2_X[:10]:
+    for example in debug_X[:10]:
         for word in example:
             try:
-                print indices_to_words[word],
+                print vocab[indices_to_words[word]],
             except IndexError:
                 print 'IndexError'
         print ''
+
+def if_zero_print_error(debug_X):
+    for example in debug_X:
+        if np.min(example) == 0:
+            raise TypeError
 
 if __name__ == "__main__": main()

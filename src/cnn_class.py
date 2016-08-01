@@ -25,8 +25,8 @@ class CNN:
             self.word_embeddings_comb = tf.concat(0, [weighted_word_embeddings, self.word_embeddings_new])
         else:
             self.word_embeddings_comb = tf.concat(0, [self.word_embeddings, self.word_embeddings_new])
-        embedding_output = tf.nn.embedding_lookup(self.word_embeddings_comb, self.input_x)
-        embedding_output_expanded = tf.expand_dims(embedding_output, 2)
+        self.embedding_output = tf.nn.embedding_lookup(self.word_embeddings_comb, self.input_x)
+        embedding_output_expanded = tf.expand_dims(self.embedding_output, 2)
         # embedding_output = tf.expand_dims(tf.pack([tf.convert_to_tensor(key_array[0:params['MAX_LENGTH']], dtype=tf.float32)] * batch_size), 2)
         slices = []
         self.weights = []
