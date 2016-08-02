@@ -6,10 +6,12 @@ import Queue as queue
 
 from optparse import OptionParser
 import numpy as np
-from hyperopt import fmin, tpe, hp, Trials, space_eval
+from hyperopt import fmin, tpe, hp, Trials, space_eval#, MongoTrials (for parallel search)
 
 import classify_test
 import space_manager
+from grid_search import *
+
 
 
 def call_experiment(args):
@@ -65,8 +67,7 @@ def wrangle_params(args, model_num):
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_xgb_' + model_num][1]
         kwargs['num_round'] = int(args['model_' + model_num]['num_round_' + model_num])
     elif model == 'CNN':
-        # print args['model_' + model_num]['regularizer_cnn_' + model_num][0]
-        # print args['model_' + model_num]['regularizer_cnn_' + model_num][1]
+        kwargs['model_num'] = model_num + '_' + str(trial_num)
         kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
         kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
@@ -152,7 +153,7 @@ def set_globals():
 
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, word2vec_filename, log_filename
-    global trial_num, max_iter, num_models, model_types, search_type, num_folds
+    global trial_num, max_iter, num_models, model_types, search_type, search_space, num_folds
     print args[:6]
     train_data_filename = args[0] + 'train.data'
     train_label_filename = args[0] + 'train.labels'
@@ -163,7 +164,8 @@ def set_globals():
     num_models = int(args[3])
     model_types = args[4].split('-')
     search_type = args[5]
-    num_folds = int(args[6])
+    search_space = args[6]
+    num_folds = int(args[7])
     train_feature_dir = output_dir + '/train_features/'
     dev_feature_dir = output_dir + '/dev_train_features/'
     model_dir = output_dir + '/saved_models/'
@@ -200,15 +202,11 @@ def main():
     print("Made it to the start of main!")
     set_globals()
     trials = Trials()
-    space = space_manager.get_space(num_models, model_types, search_type)
-    # if search_type == 'grid_search':
-    #     # global_vars = (train_data_filename, train_label_filename, dev_data_filename,
-    #     #                dev_label_filename, output_dir, train_feature_dir,
-    #     #                dev_feature_dir, model_dir, word2vec_filename, log_filename,
-    #     #                trial_num, max_iter, num_models, model_types, search_type,
-    #     #                num_folds)
-    #     # best = execute_grid_search.run_grid_search(space, model_types, global_vars)
-    # else:
+    if search_type == 'grid_search':
+        grid_space = get_grid(model_types, search_space)
+        space = grid_space.pop_model(num_models)
+    else:
+        space = space_manager.get_space(num_models, model_types, search_type, search_space)
     best = fmin(call_experiment,
                     space=space,
                     algo=tpe.suggest,
