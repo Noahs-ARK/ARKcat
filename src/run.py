@@ -153,7 +153,7 @@ def set_globals():
 
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, word2vec_filename, log_filename
-    global trial_num, max_iter, num_models, model_types, search_type, num_folds
+    global trial_num, max_iter, num_models, model_types, search_type, search_space, num_folds
     print args[:6]
     train_data_filename = args[0] + 'train.data'
     train_label_filename = args[0] + 'train.labels'
@@ -164,7 +164,8 @@ def set_globals():
     num_models = int(args[3])
     model_types = args[4].split('-')
     search_type = args[5]
-    num_folds = int(args[6])
+    search_space = args[6]
+    num_folds = int(args[7])
     train_feature_dir = output_dir + '/train_features/'
     dev_feature_dir = output_dir + '/dev_train_features/'
     model_dir = output_dir + '/saved_models/'
@@ -202,10 +203,10 @@ def main():
     set_globals()
     trials = Trials()
     if search_type == 'grid_search':
-        grid_space = get_grid(model_types)
+        grid_space = get_grid(model_types, search_space)
         space = grid_space.pop_model(num_models)
     else:
-        space = space_manager.get_space(num_models, model_types, search_type)
+        space = space_manager.get_space(num_models, model_types, search_type, search_space)
     best = fmin(call_experiment,
                     space=space,
                     algo=tpe.suggest,

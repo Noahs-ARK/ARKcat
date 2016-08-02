@@ -29,8 +29,55 @@ def get_xgboost_model(model_num):
             ])
         }
 
-def get_cnn_model_big(model_num):
-    hyperparams = {
+def get_cnn_model(model_num, search_space):
+    if search_space == 'arch':
+        return {'model_' + model_num: 'CNN',
+                'word_vectors_' + model_num: ('word2vec', True),
+                'delta_' + model_num: True,
+                'flex_' + model_num: (True, .15), #hp.choice('flex_' + model_num, [
+                    # (False, 0.0),
+                    # (True, hp.uniform('flex_amt_' + model_num, 0, 0.3))]),
+                'filters_' + model_num: hp.quniform('filters_' + model_num, 100, 600,1),
+                'kernel_size_' + model_num: hp.quniform('kernel_size_' + model_num, 1, 15, 1),
+                'kernel_increment_' + model_num: hp.quniform('kernel_increment_' + model_num, 0, 5, 1),
+                # 'kernel_num_' + model_num: hp.quniform('kernel_num_' + model_num, 1, 5, 1),
+                'kernel_num_' + model_num: 3,
+                # 'dropout_' + model_num: hp.uniform('dropout_' + model_num, 0, 1),
+                'dropout_' + model_num: .5,
+                'batch_size_' + model_num: hp.quniform('batch_size_' + model_num, 10, 200, 1),
+                # iden, relu, and elu
+                'activation_fn_' + model_num: hp.choice('activation_fn_' + model_num, ['iden', 'relu', 'elu']),
+                #clipped, or penalized
+                'regularizer_cnn_' + model_num: hp.choice('regularizer_cnn_' + model_num, [
+                    # (None, 0.0),
+                    ('l2', hp.uniform('l2_strength_cnn_' + model_num, -8,-2)),
+                    ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, 2,6))
+                ]),
+                # 'learning_rate_' + model_num: .00025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 370)
+                #hp.lognormal('learning_rate_' + model_num, 0, 1) / 3000
+                'learning_rate_' + model_num: .0003
+            }
+    elif search_space == 'reg':
+        return {'model_' + model_num: 'CNN',
+                'word_vectors_' + model_num: ('word2vec', True),
+                'delta_' + model_num: False,
+                'flex_' + model_num: (True, .15),
+                'filters_' + model_num: 100,
+                'kernel_size_' + model_num: 3,
+                'kernel_increment_' + model_num: 1,
+                'kernel_num_' + model_num: 3,
+                'dropout_' + model_num: hp.uniform('dropout_' + model_num, 0, 1),
+                'batch_size_' + model_num: 50,
+                'activation_fn_' + model_num: 'relu',
+                'regularizer_cnn_' + model_num: hp.choice('regularizer_cnn_' + model_num, [
+                    (None, 0.0),
+                    ('l2', hp.uniform('l2_strength_cnn_' + model_num, -5, 0)),
+                    ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, 0,7))
+                ]),
+                'learning_rate_' + model_num: .0003
+            }
+    else: #search_space is big
+        return {
             'model_' + model_num: 'CNN',
             # choose btwn rand, word2vec--implement glove
             'word_vectors_' + model_num: hp.choice('word_vectors_' + model_num,[
@@ -62,49 +109,9 @@ def get_cnn_model_big(model_num):
             'learning_rate_' + model_num: .00025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 370)
             }
 
-def get_cnn_model(model_num):
-    return {'model_' + model_num: 'CNN',
-            'word_vectors_' + model_num: ('word2vec', True),
-            'delta_' + model_num: True,
-            'flex_' + model_num: (True, .15), #hp.choice('flex_' + model_num, [
-                # (False, 0.0),
-                # (True, hp.uniform('flex_amt_' + model_num, 0, 0.3))]),
-            'filters_' + model_num: hp.quniform('filters_' + model_num, 100, 600,1),
-            'kernel_size_' + model_num: hp.quniform('kernel_size_' + model_num, 1, 15, 1),
-            'kernel_increment_' + model_num: hp.quniform('kernel_increment_' + model_num, 0, 5, 1),
-            # 'kernel_num_' + model_num: hp.quniform('kernel_num_' + model_num, 1, 5, 1),
-            'kernel_num_' + model_num: 3,
-            # 'dropout_' + model_num: hp.uniform('dropout_' + model_num, 0, 1),
-            'dropout_' + model_num: .5,
-            'batch_size_' + model_num: hp.quniform('batch_size_' + model_num, 10, 200, 1),
-            # iden, relu, and elu
-            'activation_fn_' + model_num: hp.choice('activation_fn_' + model_num, ['iden', 'relu', 'elu']),
-            #clipped, or penalized
-            'regularizer_cnn_' + model_num: hp.choice('regularizer_cnn_' + model_num, [
-                # (None, 0.0),
-                ('l2', hp.uniform('l2_strength_cnn_' + model_num, -8,-2)),
-                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, 2,6))
-            ]),
-            # 'learning_rate_' + model_num: .00025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 370)
-            'learning_rate_' + model_num: .0075
-        }
-
-def get_cnn_yk(model_num):
-    return {'model_' + model_num: 'CNN',
-            'word_vectors_' + model_num: ('word2vec', True),
-            'delta_' + model_num: False,
-            'flex_' + model_num: (True, .15),
-            'filters_' + model_num: 100,
-            'kernel_size_' + model_num: 3,
-            'kernel_increment_' + model_num: 1,
-            'kernel_num_' + model_num: 3,
-            'dropout_' + model_num: hp.uniform('dropout_' + model_num, 0, 1),
-            'batch_size_' + model_num: 50,
-            'activation_fn_' + model_num: 'relu',
-            'regularizer_cnn_' + model_num: hp.choice('regularizer_cnn_' + model_num, [
-                (None, 0.0),
-                ('l2', hp.uniform('l2_strength_cnn_' + model_num, -4, -1)),
-                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, 1,5))
-            ]),
-            'learning_rate_' + model_num: .001
-        }
+def get_feats(model_num):
+    return {'nmin_to_max_' + model_num: hp.choice('nmin_to_max_' + model_num,
+                                                  [(1,1),(1,2),(1,3),(2,2),(2,3)]),
+            'binary_' + model_num: hp.choice('binary_' + model_num, [True, False]),
+            'use_idf_' + model_num: hp.choice('transform_' + model_num, [True, False]),
+            'st_wrd_' + model_num: hp.choice('st_word_' + model_num, [None, 'english'])}

@@ -38,7 +38,6 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
             path = saver.save(sess, model_dir + 'temp_cnn_eval_epoch%i' %0)
             # reader = tf.train.NewCheckpointReader(path)
             # print(reader.debug_string().decode("utf-8"))
-            print "val eval"
             best_dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
             timelog.write( '\ndebug acc %g' %best_dev_accuracy)
             timelog.write('\n%g'%time.clock())
@@ -99,7 +98,6 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                             resource.getrusage(resource.RUSAGE_SELF).ru_stime))
                 timelog.write('\nmemory usage: %g' %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
                 path = saver.save(sess, model_dir + 'temp_cnn_eval_epoch%i' %(epoch))
-                print 'val eval'
                 dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
                 timelog.write('\ndev accuracy: %g'%dev_accuracy)
                 if dev_accuracy < best_dev_accuracy:

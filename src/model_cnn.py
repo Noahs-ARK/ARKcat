@@ -16,6 +16,7 @@ class Model_CNN:
         self.hp = params
         self.num_labels = n_labels
         self.indices_to_words = fix_indices(indices_to_words)
+        # self.indices_to_words = indices_to_words
         self.model_dir = model_dir
         self.word2vec_filename = word2vec_filename
         self.set_params()
@@ -37,16 +38,16 @@ class Model_CNN:
                 'LEARNING_RATE' : self.hp['learning_rate'],
                 # 'KERNEL_SIZES' : [3, 4, 5],
                 'KERNEL_SIZES' : [],
-                # 'USE_WORD2VEC' : self.hp['word_vector_init'],
-                'USE_WORD2VEC' : False,
+                'USE_WORD2VEC' : self.hp['word_vector_init'],
+                # 'USE_WORD2VEC' : False,
                 'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
                 # 'UPDATE_WORD_VECS' : False,
-                'USE_DELTA' : False,
-                # 'USE_DELTA' : self.hp['delta'],
+                # 'USE_DELTA' : False,
+                'USE_DELTA' : self.hp['delta'],
 
                 'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
-                'EPOCHS' : 5,
+                'EPOCHS' : 15,
         }
         if self.params['REGULARIZER'] == 'l2':
             self.params['REG_STRENGTH'] = 10 ** self.params['REG_STRENGTH']
@@ -58,6 +59,7 @@ class Model_CNN:
         self.vocab = get_vocab(self.indices_to_words)
         self.key_array = dict_to_array(self.word2vec_filename, self.vocab, self.params)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
+        if_zero_print_error(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
         if self.hp['flex']:
             self.params['FLEX'] = int(self.hp['flex_amt'] * self.params['MAX_LENGTH'])
@@ -66,6 +68,7 @@ class Model_CNN:
         self.best_epoch_path, self.key_array = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir, self.train_counter)
 
     def predict(self, test_X, indices_to_words=None, measure='predict'):
+        print 'test or dev acc'
         if 'numpy' not in str(type(test_X)):
             #if called on dev or test
             if indices_to_words is not None:
