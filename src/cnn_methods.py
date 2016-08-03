@@ -48,6 +48,21 @@ def insert_padding(example, tokens_to_pad, left):
         example = np.concatenate((example, np.zeros((tokens_to_pad))))
     return example
 
+#takes tokenized list_of_examples and pads all to the maximum length
+def pad_all(list_of_examples, params):
+    max_length = get_max_length(list_of_examples)
+    for i in range(len(list_of_examples)):
+        list_of_examples[i] = pad_one(list_of_examples[i], max_length, params)
+    return list_of_examples
+
+#pads all sentences to same length
+def pad_one(list_of_word_vecs, max_length, params):
+    left = (max_length - len(list_of_word_vecs)) / 2
+    right = left
+    if (max_length - len(list_of_word_vecs)) % 2 != 0:
+        right += 1
+    return np.asarray(([0] * left) + list_of_word_vecs.tolist() + ([0] * right))
+
 #returns a boolean true in percent of cases
 def boolean_percent(percent):
     return random.randrange(100) < percent
@@ -109,13 +124,6 @@ def sort_examples_by_length(x, y):
             new_y.append(y[i])
     return new_x, new_y
 
-#takes tokenized list_of_examples and pads all to the maximum length
-def pad_all(list_of_examples, params):
-    max_length = get_max_length(list_of_examples)
-    for i in range(len(list_of_examples)):
-        list_of_examples[i] = pad_one(list_of_examples[i], max_length, params)
-    return list_of_examples
-
 # converts list of ints into list of one_hot vectors (np arrays)
 #for purposes of calculating cross_entropy loss
 def one_hot(train_Y, CLASSES):
@@ -125,14 +133,6 @@ def one_hot(train_Y, CLASSES):
        one_hot[i][train_Y[i]] = 1
        one_hot[i] = np.asarray(one_hot[i])
     return one_hot
-
-#pads all sentences to same length
-def pad_one(list_of_word_vecs, max_length, params):
-    left = (max_length - len(list_of_word_vecs)) / 2
-    right = left
-    if (max_length - len(list_of_word_vecs)) % 2 != 0:
-        right += 1
-    return np.asarray(([0] * left) + list_of_word_vecs.tolist() + ([0] * right))
 
 #returns nonzero entries in input_X as np array
 def to_dense(input_X, test_key = None):

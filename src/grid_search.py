@@ -1,7 +1,7 @@
 from feature_selector import *
 import itertools, math
 
-
+#breaks when num_models > 1
 #returns all combinations from a grid of hyperparameters
 
 def get_grid(model_types, search_space):
@@ -18,7 +18,7 @@ def get_grid(model_types, search_space):
                     raise TypeError
             return grid_search('linear')
         else:
-            print 'Grid search only implemented for CNN and LogReg'
+            print 'Grid search only implemented for CNN and LR'
             raise NotImplementedError
 
 class grid_search():
@@ -66,7 +66,6 @@ class grid_search():
         l2_clip = [['l2_clip'], list(feature_selector['l2_clip_']) + feature_selector['clip_extras']] + general
         if feature_selector['no_reg']:
             no_reg = [[None], [0.0]] + general
-            print no_reg
             self.enumerate_models_list = list(itertools.product(*l2)) + list(itertools.product(*l2_clip)) + list(itertools.product(*no_reg))
         else:
             self.enumerate_models_list = list(itertools.product(*l2)) + list(itertools.product(*l2_clip))
@@ -85,8 +84,7 @@ class grid_search():
             list_of_models.append(hyperparam_grid)
         self.grid = list_of_models
 
-    def cnn_get_grid(self, model_num, model):
-        print model
+    def cnn_get_grid(self, '0', model):
         return {'model_' + model_num:
                     {'model_' + model_num: 'CNN',
                     'word_vectors_' + model_num: ('word2vec', True),
@@ -113,13 +111,6 @@ class grid_search():
                     'binary_' + model_num: model[4],
                     'use_idf_' + model_num: model[5],
                     'st_wrd_' + model_num: model[6]}}
-
-    def get_feats(self, model_num):
-        if self.model_type == 'cnn':
-            return {'nmin_to_max_' + model_num: (1,1),
-                    'binary_' + model_num: False,
-                    'use_idf_' + model_num: False,
-                    'st_wrd_' + model_num: None}
 
     def to_list(self, space):
         try:

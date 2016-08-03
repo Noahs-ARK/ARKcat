@@ -14,7 +14,8 @@ def cnn_feature_selector(search_space):
                 'l2_clip_': (1.0, 5.0),
                 'l2_extras': [-4.0, -3.0, -2.0],
                 'clip_extras': [3.0],
-                'no_reg': True
+                'no_reg': True,
+                'search_lr': False
         }
     elif search_space == 'arch':
         return {'model_': 'CNN',
@@ -31,7 +32,10 @@ def cnn_feature_selector(search_space):
                 'l2_clip_': (2.0,10.0),
                 'l2_extras': [],
                 'clip_extras': [],
-                'no_reg': False
+                #try no regularization
+                'no_reg': False,
+                #search learning rates (False automatically use default)
+                'search_lr': False
         }
     else: #search space is big
         return {}

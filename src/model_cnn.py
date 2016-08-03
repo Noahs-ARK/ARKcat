@@ -23,9 +23,9 @@ class Model_CNN:
 
     def set_params(self):
         self.params = {
-                'FILTERS' : self.hp['filters'],
                 'MODEL_NUM': self.hp['model_num'],
-                # 'FILTERS' : 2,
+                'FILTERS' : self.hp['filters'],
+                # 'FILTERS' : 2,                
                 'ACTIVATION_FN' : self.hp['activation_fn'],
                 'REGULARIZER' : self.hp['regularizer'],
                 'REG_STRENGTH' : self.hp['reg_strength'],
@@ -38,8 +38,8 @@ class Model_CNN:
                 'LEARNING_RATE' : self.hp['learning_rate'],
                 # 'KERNEL_SIZES' : [3, 4, 5],
                 'KERNEL_SIZES' : [],
-                'USE_WORD2VEC' : self.hp['word_vector_init'],
-                # 'USE_WORD2VEC' : False,
+                # 'USE_WORD2VEC' : self.hp['word_vector_init'],
+                'USE_WORD2VEC' : False,
                 'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
                 # 'UPDATE_WORD_VECS' : False,
                 # 'USE_DELTA' : False,
@@ -59,7 +59,6 @@ class Model_CNN:
         self.vocab = get_vocab(self.indices_to_words)
         self.key_array = dict_to_array(self.word2vec_filename, self.vocab, self.params)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
-        if_zero_print_error(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
         if self.hp['flex']:
             self.params['FLEX'] = int(self.hp['flex_amt'] * self.params['MAX_LENGTH'])
