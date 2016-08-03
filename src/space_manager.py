@@ -25,4 +25,11 @@ def add_model(model_num, space, model_types, search_module, search_space):
         space['model_' + model_num] = hp.choice('model_' + model_num, set_of_models)
     else:
         space['model_' + model_num] = random.choice(set_of_models)
+    # if not are_cnn(model_types):
     space['features_' + model_num] = search_module.get_feats(model_num)
+
+def are_cnn(model_types):
+    for model in model_types:
+        if model != 'cnn':
+            return False
+    return True

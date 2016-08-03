@@ -16,9 +16,15 @@ def remove_chkpt_files(file_path):
     os.remove(file_path + '.meta')
 
 def clip_again(tensor, params):
-    reg = tf.convert_to_tensor(params['REG_STRENGTH'], dtype=tf.float32, as_ref=True)
-    scalar = tf.convert_to_tensor(reg / l2_loss_float(tensor), as_ref=True)
-    return tf.scalar_mul(scalar, tensor)
+    pass
+    # reg = tf.convert_to_tensor(params['REG_STRENGTH'], dtype=tf.float32, as_ref=True)
+    # scalar = tf.convert_to_tensor(reg / l2_loss_float(tensor))
+    # if s
+    #     scalar = tf.cast(scalar, dtype=tf.float32_ref)
+    # except RuntimeError:
+    #     pass
+    # print scalar
+    # return tf.scalar_mul(scalar, tensor)
 
 def main(params, input_X, input_Y, key_array, model_dir, train_counter):
     os.makedirs(model_dir + params['MODEL_NUM'])
@@ -31,9 +37,12 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
             loss = cnn.cross_entropy
             loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
             train_step = cnn.optimizer.minimize(loss)
-            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
-                                  intra_op_parallelism_threads=1, use_per_session_threads=True))
+            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=16,
+                                  intra_op_parallelism_threads=16))
             sess.run(tf.initialize_all_variables())
+            init_time = time.time()
+            timelog.write(str(init_time))
+
             saver = tf.train.Saver(tf.all_variables())
             path = saver.save(sess, model_dir + 'temp_cnn_eval_epoch%i' %0)
             # reader = tf.train.NewCheckpointReader(path)
@@ -41,6 +50,7 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
             best_dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
             timelog.write( '\ndebug acc %g' %best_dev_accuracy)
             timelog.write('\n%g'%time.clock())
+            saver = tf.train.Saver(tf.all_variables())
             for epoch in range(params['EPOCHS']):
                 batches_x, batches_y = scramble_batches(params, train_X, train_Y)
                 for j in range(len(batches_x)):
@@ -56,12 +66,12 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                             check_Wfc = tf.reduce_sum(cnn.W_fc).eval(session=sess)
                             check_bfc = tf.reduce_sum(cnn.b_fc).eval(session=sess)
                             cnn.clip_vars(params)
-                            for W in cnn.weights:
-                                clip_again(W, params)
-                            for b in cnn.biases:
-                                clip_again(b, params)
-                            clip_again(cnn.W_fc, params)
-                            clip_again(cnn.b_fc, params)
+                            # for W in cnn.weights:
+                            #     clip_again(W, params)
+                            # for b in cnn.biases:
+                            #     clip_again(b, params)
+                            # clip_again(cnn.W_fc, params)
+                            # clip_again(cnn.b_fc, params)
                             weights_2 = tf.reduce_sum(cnn.weights[0]).eval(session=sess)
                             biases_2 = tf.reduce_sum(cnn.biases[0]).eval(session=sess)
                             Wfc_2 = tf.reduce_sum(cnn.W_fc).eval(session=sess)
@@ -82,17 +92,18 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                             print l2_loss_float(cnn.b_fc).eval(session=sess)
                         else:
                             cnn.clip_vars(params)
-                            for W in cnn.weights:
-                                clip_again(W, params)
-                            for b in cnn.biases:
-                                clip_again(b, params)
-                            clip_again(cnn.W_fc, params)
-                            clip_again(cnn.b_fc, params)
+                            # for W in cnn.weights:
+                            #     clip_again(W, params)
+                            # for b in cnn.biases:
+                            #     clip_again(b, params)
+                            # clip_again(cnn.W_fc, params)
+                            # clip_again(cnn.b_fc, params)
                     # if j == (len(batches_x) - 2):
                     #     print 'debug w_embeds:', cnn.word_embeddings.eval(session=sess)
                     #     print 'debug weights:', cnn.weights[0].eval(session=sess)
                     #     print cnn.biases[0].eval(session=sess)
                 timelog.write('\n\nepoch %i initial time %g' %(epoch, time.clock()))
+                timelog.write('\n epoch time %i\navg time: %g' %((time.time() - init_time), (time.time() - init_time)/ (epoch + 1)))
                 timelog.write('\nCPU usage: %g'
                             %(resource.getrusage(resource.RUSAGE_SELF).ru_utime +
                             resource.getrusage(resource.RUSAGE_SELF).ru_stime))
