@@ -1,8 +1,11 @@
 from feature_selector import *
 import itertools, math
+import random
 
 #breaks when num_models > 1
 #returns all combinations from a grid of hyperparameters
+#searching lr not implemented yet
+#return 25% and 75% percentile
 
 def get_grid(model_types, search_space):
         if model_types[0] == 'cnn':
@@ -51,19 +54,22 @@ class grid_search():
         general = [feature_selector['delta_'],
                     #flex
                     # [.15, .3],
-                    self.to_list(feature_selector['flex_amt_']),
-                    self.to_list(feature_selector['filters_']),
-                    self.to_list(feature_selector['kernel_size_']),
-                    self.to_list(feature_selector['kernel_increment_']),
-                    self.to_list(feature_selector['kernel_num_']),
-                    self.to_list(feature_selector['dropout_']),
-                    self.to_list(feature_selector['batch_size_']),
-                    feature_selector['activation_fn_'],
-                    #learning_rate
-                    # [.00075, .0015]
-                    [.0001]]
-        l2 = [['l2'], list(feature_selector['l2_']) + feature_selector['l2_extras']] + general
-        l2_clip = [['l2_clip'], list(feature_selector['l2_clip_']) + feature_selector['clip_extras']] + general
+                    self.to_list(feature_selector['flex_amt_'], feature_selector['grid'][2]),
+                    self.to_list(feature_selector['filters_'], feature_selector['grid'][3]),
+                    self.to_list(feature_selector['kernel_size_'], feature_selector['grid'][4]),
+                    self.to_list(feature_selector['kernel_increment_'], feature_selector['grid'][5]),
+                    self.to_list(feature_selector['kernel_num_'], feature_selector['grid'][6]),
+                    self.to_list(feature_selector['dropout_'], feature_selector['grid'][7]),
+                    self.to_list(feature_selector['batch_size_'], feature_selector['grid'][8]),
+                    feature_selector['activation_fn_']]
+                    # [.00017, .0015]
+                    # [.0003]]
+        if feature_selector['search_lr']:
+            general.append([.00017, .000653])
+        else:
+            general.append([.0003])
+        l2 = [['l2'], list(feature_selector['l2_'])] + general
+        l2_clip = [['l2_clip'], list(feature_selector['l2_clip_'])] + general
         if feature_selector['no_reg']:
             no_reg = [[None], [0.0]] + general
             self.enumerate_models_list = list(itertools.product(*l2)) + list(itertools.product(*l2_clip)) + list(itertools.product(*no_reg))
@@ -75,7 +81,7 @@ class grid_search():
         model_counter = 0
         list_of_models = []
         for model in self.enumerate_models_list:
-            model_num = str(model_counter)
+            model_num = str(0)
             if self.model_type == 'cnn':
                 hyperparam_grid = self.cnn_get_grid(model_num, model)
             else:
@@ -84,7 +90,7 @@ class grid_search():
             list_of_models.append(hyperparam_grid)
         self.grid = list_of_models
 
-    def cnn_get_grid(self, '0', model):
+    def cnn_get_grid(self, model_num, model):
         return {'model_' + model_num:
                     {'model_' + model_num: 'CNN',
                     'word_vectors_' + model_num: ('word2vec', True),
@@ -112,11 +118,21 @@ class grid_search():
                     'use_idf_' + model_num: model[5],
                     'st_wrd_' + model_num: model[6]}}
 
-    def to_list(self, space):
-        try:
-            return list(space)
-        except TypeError:
-            return [space]
+    def to_list(self, space, index):
+        if index == 1:
+            try:
+                return [float(sum(space))/len(space)]
+            except TypeError:
+                return [space]
+        elif index == 2:
+            quartile = float(sum(space))/len(space) - space[0] / 2
+            return [space[0] + quartile, space[0] + 3 * quartile]
+        else:
+            space_list = [space[0], space[1]]
+            space_range = space[1] - space[0]
+            for option in range(index - 2):
+                space_list.append(space[0] + option * space_range / (index - 1))
+            return space_list
 
     def pop_model(self, num_models):
         models = self.grid.pop(0)

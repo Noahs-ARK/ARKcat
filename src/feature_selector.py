@@ -7,15 +7,14 @@ def cnn_feature_selector(search_space):
                 'kernel_size_': (3),
                 'kernel_increment_': (1),
                 'kernel_num_': (3),
-                'dropout_': (0, 0.25, 0.5, 0.75),
+                'dropout_': (0, 0.75),
                 'batch_size_': (50),
                 'activation_fn_': ['relu'],
                 'l2_': (-5.0, -1.0),
                 'l2_clip_': (1.0, 5.0),
-                'l2_extras': [-4.0, -3.0, -2.0],
-                'clip_extras': [3.0],
                 'no_reg': True,
-                'search_lr': False
+                'search_lr': False,
+                'grid': [1, 1, 1, 1, 1, 1, 1, 4, 1, 1, 4, 3]
         }
     elif search_space == 'arch':
         return {'model_': 'CNN',
@@ -30,12 +29,12 @@ def cnn_feature_selector(search_space):
                 'activation_fn_': ['iden', 'relu', 'elu'],
                 'l2_': (-8.0,-2.0),
                 'l2_clip_': (2.0,10.0),
-                'l2_extras': [],
-                'clip_extras': [],
                 #try no regularization
                 'no_reg': False,
                 #search learning rates (False automatically use default)
-                'search_lr': False
+                'search_lr': False,
+                'grid': [1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2]
+
         }
     else: #search space is big
         return {}

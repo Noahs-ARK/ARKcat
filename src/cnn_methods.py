@@ -3,6 +3,17 @@ import numpy as np
 
 #assorted snippets of code used by model_cnn, cnn_train, and cnn_eval
 
+# def collapse_vectors(train_X, vector_length):
+#     new_train_X = []
+#     for example in train_X:
+#         example = tokenize(example)
+#         embed_layer = []
+#         while len(example) > 0:
+#             embed_layer.append(example[:vector_length])
+#             del example[:vector_length]
+#         new_train_X.append(embed_layer)
+#     return new_train_X
+
 #max length of example in minibatch
 def get_max_length(list_of_examples):
     max_length = 0
@@ -21,7 +32,7 @@ def tokenize(line):
       else:
          word += char
    list_of_words.append(word.strip())
-   return list_of_words
+   return tuple(list_of_words)
 
 #randomly adds zero padding to some examples to increase minibatch variety
 def flex(input_list, params):
@@ -188,6 +199,7 @@ def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
 #loads word vectors
 def dict_to_array(word2vec_filename, vocab, params, train=True):
     key_array = [[] for item in range(len(vocab))]
+    random.seed(None)
     if params['USE_WORD2VEC']:
         key_array = init_word_vecs(word2vec_filename, key_array, vocab, params)
     for i in range(len(key_array)):
