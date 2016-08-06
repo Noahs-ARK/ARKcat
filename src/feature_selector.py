@@ -29,12 +29,21 @@ def cnn_feature_selector(search_space):
                 'activation_fn_': ['iden', 'relu', 'elu'],
                 'l2_': (-8.0,-2.0),
                 'l2_clip_': (2.0,10.0),
+<<<<<<< HEAD
                 #try no regularization
                 'no_reg': False,
                 #search learning rates (False automatically use default)
                 'search_lr': False,
                 'grid': [1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2]
 
+=======
+                'l2_extras': [],
+                'clip_extras': [],
+                #try no regularization
+                'no_reg': False,
+                #search learning rates (False automatically use default)
+                'search_lr': False
+>>>>>>> 33b04cce36d2e37d6dd952fc8199a2021ff30530
         }
     else: #search space is big
         return {}

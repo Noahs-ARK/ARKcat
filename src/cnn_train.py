@@ -15,16 +15,16 @@ def remove_chkpt_files(file_path):
     os.remove(file_path)
     os.remove(file_path + '.meta')
 
-def clip_again(tensor, params, j):
-    print 'tensor', tensor
-    reg = tf.convert_to_tensor(params['REG_STRENGTH'], dtype=tf.float32, as_ref=True)
-    print 'reg', reg
-    scalar = tf.convert_to_tensor(reg / l2_loss_float(tensor))
-    print 'scalar', scalar
-    if j == 0:
-        scalar = tf.cast(scalar, dtype=tf.float32_ref)
-    print scalar
-    return tf.scalar_mul(scalar, tensor)
+def clip_again(tensor, params):
+    pass
+    # reg = tf.convert_to_tensor(params['REG_STRENGTH'], dtype=tf.float32, as_ref=True)
+    # scalar = tf.convert_to_tensor(reg / l2_loss_float(tensor))
+    # if s
+    #     scalar = tf.cast(scalar, dtype=tf.float32_ref)
+    # except RuntimeError:
+    #     pass
+    # print scalar
+    # return tf.scalar_mul(scalar, tensor)
 
 def main(params, input_X, input_Y, key_array, model_dir):
     # print 'model_num', params['MODEL_NUM']
@@ -47,8 +47,8 @@ def main(params, input_X, input_Y, key_array, model_dir):
             loss = cnn.cross_entropy
             loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
             train_step = cnn.optimizer.minimize(loss)
-            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
-                                  intra_op_parallelism_threads=1, use_per_session_threads=True))
+            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=16,
+                                  intra_op_parallelism_threads=16))
             sess.run(tf.initialize_all_variables())
             init_time = time.time()
             timelog.write(str(init_time))
