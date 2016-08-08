@@ -47,8 +47,8 @@ def main(params, input_X, input_Y, key_array, model_dir):
             loss = cnn.cross_entropy
             loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
             train_step = cnn.optimizer.minimize(loss)
-            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=16,
-                                  intra_op_parallelism_threads=16))
+            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
+                            intra_op_parallelism_threads=1, use_per_session_threads=True))
             sess.run(tf.initialize_all_variables())
             init_time = time.time()
             timelog.write(str(init_time))

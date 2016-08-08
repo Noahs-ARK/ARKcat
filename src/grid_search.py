@@ -19,7 +19,8 @@ def get_grid(model_types, search_space):
                 if model != 'linear':
                     print 'model types don\'t match'
                     raise TypeError
-            return grid_search('linear')
+            print grid_search('linear', search_space)
+            return grid_search('linear', search_space)
         else:
             print 'Grid search only implemented for CNN and LR'
             raise NotImplementedError
@@ -38,7 +39,7 @@ class grid_search():
             raise NotImplementedError
 
     def get_linear_model(self):
-        feature_selector = lr_feature_selector()
+        feature_selector = lr_feature_selector(self.search_space)
         linear_list = [feature_selector['regularizer'],
             feature_selector['reg_strength_list'],
             feature_selector['converge_as_list'],

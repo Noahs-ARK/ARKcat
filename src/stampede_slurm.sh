@@ -36,8 +36,6 @@ module load json
 
 # Launch the executable named "a.out"
 ./stampede_job.sh sst2 rand reg 5
-./stampede_job.sh sst2 grid arch 5
-
 
 """ high level on stampede:
 dir for ceil(iters/16)
@@ -60,5 +58,4 @@ why 6 procs instead of 4?? 3 "3" and 3 "2"
 
 done:
 eval.py (for the moment)
-w2v processing
-added wait to bash script :)"""
+w2v processing"""

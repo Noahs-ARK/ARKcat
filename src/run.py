@@ -141,8 +141,6 @@ def save_model(result):
     pickle.dump([trial_num, train_feature_dir, result], open(model_dir + str(trial_num) + '_' +
                                                              feature_string + '.model', 'wb'))
 
-
-
 #sets the global variables, including params passed as args
 def set_globals(args):
     for k, v in args.iteritems():
@@ -167,16 +165,17 @@ def set_globals(args):
     model_dir = output_dir + '/saved_models/'
 
     trial_num = 0
-    max_iter = args['max_iter']
     if args['run_bayesopt']:
         num_models = 1
         model_types = [args['run_bayesopt'][0]]
         search_space = args['run_bayesopt'][1]
+        max_iter = int(args['run_bayesopt'][2])
         print model_types, search_space
     else:
         num_models = 1
         file_path = args['load_file'][0]
         line = int(args['load_file'][1])
+        print line
         model_dir += str(line) + '/'
 
     for directory in [output_dir, train_feature_dir, dev_feature_dir, model_dir]:
@@ -215,6 +214,9 @@ def main(args):
                     algo=tpe.suggest,
                     max_evals=max_iter,
                     trials=trials)
+        print space_eval(space, best)
+        printing_best(trials)
+    #loading models from file
     else:
         with open(file_path) as f:
             for i in range(line - 1):
@@ -223,9 +225,6 @@ def main(args):
             space = eval(f.readline())
             best = call_experiment(space)
 
-    print space_eval(space, best)
-    printing_best(trials)
-
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='need to write one')
@@ -233,10 +232,9 @@ if __name__ == '__main__':
     parser.add_argument('word2vec_filename', nargs=1, type=str, help='')
     parser.add_argument('output_dir', nargs=1, type=str, help='')
     parser.add_argument('num_folds', nargs=1, type=int, help='')
-    parser.add_argument('-m', nargs=1, dest='max_iter', type=int, default=30,
-                              help='Maximum iterations of Bayesian optimization; default=%default')
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-b', nargs=2, type=str, dest='run_bayesopt',
-                        help='model types, search space')
+    group.add_argument('-b', nargs=3, type=str, dest='run_bayesopt',
+                        help='model types, search space, number of iters')
     group.add_argument('-f', nargs=2, type=str, dest='load_file')
+    print vars(parser.parse_args(sys.argv[1:]))
     main(vars(parser.parse_args(sys.argv[1:])))

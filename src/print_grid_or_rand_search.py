@@ -56,11 +56,11 @@ def print_grid(grid):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='need to write one')
     parser.add_argument('search_space', nargs=1, type=str,
-            choices=['reg', 'arch', 'big'], help='specify search space')
+            choices=['reg', 'arch', 'big', 'small'], help='specify search space')
     parser.add_argument('model_type', nargs='?', type=str, default='cnn', choices=['cnn', 'linear'])
     # group = parser.add_mutually_exclusive_group(required=True)
     parser.add_argument('-g', '--grid', dest='grid', action='store_true', help='')
-    parser.add_argument('-r', '--rand', nargs=1, dest='rand', type=int, default=30,
+    parser.add_argument('-r', '--rand', nargs=1, dest='rand', type=int,
                 help='random search; specify iterations with optional addl argument; default=%default')
     print sys.argv
     print vars(parser.parse_args(sys.argv[1:]))

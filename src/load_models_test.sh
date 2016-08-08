@@ -1,14 +1,10 @@
 DATASET='/home/katya/datasets/sst2/'
 W2V_LOC='/home/katya/datasets/sst2_vecs.txt'
-SAVE_LOC='../output/alba_gu_brath'
+SAVE_LOC='../output/'$1
 SEARCH_TYPE='rand'
 SEARCH_SPACE='reg'
-NUM_MODELS='4'
+NUM_MODELS='3'
 MODEL_FILE=~/datasets/$SEARCH_TYPE'_'$SEARCH_SPACE'_cnn_'$NUM_MODELS'.models'
-
-echo $1
-echo $2
-echo "Number of processes:" $7
 
 echo $MODEL_FILE
 rm $MODEL_FILE

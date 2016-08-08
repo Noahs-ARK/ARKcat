@@ -33,7 +33,7 @@ echo $START_TIME
 
 echo "about to run.py"
 #python run.py ~/datasets/sst2/  ~/datasets/output.txt ../output/dummy 1 cnn bayesopt -m 2 1 > ../output/dummy/outfile.txt 2> ../output/dummy/errfile.txt
-python run.py  $DATASET/ $W2V_LOC $SAVE_LOC $NUM_FOLDS  -b $MODEL_TYPE $SEARCH_SPACE -m $NUM_ITERS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
+python run.py  $DATASET/ $W2V_LOC $SAVE_LOC $NUM_FOLDS  -b $MODEL_TYPE $SEARCH_SPACE $NUM_ITERS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
 echo "done with run.py. now going to eval.py"
 echo $8
 RUN_TIME=$(date +%s)

@@ -1,20 +1,16 @@
 DATASET='/home/katya/datasets/sst2/'
 W2V_LOC='/home/katya/datasets/sst2_vecs.txt'
-SAVE_LOC='../output/cymru_am_byth'
+SAVE_LOC='../output/'$1
 SEARCH_TYPE='grid'
-SEARCH_SPACE='reg'
-NUM_MODELS='4'
+SEARCH_SPACE='small'
+NUM_MODELS='1'
 MODEL_FILE=~/datasets/$SEARCH_TYPE'_'$SEARCH_SPACE'_linear_'$NUM_MODELS'.models'
-
-echo $1
-echo $2
-echo "Number of processes:" $7
 
 echo $MODEL_FILE
 rm $MODEL_FILE
 echo "creating models..."
 
-python print_grid_or_rand_search.py $SEARCH_SPACE '--'$SEARCH_TYPE 'linear'
+python print_grid_or_rand_search.py '--'$SEARCH_TYPE $SEARCH_SPACE 'linear'
 
 echo $SAVE_LOC
 rm -rf $SAVE_LOC
@@ -22,7 +18,7 @@ echo "making the dir to save output..."
 mkdir -p $SAVE_LOC /
 
 echo "about to run.py"
-for ((i=1; i<=$NUM_MODELS; i++)); do
+for ((i=0; i<=$NUM_MODELS; i++)); do
   python run.py $DATASET $W2V_LOC $SAVE_LOC 5 -f $MODEL_FILE $i >> $SAVE_LOC/'outfile.txt' 2>> $SAVE_LOC/'errfile.txt'
 done
 

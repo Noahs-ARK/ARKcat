@@ -20,22 +20,6 @@ def main(files):
         if not (word in vocab):
             vocab.append(word.encode('ascii', 'replace'))
 
-
-    # for file_path in input_file_paths:
-    #     with open(file_path) as input_file:
-    #         vectorizer = TfidfVectorizer(ngram_range=(1,1),
-    #                 binary=False,
-    #                 use_idf=False,
-    #                 stop_words=None)
-    #         input_list = []
-    #         for line in input_file:
-    #             input_list.append(line.strip())
-    #         vectorizer.fit(input_list)
-    #         for word in vectorizer.vocabulary_:
-    #             word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", word)
-    #             if not (word in vocab):
-    #                 vocab.append(word)
-
     print "len vocab =", len(vocab)
     with open(output_file_path, 'w') as output_file:
         with open(word2vec_file_path) as word2vec:
