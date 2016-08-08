@@ -170,12 +170,11 @@ def set_globals(args):
         model_types = [args['run_bayesopt'][0]]
         search_space = args['run_bayesopt'][1]
         max_iter = int(args['run_bayesopt'][2])
-        print model_types, search_space
     else:
         num_models = 1
         file_path = args['load_file'][0]
         line = int(args['load_file'][1])
-        print line
+        trial_num = line
         model_dir += str(line) + '/'
 
     for directory in [output_dir, train_feature_dir, dev_feature_dir, model_dir]:
