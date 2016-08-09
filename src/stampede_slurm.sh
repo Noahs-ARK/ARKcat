@@ -32,5 +32,4 @@ module load cPickle
 module load Queue
 module load json
 
-
 ./stampede_job.sh sst2 rand reg 5

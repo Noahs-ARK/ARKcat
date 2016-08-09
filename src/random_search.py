@@ -23,6 +23,7 @@ def get_cnn_model(model_num, search_space):
         param_dist['learning_rate_' + model_num] = (random.lognormvariate(0, 1)) / 3000
     else:
         param_dist['learning_rate_' + model_num] = .0003
+        
     if len(feature_selector['dropout_']) > 1:
         param_dist['dropout_' + model_num] = random.random() * (feature_selector['dropout_'][1] - feature_selector['dropout_'][0]) + feature_selector['dropout_'][0]
     else:
