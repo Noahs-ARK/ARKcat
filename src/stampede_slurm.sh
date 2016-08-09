@@ -12,9 +12,8 @@
 #SBATCH -J mysimplejob           # Job name
 #SBATCH -o mysimplejob.%j.outfile    # Specify stdout output file (%j expands to jobId)
 #SBATCH -p normal           # Queue name
-#SBATCH -N 1                     # Total number of nodes requested (16 cores/node)
-#SBATCH -n 16                     # Total number of tasks
-#SBATCH -t 01:30:00              # Run time (hh:mm:ss) - 1.5 hours
+#SBATCH -n 5                     # Total number of tasks
+#SBATCH -t 01:00:00              # Run time (hh:mm:ss) - 1.5 hours
 
 #SBATCH -A DBS110003         # Specify allocation to charge against
 #SBATCH --mail-user=katyasyc@gmail.com
@@ -32,30 +31,6 @@ module load sklearn
 module load cPickle
 module load Queue
 module load json
-#etc.
 
-# Launch the executable named "a.out"
+
 ./stampede_job.sh sst2 rand reg 5
-
-""" high level on stampede:
-dir for ceil(iters/16)
-script to run 16
-save to dir as 0_0-0_15
-then next file 1_0-1_15
-etc.
-eval all dirs in save_dir
-
-todo:
-stampede codec
-technical writeup
-where to mkdirs?
-why 6 procs instead of 4?? 3 "3" and 3 "2"
-  I'm limiting the same way, but it's not limiting, as if paralellized to 3 ???
-  Not "adding" to CPU usage of highest processed
-  but not saving model of its own
-  im stumped :(
-  didn't happen when I run manually, I don't think
-
-done:
-eval.py (for the moment)
-w2v processing"""

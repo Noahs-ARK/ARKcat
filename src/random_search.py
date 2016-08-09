@@ -18,10 +18,13 @@ def get_cnn_model(model_num, search_space):
                 ('l2_clip', (random.random() * (feature_selector['l2_clip_'][1] - feature_selector['l2_clip_'][0]) + feature_selector['l2_clip_'][0]))
             ]),
             # 'learning_rate_' + model_num: .00025 + (random.lognormvariate(0, 1) / 370.0)
-            'learning_rate_' + model_num: .0003
     }
+    if feature_selector['search_lr'] == True:
+        param_dist['learning_rate_' + model_num] = (random.lognormvariate(0, 1)) / 3000
+    else:
+        param_dist['learning_rate_' + model_num] = .0003
     if len(feature_selector['dropout_']) > 1:
-        param_dist['dropout_' + model_num] = random.random()
+        param_dist['dropout_' + model_num] = random.random() * (feature_selector['dropout_'][1] - feature_selector['dropout_'][0]) + feature_selector['dropout_'][0]
     else:
         param_dist['dropout_' + model_num] = .5
     other_hparams = {'filters_' + model_num: feature_selector['filters_'],
