@@ -225,7 +225,6 @@ def main(args):
             best = call_experiment(space)
 
 if __name__ == '__main__':
-    import argparse
     parser = argparse.ArgumentParser(description='need to write one')
     parser.add_argument('dataset', nargs=1, type=str, help='')
     parser.add_argument('word2vec_filename', nargs=1, type=str, help='')

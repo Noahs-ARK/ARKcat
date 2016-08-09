@@ -51,6 +51,7 @@ def get_cnn_model(model_num, search_space):
                 ]),
                 'learning_rate_' + model_num: hp.lognormal('learning_rate_' + model_num, 0, 1) / 3000
             }
+
     elif search_space == 'reg':
         return {'model_' + model_num: 'CNN',
                 'word_vectors_' + model_num: ('word2vec', True),
@@ -70,7 +71,8 @@ def get_cnn_model(model_num, search_space):
                 ]),
                 'learning_rate_' + model_num: .0003
             }
-    else: #search_space is big
+
+    elif search_space == 'big':
         return {
             'model_' + model_num: 'CNN',
             # choose btwn rand, word2vec--implement glove
@@ -100,8 +102,11 @@ def get_cnn_model(model_num, search_space):
             ]),
             #debug to check if this has a mean about .001
             # 'learning_rate_' + model_num: hp.lognormal('learning_rate_' + model_num, 0, 1) / 1000)
-            'learning_rate_' + model_num: .00025 + (hp.lognormal('learning_rate_' + model_num, 0, 1) / 370)
+            'learning_rate_' + model_num: (hp.lognormal('learning_rate_' + model_num, 0, 1) / 370)
             }
+        else:
+            print 'error: search space not defined for CNN'
+            raise NotImplementedError
 
 def get_feats(model_num):
     return {'nmin_to_max_' + model_num: hp.choice('nmin_to_max_' + model_num,
