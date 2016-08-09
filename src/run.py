@@ -4,14 +4,13 @@ import datetime
 import cPickle as pickle
 import Queue as queue
 
-from optparse import OptionParser
+import argparse
 import numpy as np
 from hyperopt import fmin, tpe, hp, Trials, space_eval#, MongoTrials (for parallel search)
 
 import classify_test
 import space_manager
 from grid_search import *
-
 
 
 def call_experiment(args):
@@ -49,7 +48,6 @@ def wrangle_params(args, model_num):
     print('the args:')
     print(args)
 
-
     model = args['model_' + model_num]['model_' + model_num]
     kwargs['model_type'] = model
     if model == 'LR':
@@ -67,7 +65,10 @@ def wrangle_params(args, model_num):
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_xgb_' + model_num][1]
         kwargs['num_round'] = int(args['model_' + model_num]['num_round_' + model_num])
     elif model == 'CNN':
-        kwargs['model_num'] = model_num + '_' + str(trial_num)
+        if type(line) == int:
+            kwargs['model_num'] = False
+        else:
+            kwargs['model_num'] = str(trial_num)
         kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
         kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
@@ -140,38 +141,41 @@ def save_model(result):
     pickle.dump([trial_num, train_feature_dir, result], open(model_dir + str(trial_num) + '_' +
                                                              feature_string + '.model', 'wb'))
 
-
-
 #sets the global variables, including params passed as args
-def set_globals():
-    usage = "%prog train_text.json train_labels.csv dev_text.json dev_labels.csv output_dir"
-    parser = OptionParser(usage=usage)
-    parser.add_option('-m', dest='max_iter', default=30,
-                      help='Maximum iterations of Bayesian optimization; default=%default')
-
-    (options, args) = parser.parse_args()
-
+def set_globals(args):
+    for k, v in args.iteritems():
+        try:
+            if len(v) == 1:
+                args[k] = v[0]
+        except TypeError: #v is None
+            pass
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, word2vec_filename, log_filename
-    global trial_num, max_iter, num_models, model_types, search_type, search_space, num_folds
-    print args[:6]
-    train_data_filename = args[0] + 'train.data'
-    train_label_filename = args[0] + 'train.labels'
-    dev_data_filename = args[0] + 'dev.data'
-    dev_label_filename = args[0] + 'dev.labels'
-    word2vec_filename = args[1]
-    output_dir = args[2]
-    num_models = int(args[3])
-    model_types = args[4].split('-')
-    search_type = args[5]
-    search_space = args[6]
-    num_folds = int(args[7])
+    global trial_num, max_iter, num_folds, num_models, model_types, search_space, file_path, line
+    train_data_filename = args['dataset'] + 'train.data'
+    train_label_filename = args['dataset'] + 'train.labels'
+    dev_data_filename = args['dataset'] + 'dev.data'
+    dev_label_filename = args['dataset'] + 'dev.labels'
+    print train_data_filename, dev_data_filename
+    word2vec_filename = args['word2vec_filename']
+    output_dir = args['output_dir']
+    num_folds = args['num_folds']
     train_feature_dir = output_dir + '/train_features/'
     dev_feature_dir = output_dir + '/dev_train_features/'
     model_dir = output_dir + '/saved_models/'
 
     trial_num = 0
-    max_iter = int(options.max_iter)
+    if args['run_bayesopt']:
+        num_models = 1
+        model_types = [args['run_bayesopt'][0]]
+        search_space = args['run_bayesopt'][1]
+        max_iter = int(args['run_bayesopt'][2])
+    else:
+        num_models = 1
+        file_path = args['load_file'][0]
+        line = int(args['load_file'][1])
+        trial_num = line
+        model_dir += str(line) + '/'
 
     for directory in [output_dir, train_feature_dir, dev_feature_dir, model_dir]:
         if not os.path.exists(directory):
@@ -198,23 +202,38 @@ def printing_best(trials):
     print('')
 
 
-def main():
+def main(args):
     print("Made it to the start of main!")
-    set_globals()
+    set_globals(args)
     trials = Trials()
-    if search_type == 'grid_search':
-        grid_space = get_grid(model_types, search_space)
-        space = grid_space.pop_model(num_models)
-    else:
-        space = space_manager.get_space(num_models, model_types, search_type, search_space)
-    best = fmin(call_experiment,
+    if args['run_bayesopt']:
+        space = space_manager.get_space(num_models, model_types, search_space)
+        best = fmin(call_experiment,
                     space=space,
                     algo=tpe.suggest,
                     max_evals=max_iter,
                     trials=trials)
-    print space_eval(space, best)
-    printing_best(trials)
+        print space_eval(space, best)
+        printing_best(trials)
+    #loading models from file
+    else:
+        with open(file_path) as f:
+            for i in range(line - 1):
+                f.readline()
 
+            space = eval(f.readline())
+            best = call_experiment(space)
 
 if __name__ == '__main__':
-    main()
+    import argparse
+    parser = argparse.ArgumentParser(description='need to write one')
+    parser.add_argument('dataset', nargs=1, type=str, help='')
+    parser.add_argument('word2vec_filename', nargs=1, type=str, help='')
+    parser.add_argument('output_dir', nargs=1, type=str, help='')
+    parser.add_argument('num_folds', nargs=1, type=int, help='')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-b', nargs=3, type=str, dest='run_bayesopt',
+                        help='model types, search space, number of iters')
+    group.add_argument('-f', nargs=2, type=str, dest='load_file')
+    print vars(parser.parse_args(sys.argv[1:]))
+    main(vars(parser.parse_args(sys.argv[1:])))

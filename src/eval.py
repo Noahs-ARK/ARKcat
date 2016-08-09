@@ -42,7 +42,6 @@ def eval_k_best_models(models, print_k_models_per_iter):
         print('')
         sys.stdout.flush()
 
-
 def set_globals(args):
     if len(args) < 3:
         print("USEAGE: model_dir data_dir output_dir")
@@ -52,6 +51,16 @@ def set_globals(args):
     test_data = args[1] + 'test.data'
     test_labels = args[1] + 'test.labels'
     feat_dir = args[2] + 'test_features'
+
+def find_models_in_dir(directory, model_counter=0, models=[]):
+    for model_file in os.listdir(directory):
+        if not model_file.endswith('model'):
+            continue
+        models.append(pickle.load(open(directory + model_file, 'rb')))
+        print('loaded model ' + str(model_counter))
+        sys.stdout.flush()
+        model_counter = model_counter + 1
+    return models, model_counter
 
 
 def main():
@@ -69,19 +78,14 @@ def main():
     #read in all already-trained models
     #the models were saved in a list like this:
     #[-dev_acc, status, Data_and_Model_Manager]
-    models = []
     sys.stdout.write('loading the trained models...\n')
-    model_counter = 0
-    for model_file in os.listdir(model_dir):
-        if not model_file.endswith('model'):
-            continue
-        models.append(pickle.load(open(model_dir + model_file, 'rb')))
-        print('loaded model ' + str(model_counter))
-        sys.stdout.flush()
-        model_counter = model_counter + 1
+    models, model_counter = find_models_in_dir(model_dir)
+    if not models:
+        for directory in os.listdir(model_dir):
+            models, model_counter = find_models_in_dir(model_dir + directory + '/', model_counter, models)
     print_k_models_per_iter = 1
+    print models
     eval_k_best_models(models, print_k_models_per_iter)
-
 
 if __name__ == '__main__':
     main()

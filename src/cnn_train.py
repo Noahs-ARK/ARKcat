@@ -26,8 +26,18 @@ def clip_again(tensor, params):
     # print scalar
     # return tf.scalar_mul(scalar, tensor)
 
-def main(params, input_X, input_Y, key_array, model_dir, train_counter):
-    os.makedirs(model_dir + params['MODEL_NUM'])
+def main(params, input_X, input_Y, key_array, model_dir):
+    # print 'model_num', params['MODEL_NUM']
+    # print 'model dir', model_dir
+    # print model_dir + params['MODEL_NUM']
+    if params['MODEL_NUM']:
+        if model_dir[len(model_dir)-2] != 's':
+            print 'error message', model_dir, params['MODEL_NUM']
+            sys.exit(0)
+        os.makedirs(model_dir + params['MODEL_NUM'])
+        lowest_dir = params['MODEL_NUM'] + '/'
+    else:
+        lowest_dir = ''
     train_X, train_Y, val_X, val_Y = separate_train_and_val(input_X, input_Y)
 
     with tf.Graph().as_default():
@@ -37,14 +47,14 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
             loss = cnn.cross_entropy
             loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
             train_step = cnn.optimizer.minimize(loss)
-            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=16,
-                                  intra_op_parallelism_threads=16))
+            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
+                            intra_op_parallelism_threads=1, use_per_session_threads=True))
             sess.run(tf.initialize_all_variables())
             init_time = time.time()
             timelog.write(str(init_time))
 
             saver = tf.train.Saver(tf.all_variables())
-            path = saver.save(sess, model_dir + 'temp_cnn_eval_epoch%i' %0)
+            path = saver.save(sess, model_dir + lowest_dir + 'temp_cnn_eval_epoch%i' %0)
             # reader = tf.train.NewCheckpointReader(path)
             # print(reader.debug_string().decode("utf-8"))
             best_dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
@@ -67,11 +77,11 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                             check_bfc = tf.reduce_sum(cnn.b_fc).eval(session=sess)
                             cnn.clip_vars(params)
                             # for W in cnn.weights:
-                            #     clip_again(W, params)
+                            #     clip_again(W, params, j)
                             # for b in cnn.biases:
-                            #     clip_again(b, params)
-                            # clip_again(cnn.W_fc, params)
-                            # clip_again(cnn.b_fc, params)
+                            #     clip_again(b, params, j)
+                            # clip_again(cnn.W_fc, params, j)
+                            # clip_again(cnn.b_fc, params, j)
                             weights_2 = tf.reduce_sum(cnn.weights[0]).eval(session=sess)
                             biases_2 = tf.reduce_sum(cnn.biases[0]).eval(session=sess)
                             Wfc_2 = tf.reduce_sum(cnn.W_fc).eval(session=sess)
@@ -92,12 +102,16 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                             print l2_loss_float(cnn.b_fc).eval(session=sess)
                         else:
                             cnn.clip_vars(params)
+                            # print 'W', j
                             # for W in cnn.weights:
-                            #     clip_again(W, params)
+                            #     clip_again(W, params, j)
+                            # print 'b', j
                             # for b in cnn.biases:
-                            #     clip_again(b, params)
-                            # clip_again(cnn.W_fc, params)
-                            # clip_again(cnn.b_fc, params)
+                            #     clip_again(b, params, j)
+                            # print 'wfc', j
+                            # clip_again(cnn.W_fc, params, j)
+                            # print 'bfc', j
+                            # clip_again(cnn.b_fc, params, j)
                     # if j == (len(batches_x) - 2):
                     #     print 'debug w_embeds:', cnn.word_embeddings.eval(session=sess)
                     #     print 'debug weights:', cnn.weights[0].eval(session=sess)
@@ -108,7 +122,7 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                             %(resource.getrusage(resource.RUSAGE_SELF).ru_utime +
                             resource.getrusage(resource.RUSAGE_SELF).ru_stime))
                 timelog.write('\nmemory usage: %g' %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
-                path = saver.save(sess, model_dir + 'temp_cnn_eval_epoch%i' %(epoch))
+                path = saver.save(sess, model_dir + lowest_dir + 'temp_cnn_eval_epoch%i' %(epoch))
                 dev_accuracy = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
                 timelog.write('\ndev accuracy: %g'%dev_accuracy)
                 if dev_accuracy < best_dev_accuracy:
@@ -118,7 +132,7 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                         remove_chkpt_files(path_final)
                     except (UnboundLocalError, OSError):
                         pass
-                    path_final = saver.save(sess, model_dir + params['MODEL_NUM'] + '/cnn_final', global_step=epoch)
+                    path_final = saver.save(sess, model_dir + lowest_dir + 'cnn_final', global_step=epoch)
                     best_dev_accuracy = dev_accuracy
                     word_embeddings = cnn.word_embeddings.eval(session=sess)
                 elif dev_accuracy > best_dev_accuracy + .05:
@@ -132,18 +146,18 @@ def main(params, input_X, input_Y, key_array, model_dir, train_counter):
                     try:
                         return path_final, word_embeddings
                     except (UnboundLocalError, ValueError): #path_final does not exist because initial dev accuracy highest
-                        path_final = saver.save(sess, model_dir + params['MODEL_NUM'] + '/cnn_final', global_step=epoch)
+                        path_final = saver.save(sess, model_dir + lowest_dir + 'cnn_final', global_step=epoch)
                         return path_final, cnn.word_embeddings.eval(session=sess)
             #remove any old chkpt files
             for past_epoch in range(epoch + 1):
                 try:
-                    remove_chkpt_files(model_dir + 'temp_cnn_eval_epoch%i' %(past_epoch))
+                    remove_chkpt_files(model_dir + lowest_dir + 'temp_cnn_eval_epoch%i' %(past_epoch))
                 except (UnboundLocalError, OSError):
                     pass
             try:
                 return path_final, word_embeddings
             except (UnboundLocalError, ValueError): #path_final does not exist because initial dev accuracy highest
-                path_final = saver.save(sess, model_dir + params['MODEL_NUM'] + '/cnn_final', global_step=epoch)
+                path_final = saver.save(sess, model_dir + lowest_dir + '/cnn_final', global_step=epoch)
                 return path_final, cnn.word_embeddings.eval(session=sess)
 
 if __name__ == "__main__":

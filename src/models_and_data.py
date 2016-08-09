@@ -6,11 +6,6 @@ from model_xgb import Model_XGB
 from model_lr import Model_LR
 from model_cnn import Model_CNN
 import re
-#DEBUGGING
-#import xgboost
-#debug
-import tensorflow as tf
-
 
 class Data_and_Model_Manager:
     def __init__(self, f_and_p, model_dir, word2vec_filename):
@@ -87,6 +82,7 @@ class Data_and_Model_Manager:
         feat_and_param['feats']['ngram_range'] = (1,1)
         feat_and_param['feats']['use_idf'] = False
         feat_and_param['feats']['binary'] = False
+
         vectorizer = TfidfVectorizer(**feat_and_param['feats'])
         vectorizer.fit(X_raw)
         tokenizer = TfidfVectorizer.build_tokenizer(vectorizer)

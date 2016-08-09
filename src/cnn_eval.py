@@ -20,8 +20,8 @@ def float_entropy(path, val_x, val_y, key_array, params):
 def evaluate(path, val_x, val_y, key_array, params, measure, new_key_embeds):
     with tf.Graph().as_default():
             cnn = CNN(params, key_array, batch_size=1, train=False)
-            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=16,
-                                          intra_op_parallelism_threads=16))
+            sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
+                                          intra_op_parallelism_threads=1, use_per_session_threads=True))
             saver = tf.train.Saver()
             saver.restore(sess, path)
             pred = []

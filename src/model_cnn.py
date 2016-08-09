@@ -24,8 +24,8 @@ class Model_CNN:
     def set_params(self):
         self.params = {
                 'MODEL_NUM': self.hp['model_num'],
-                'FILTERS' : self.hp['filters'],
-                # 'FILTERS' : 2,                
+                # 'FILTERS' : self.hp['filters'],
+                'FILTERS' : 2,
                 'ACTIVATION_FN' : self.hp['activation_fn'],
                 'REGULARIZER' : self.hp['regularizer'],
                 'REG_STRENGTH' : self.hp['reg_strength'],
@@ -47,7 +47,7 @@ class Model_CNN:
 
                 'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
-                'EPOCHS' : 15,
+                'EPOCHS' : 5,
         }
         if self.params['REGULARIZER'] == 'l2':
             self.params['REG_STRENGTH'] = 10 ** self.params['REG_STRENGTH']
@@ -55,19 +55,19 @@ class Model_CNN:
             self.params['KERNEL_SIZES'].append(self.hp['kernel_size'] + i * self.hp['kernel_increment'])
 
     def train(self, train_X, train_Y):
-        self.train_counter += 1
         self.vocab = get_vocab(self.indices_to_words)
         self.key_array = dict_to_array(self.word2vec_filename, self.vocab, self.params)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
+        # train_X = collapse_vectors(train_X, params['WORD_VECTOR_LENGTH'])
         if self.hp['flex']:
             self.params['FLEX'] = int(self.hp['flex_amt'] * self.params['MAX_LENGTH'])
         else:
             self.params['FLEX'] = 0
-        self.best_epoch_path, self.key_array = cnn_train.main(self.params, train_X, train_Y, self.key_array, self.model_dir, self.train_counter)
+        self.best_epoch_path, self.key_array = cnn_train.main(self.params,
+                                train_X, train_Y, self.key_array, self.model_dir)
 
     def predict(self, test_X, indices_to_words=None, measure='predict'):
-        print 'test or dev acc'
         if 'numpy' not in str(type(test_X)):
             #if called on dev or test
             if indices_to_words is not None:
@@ -75,7 +75,6 @@ class Model_CNN:
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key=test_vocab_key)
                 return cnn_eval.main(self.best_epoch_path, self.params, test_X,
                                      self.key_array, measure, test_key_array)
-
             #called on train
             else:
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X)

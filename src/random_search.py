@@ -1,8 +1,6 @@
 import random
 from feature_selector import cnn_feature_selector
 
-#randomly chooses hyperparameters from given grid
-
 #random searches for a CNN
 def get_cnn_model(model_num, search_space):
     feature_selector = cnn_feature_selector(search_space)
