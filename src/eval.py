@@ -20,7 +20,9 @@ def eval_k_best_models(models, print_k_models_per_iter):
         test_evals.append(round(acc,5))
         dev_evals.append(round(-model[2]['loss'],5))
         #DEBUGGING should sort by dev acc, then sample among ties.
-        models_and_acc[model[0]] = (model[2]['loss'], model[0], model)
+        models_and_acc[model[0]] = (model[2]['loss'], model[0], acc * -1, model)
+        print models_and_acc
+        print models_and_acc[model[0]]
         sys.stdout.write('done!\n')
         model_counter = model_counter + 1
     sys.stdout.flush()
@@ -33,7 +35,7 @@ def eval_k_best_models(models, print_k_models_per_iter):
         print('')
         print('best models for iter ' + str(i + 1))
         for j in range(print_k_models_per_iter):
-            dev_acc, test_acc, model = ordered_models.get()
+            dev_acc, iteration, test_acc, model = ordered_models.get()
             print('test acc: ' + str(test_acc))
             print('dev acc:  ' + str(dev_acc))
             print('hyperparams: ')
