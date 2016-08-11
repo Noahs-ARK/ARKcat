@@ -53,8 +53,6 @@ class grid_search():
     def get_cnn_model(self):
         feature_selector = cnn_feature_selector(self.search_space)
         general = [feature_selector['delta_'],
-                    #flex
-                    # [.15, .3],
                     self.to_list(feature_selector['flex_amt_'], feature_selector['grid'][2]),
                     self.to_list(feature_selector['filters_'], feature_selector['grid'][3]),
                     self.to_list(feature_selector['kernel_size_'], feature_selector['grid'][4]),
@@ -63,8 +61,6 @@ class grid_search():
                     self.to_list(feature_selector['dropout_'], feature_selector['grid'][7]),
                     self.to_list(feature_selector['batch_size_'], feature_selector['grid'][8]),
                     feature_selector['activation_fn_']]
-                    # [.00017, .0015]
-                    # [.0003]]
         if feature_selector['search_lr']:
             general.append([.00017, .000653])
         else:
@@ -120,11 +116,13 @@ class grid_search():
                     'st_wrd_' + model_num: model[6]}}
 
     def to_list(self, space, index):
+        if type(space) != tuple:
+            return [space]
+        elif space[0] == space[1]:
+            return space[0]
+
         if index == 1:
-            try:
-                return [float(sum(space))/len(space)]
-            except TypeError:
-                return [space]
+            return [float(sum(space))/len(space)]
         elif index == 2:
             quartile = float(sum(space))/len(space) - space[0] / 2
             return [space[0] + quartile, space[0] + 3 * quartile]

@@ -128,16 +128,16 @@ def main(params, input_X, input_Y, key_array, model_dir):
                 if dev_accuracy < best_dev_accuracy:
                     timelog.write('\nnew best model, epoch %i'%epoch)
                     #remove old best epoch save if exists
-                    try:
-                        remove_chkpt_files(path_final)
-                    except (UnboundLocalError, OSError):
-                        pass
+                    # try:
+                    #     remove_chkpt_files(path_final)
+                    # except (UnboundLocalError, OSError):
+                    #     pass
                     path_final = saver.save(sess, model_dir + lowest_dir + 'cnn_final', global_step=epoch)
                     best_dev_accuracy = dev_accuracy
                     word_embeddings = cnn.word_embeddings.eval(session=sess)
                 elif dev_accuracy > best_dev_accuracy + .05:
                     #remove any old chkpt files
-                    for past_epoch in range(epoch + 1):
+                    for past_epoch in range(epoch):
                         try:
                             remove_chkpt_files(model_dir + 'temp_cnn_eval_epoch%i' %(past_epoch))
                         except (UnboundLocalError, OSError):

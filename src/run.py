@@ -16,7 +16,8 @@ from grid_search import *
 def call_experiment(args):
     global trial_num
     trial_num = trial_num + 1
-
+    new_model_dir = model_dir + str(trial_num) + '/'
+    os.makedirs(new_model_dir)
     feats_and_args = {}
     all_description = []
     for i in range(num_models):
@@ -27,7 +28,7 @@ def call_experiment(args):
 
     result = classify_test.classify(train_data_filename, train_label_filename, dev_data_filename,
                                     dev_label_filename, train_feature_dir, dev_feature_dir,
-                                    model_dir, word2vec_filename, feats_and_args, folds=num_folds)
+                                    new_model_dir, word2vec_filename, feats_and_args, folds=num_folds)
 
 
 
@@ -65,10 +66,7 @@ def wrangle_params(args, model_num):
         kwargs['reg_strength'] = args['model_' + model_num]['regularizer_xgb_' + model_num][1]
         kwargs['num_round'] = int(args['model_' + model_num]['num_round_' + model_num])
     elif model == 'CNN':
-        if type(line) == int:
-            kwargs['model_num'] = False
-        else:
-            kwargs['model_num'] = str(trial_num)
+        kwargs['model_num'] = False
         kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
         kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
@@ -151,7 +149,7 @@ def set_globals(args):
             pass
     global train_data_filename, train_label_filename, dev_data_filename, dev_label_filename
     global output_dir, train_feature_dir, dev_feature_dir, model_dir, word2vec_filename, log_filename
-    global trial_num, max_iter, num_folds, num_models, model_types, search_space, file_path, line
+    global trial_num, max_iter, num_folds, num_models, model_types, search_space, model_path, line_num
     train_data_filename = args['dataset'] + 'train.data'
     train_label_filename = args['dataset'] + 'train.labels'
     dev_data_filename = args['dataset'] + 'dev.data'
@@ -170,12 +168,13 @@ def set_globals(args):
         model_types = [args['run_bayesopt'][0]]
         search_space = args['run_bayesopt'][1]
         max_iter = int(args['run_bayesopt'][2])
-    else:
+        line_num = None
+    else: #we're loading from a file
         num_models = 1
-        file_path = args['load_file'][0]
-        line = int(args['load_file'][1])
-        trial_num = line
-        model_dir += str(line) + '/'
+        model_path = args['load_file'][0] #path to the file with saved hparams to try
+        line_num = int(args['load_file'][1]) #line number in the file
+        trial_num = line_num
+        model_dir += str(line_num) + '/'
 
     for directory in [output_dir, train_feature_dir, dev_feature_dir, model_dir]:
         if not os.path.exists(directory):
@@ -217,11 +216,11 @@ def main(args):
         printing_best(trials)
     #loading models from file
     else:
-        with open(file_path) as f:
-            for i in range(line - 1):
-                f.readline()
+        with open(model_path) as f:
+            for i in range(line_num - 1):
+                f.readline_num()
 
-            space = eval(f.readline())
+            space = eval(f.readline_num())
             best = call_experiment(space)
 
 if __name__ == '__main__':

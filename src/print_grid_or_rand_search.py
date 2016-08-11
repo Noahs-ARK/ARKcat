@@ -5,7 +5,6 @@ import os
 import sys
 import argparse
 
-# def main(search_type, search_space, model_type='cnn', num_models=None):
 def main(args):
     if args['grid']:
         grid = get_grid([args['model_type']], args['search_space'][0])
