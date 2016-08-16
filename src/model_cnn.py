@@ -25,31 +25,32 @@ class Model_CNN:
     #you can also reduce the number of epochs
     def set_params(self):
         self.params = {
-                'MODEL_NUM': self.hp['model_num'],
                 'FILTERS' : self.hp['filters'],
-                # 'FILTERS' : 2,
                 'ACTIVATION_FN' : self.hp['activation_fn'],
                 'REGULARIZER' : self.hp['regularizer'],
                 'REG_STRENGTH' : self.hp['reg_strength'],
-                # 'REGULARIZER' : 'l2',
-                # 'REG_STRENGTH' : -8.0,
-                # 'REGULARIZER': 'l2_clip',
-                # 'REG_STRENGTH': 2.0,
                 'TRAIN_DROPOUT' : self.hp['dropout'],
                 'BATCH_SIZE' : self.hp['batch_size'],
                 'LEARNING_RATE' : self.hp['learning_rate'],
-                # 'KERNEL_SIZES' : [3, 4, 5],
                 'KERNEL_SIZES' : [],
                 'USE_WORD2VEC' : self.hp['word_vector_init'],
-                # 'USE_WORD2VEC' : False,
                 'UPDATE_WORD_VECS' : self.hp['word_vector_update'],
-                # 'UPDATE_WORD_VECS' : False,
-                # 'USE_DELTA' : False,
                 'USE_DELTA' : self.hp['delta'],
 
                 'WORD_VECTOR_LENGTH' : 300,
                 'CLASSES' : self.num_labels,
                 'EPOCHS' : 15,
+                # 'REGULARIZER' : 'l2',
+                # 'REG_STRENGTH' : -8.0,
+                # 'REGULARIZER': 'l2_clip',
+                # 'REG_STRENGTH': 2.0,
+                # smaller: for debugging:
+                # 'FILTERS' : 2,
+                # 'KERNEL_SIZES' : [3],
+                # 'USE_WORD2VEC' : False,
+                # 'UPDATE_WORD_VECS' : False,
+                # 'USE_DELTA' : False,
+                # 'EPOCHS' : 2,
         }
         if self.params['REGULARIZER'] == 'l2':
             self.params['REG_STRENGTH'] = 10 ** self.params['REG_STRENGTH']
@@ -83,7 +84,6 @@ class Model_CNN:
 
         return cnn_eval.main(self.best_epoch_path, self.params, test_X, self.key_array,
                                  measure, np.zeros([0, self.key_array.shape[1]]))
-
 
     #softmax array
     def predict_prob(self, test_X, indices_to_words=None):

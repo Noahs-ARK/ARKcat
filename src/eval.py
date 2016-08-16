@@ -21,8 +21,6 @@ def eval_k_best_models(models, print_k_models_per_iter):
         dev_evals.append(round(-model[2]['loss'],5))
         #DEBUGGING should sort by dev acc, then sample among ties.
         models_and_acc[model[0]] = (model[2]['loss'], model[0], acc * -1, model)
-        print models_and_acc
-        print models_and_acc[model[0]]
         sys.stdout.write('done!\n')
         model_counter = model_counter + 1
     sys.stdout.flush()

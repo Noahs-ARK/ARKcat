@@ -4,8 +4,6 @@ import random
 
 #breaks when num_models > 1
 #returns all combinations from a grid of hyperparameters
-#searching lr not implemented yet
-#return 25% and 75% percentile
 
 def get_grid(model_types, search_space):
         if model_types[0] == 'cnn':

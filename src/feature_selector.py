@@ -50,22 +50,35 @@ def cnn_feature_selector(search_space):
                 'delta_': [True, False],
                 'flex_amt_': (0.0, 0.3),
                 'filters_': (100, 600),
-                'kernel_size_': (2, 15),
-                'kernel_increment_': (0,5),
+                'kernel_size_': (2, 10),
+                'kernel_increment_': (0,3),
                 'kernel_num_': (1,5),
                 'dropout_': (0.25, 0.75),
-                'batch_size_': (10, 200),
+                'batch_size_': (50, 50),
                 'activation_fn_': ['iden', 'relu', 'elu'],
+                #not sure
                 'l2_': (-8.0,-2.0),
                 'l2_clip_': (2.0,10.0),
-                #try no regularization
                 'no_reg': False,
-                #search learning rates (False automatically use default)
                 'search_lr': False,
                 'grid': [1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2]
         }
     elif search_space == 'big':
-        return {}
+        return {'model_': 'CNN',
+                'delta_': [True, False],
+                'flex_amt_': (0.0, 0.3),
+                'filters_': (100, 600),
+                'kernel_size_': (2, 30),
+                'kernel_increment_': (0,5),
+                'kernel_num_': (1,5),
+                'dropout_': (0, 1),
+                'batch_size_': (10, 200),
+                'activation_fn_': ['iden', 'relu', 'elu'],
+                'l2_': (-8.0,-2.0),
+                'l2_clip_': (2.0,10.0),
+                'no_reg': False,
+                'search_lr': False,
+                'grid': [1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2]}
     else:
         print 'search space not implemented for CNN'
         raise NotImplementedError

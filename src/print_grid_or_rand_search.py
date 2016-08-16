@@ -5,6 +5,8 @@ import os
 import sys
 import argparse
 
+#calls a grid search or a random search and prints to file for evaluation
+
 def main(args):
     if args['grid']:
         grid = get_grid([args['model_type']], args['search_space'][0])

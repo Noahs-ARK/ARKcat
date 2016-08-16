@@ -5,7 +5,6 @@ from feature_selector import cnn_feature_selector
 def get_cnn_model(model_num, search_space):
     feature_selector = cnn_feature_selector(search_space)
 
-    #define basic/default parameters
     param_dist = {'model_' + model_num: 'CNN',
             'word_vectors_' + model_num: ('word2vec', True),
             'delta_' + model_num: random.choice(feature_selector['delta_']),
@@ -39,7 +38,7 @@ def get_cnn_model(model_num, search_space):
     #overwrite previously set values to search over some parameters depending on options
     if feature_selector['search_lr'] == True:
         param_dist['learning_rate_' + model_num] = (random.lognormvariate(0, 1)) / 3000
-        
+
     return param_dist
 
 def get_feats(model_num):
