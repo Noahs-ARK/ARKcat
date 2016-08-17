@@ -16,7 +16,7 @@ def test_batch(test_X, params, embed_keys):
 def float_entropy(path, val_x, val_y, key_array, params):
     pred = evaluate(path, val_x, val_y, key_array, params, 'cross_entropy', np.zeros([0, key_array.shape[1]]))
     return np.mean(np.asarray(pred))
-
+#make lell al default
 def evaluate(path, val_x, val_y, key_array, params, measure, new_key_embeds):
     with tf.Graph().as_default():
             cnn = CNN(params, key_array, batch_size=1, train=False)
@@ -42,8 +42,10 @@ def evaluate(path, val_x, val_y, key_array, params, measure, new_key_embeds):
                 pred.append(output)
                 val_x = val_x[1:]
                 val_y = val_y[1:]
-            return pred
+            sess.close()
+    return pred
 
+#rename
 def main(checkpoint, params, test_X, key_array, measure, new_key_embeds):
     test_Y_filler = [np.zeros(params['CLASSES'])] * len(test_X)
     pred = evaluate(checkpoint, test_X, test_Y_filler, key_array, params, measure, new_key_embeds)

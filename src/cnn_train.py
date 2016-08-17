@@ -117,14 +117,13 @@ def epoch_train(train_X, train_Y, params, cnn, sess, train_step):
         if params['REGULARIZER'] == 'l2_clip':
             cnn = clip_tensors(j, len(batches_x), cnn, sess, params)
     return cnn
+#make graphs as interior as possible
 
+#rename train
 def main(params, input_X, input_Y, key_array, model_dir):
     train_X, train_Y, val_X, val_Y = separate_train_and_val(input_X, input_Y)
-    # debugging_saved_model = False
-
     with tf.Graph().as_default():
         with open(model_dir + 'train_log', 'a') as timelog:
-            #make init method
             cnn, loss, train_step, sess, saver = set_up_model(params, key_array)
             best_dev_loss, init_time = initial_prints(timelog, saver, sess, model_dir, val_X, val_Y, key_array, params)
 
@@ -138,6 +137,7 @@ def main(params, input_X, input_Y, key_array, model_dir):
                 if dev_loss < best_dev_loss:
                     best_dev_loss, word_embeddings = new_best_model(timelog, saver, sess, cnn,
                                                     model_dir + 'cnn_final%i' %epoch, dev_loss)
+                #2 drc
                 elif dev_loss > best_dev_loss + .05:
                     remove_chkpt_files(epoch, model_dir)
                     #early stop if accuracy drops significantly
@@ -151,7 +151,7 @@ def main(params, input_X, input_Y, key_array, model_dir):
                 return path_final, word_embeddings
             except (UnboundLocalError, ValueError): #path_final does not exist because initial dev accuracy highest
                 return return_current_state(saver, sess, model_dir, epoch)
-
+#rewrite to close before returning
 if __name__ == "__main__":
     main()
 

@@ -27,6 +27,9 @@ grid: size of grid for each hyperparameter. For example, 4 at the index of dropo
     to choose four options within the range specified for dropout.
 '''
 
+#space managemenet\
+#space
+
 def cnn_feature_selector(search_space):
     if search_space == 'reg':
         return {'model_': 'CNN',
