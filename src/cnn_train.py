@@ -6,6 +6,113 @@ import cnn_eval
 import time, resource
 import os, sys #debug
 
+#batching methods
+#randomly adds zero padding to some examples to increase minibatch variety
+def flex(input_list, params):
+    for example in input_list:
+        if example.shape[0] + params['FLEX'] <= params['MAX_LENGTH']:
+            #~30% chance of padding the left side
+            if boolean_percent(15):
+                example = insert_padding(example, params['FLEX'], True)
+            elif boolean_percent(15):
+                example = insert_padding(example, int(math.ceil(params['FLEX']/2.0)), True)
+            #~30% chance of padding the right
+            if boolean_percent(15):
+                example = insert_padding(example, params['FLEX'], False)
+            elif boolean_percent(15):
+                example = insert_padding(example, int(math.ceil(params['FLEX']/2.0)), False)
+    return input_list
+
+
+#inserts zero padding for flex--note this is on a np array which has already been processed for feeding into tf
+def insert_padding(example, tokens_to_pad, left):
+    if left:
+        example = np.concatenate((np.zeros((tokens_to_pad)), example))
+    else:
+        example = np.concatenate((example, np.zeros((tokens_to_pad))))
+    return example
+
+#takes tokenized list_of_examples and pads all to the maximum length
+def pad_all(list_of_examples, params):
+    max_length = get_max_length(list_of_examples)
+    for i in range(len(list_of_examples)):
+        list_of_examples[i] = pad_one(list_of_examples[i], max_length, params)
+    return list_of_examples
+
+#pads all sentences to same length
+def pad_one(list_of_word_vecs, max_length, params):
+    left = (max_length - len(list_of_word_vecs)) / 2
+    right = left
+    if (max_length - len(list_of_word_vecs)) % 2 != 0:
+        right += 1
+    return np.asarray(([0] * left) + list_of_word_vecs.tolist() + ([0] * right))
+
+#returns a boolean true in percent of cases
+def boolean_percent(percent):
+    return random.randrange(100) < percent
+
+#shuffle two numpy arrays in unison
+def shuffle_in_unison(a, b):
+    rng_state = np.random.get_state()
+    np.random.shuffle(a)
+    np.random.set_state(rng_state)
+    np.random.shuffle(b)
+    return a, b
+
+# sorts examples in input_x by length
+def sort_examples_by_length(x, y):
+    lengths = []
+    for i in range(len(x)):
+        lengths.append(len(x[i]))
+    new_lengths = []
+    new_x = []
+    new_y = []
+    for i in range(len(lengths)):
+        for j in range(len(new_lengths)):
+            if lengths[i] < new_lengths[j]:
+                new_lengths.insert(j, lengths[i])
+                new_x.insert(j, x[i])
+                new_y.insert(j, y[i])
+                break
+        else:
+            new_lengths.append(lengths[i])
+            new_x.append(x[i])
+            new_y.append(y[i])
+    return new_x, new_y
+
+#convert x to multidimensional python list if necessary
+#MAX_EPOCH_SIZE might be useful when dealing with very large datasets
+def scramble_batches(params, x, y):
+    extras = len(x) % params['BATCH_SIZE']
+    x, y = shuffle_in_unison(x, y)
+    duplicates_x = []
+    duplicates_y = []
+    for i in range(extras):
+        duplicates_x.append(x[i])
+        duplicates_y.append(y[i])
+    x.extend(duplicates_x)
+    y.extend(duplicates_y)
+    if params['FLEX'] > 0:
+        x = flex(x, params)
+    # if len(x) > params['MAX_EPOCH_SIZE']:
+    #     extras = params['MAX_EPOCH_SIZE'] % params['BATCH_SIZE']
+    #     x = x[:(params['MAX_EPOCH_SIZE']) - extras]
+    #     y = y[:(params['MAX_EPOCH_SIZE']) - extras]
+    #     incomplete = False
+    x, y = sort_examples_by_length(x, y)
+    batches_x, batches_y = [], []
+    while len(y) >= params['BATCH_SIZE']:
+        batches_x.append(pad_all(x[:params['BATCH_SIZE']], params))
+        batches_y.append(np.asarray(y[:params['BATCH_SIZE']]))
+        x = x[params['BATCH_SIZE']:]
+        y = y[params['BATCH_SIZE']:]
+    return batches_x, batches_y
+
+def separate_train_and_val(train_X, train_Y):
+    shuffle_in_unison(train_X, train_Y)
+    val_split = len(train_X)/10
+    return train_X[val_split:], train_Y[val_split:], train_X[:val_split], train_Y[:val_split]
+
 #remove any old chkpt files
 def remove_chkpt_files(epoch, model_dir):
     for past_epoch in range(epoch):
@@ -24,7 +131,8 @@ def epoch_write_statements(timelog, init_time, epoch):
                 resource.getrusage(resource.RUSAGE_SELF).ru_stime))
     timelog.write('\nmemory usage: %g' %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
 
-def return_current_state(saver, sess, model_dir, epoch):
+def return_current_state(trainlog, cnn, saver, sess, model_dir, epoch):
+    trainlog.write('failure to train, returning current state')
     path_final = saver.save(sess, model_dir + 'cnn_final%i' %epoch)
     return path_final, cnn.word_embeddings.eval(session=sess)
 
@@ -94,18 +202,15 @@ def new_best_model(timelog, saver, sess, cnn, path, dev_loss):
     path_final = saver.save(sess, path)
     return dev_loss, cnn.word_embeddings.eval(session=sess)
 
-def set_up_model(params, key_array):
+def set_up_model(sess, params, key_array):
     cnn = CNN(params, key_array)
-    loss = cnn.cross_entropy
-    loss += tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
+    loss = cnn.cross_entropy + tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
     train_step = cnn.optimizer.minimize(loss)
-    sess = tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
-                    intra_op_parallelism_threads=1, use_per_session_threads=True))
     sess.run(tf.initialize_all_variables())
     saver = tf.train.Saver(tf.all_variables(), max_to_keep=None)
     return cnn, loss, train_step, sess, saver
 
-def epoch_train(train_X, train_Y, params, cnn, sess, train_step):
+def epoch_train(train_X, train_Y, key_array, params, cnn, sess, train_step):
     batches_x, batches_y = scramble_batches(params, train_X, train_Y)
 
     for j in range(len(batches_x)):
@@ -120,15 +225,17 @@ def epoch_train(train_X, train_Y, params, cnn, sess, train_step):
 #make graphs as interior as possible
 
 #rename train
-def main(params, input_X, input_Y, key_array, model_dir):
+def train(params, input_X, input_Y, key_array, model_dir):
     train_X, train_Y, val_X, val_Y = separate_train_and_val(input_X, input_Y)
-    with tf.Graph().as_default():
-        with open(model_dir + 'train_log', 'a') as timelog:
-            cnn, loss, train_step, sess, saver = set_up_model(params, key_array)
+    path_final, word_embeddings = None, None
+    with open(model_dir + 'train_log', 'a') as timelog:
+        with tf.Graph().as_default(), tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
+                                      intra_op_parallelism_threads=1, use_per_session_threads=True)) as sess:
+            cnn, loss, train_step, sess, saver = set_up_model(sess, params, key_array)
             best_dev_loss, init_time = initial_prints(timelog, saver, sess, model_dir, val_X, val_Y, key_array, params)
 
             for epoch in range(params['EPOCHS']):
-                cnn = epoch_train(train_X, train_Y, params, cnn, sess, train_step)
+                cnn = epoch_train(train_X, train_Y, key_array, params, cnn, sess, train_step)
                 epoch_write_statements(timelog, init_time, epoch)
 
                 path = saver.save(sess, model_dir + 'temp_cnn_eval_epoch%i' %(epoch))
@@ -137,22 +244,16 @@ def main(params, input_X, input_Y, key_array, model_dir):
                 if dev_loss < best_dev_loss:
                     best_dev_loss, word_embeddings = new_best_model(timelog, saver, sess, cnn,
                                                     model_dir + 'cnn_final%i' %epoch, dev_loss)
-                #2 drc
+                #early stop if accuracy drops significantly
                 elif dev_loss > best_dev_loss + .05:
-                    remove_chkpt_files(epoch, model_dir)
-                    #early stop if accuracy drops significantly
-                    try:
-                        return path_final, word_embeddings
-                    except (UnboundLocalError, ValueError): #path_final does not exist because initial dev accuracy highest
-                        return return_current_state(saver, sess, model_dir, epoch)
-
+                    break
+            timelog.write('\ntypes:' + str(type(path_final)) + str(type(word_embeddings)))
             remove_chkpt_files(epoch, model_dir)
-            try:
-                return path_final, word_embeddings
-            except (UnboundLocalError, ValueError): #path_final does not exist because initial dev accuracy highest
-                return return_current_state(saver, sess, model_dir, epoch)
-#rewrite to close before returning
-if __name__ == "__main__":
-    main()
+            if (path_final == None or word_embeddings == None):
+                path_final, word_embeddings = return_current_state(timelog, cnn, saver, sess, model_dir, epoch)
+                # debug
+                # timelog.write('\ntypes:2' + str(type(path_final)) + str(type(word_embeddings)))
 
-    #tri sgd
+
+    return path_final, word_embeddings
+#tri sgd

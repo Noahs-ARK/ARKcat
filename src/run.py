@@ -217,9 +217,9 @@ def main(args):
     else:
         with open(model_path) as f:
             for i in range(line_num - 1):
-                f.readline_num()
+                f.readline()
 
-            space = eval(f.readline_num())
+            space = eval(f.readline())
             best = call_experiment(space)
 
 if __name__ == '__main__':

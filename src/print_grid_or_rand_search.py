@@ -63,6 +63,4 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--grid', dest='grid', action='store_true', help='')
     parser.add_argument('-r', '--rand', nargs=1, dest='rand', type=int,
                 help='random search; specify iterations with optional addl argument; default=%default')
-    print sys.argv
-    print vars(parser.parse_args(sys.argv[1:]))
     main(vars(parser.parse_args(sys.argv[1:])))
