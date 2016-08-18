@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-
+#work on this
 #defines the architecture of a CNN
 
 #problem:
