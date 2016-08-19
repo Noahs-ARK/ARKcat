@@ -12,12 +12,22 @@ import classify_test
 import space_manager
 from grid_search import *
 
+#Note on running: use cbr.sh or cbr_long.sh for bayesopt; run_file.sh for reading file
+
+#Note on file system: bayesopt cnn models save to model_dir/iter #/, while evaluated
+#lines from file save to model_dir/.
 
 def call_experiment(args):
     global trial_num
     trial_num = trial_num + 1
-    new_model_dir = model_dir + str(trial_num) + '/'
-    os.makedirs(new_model_dir)
+    print model_dir
+    if line_num: #if reading from file
+        print 'file'
+        new_model_dir = model_dir
+    else:
+        new_model_dir = model_dir + str(trial_num) + '/'
+        os.makedirs(new_model_dir)
+    print new_model_dir
     feats_and_args = {}
     all_description = []
     for i in range(num_models):
@@ -87,12 +97,6 @@ def wrangle_params(args, model_num):
     features['binary'] = args['features_' + model_num]['binary_' + model_num]
     features['use_idf'] = args['features_' + model_num]['use_idf_' + model_num]
     features['stop_words'] = args['features_' + model_num]['st_wrd_' + model_num]
-
-    #note to Jesse: code in
-    #passing English will break CNN because some examples become null
-    if model == 'CNN':
-        features['stop_words'] = None
-        features['binary'] = False
 
     print kwargs
     print features
@@ -173,7 +177,7 @@ def set_globals(args):
         model_path = args['load_file'][0] #path to the file with saved hparams to try
         line_num = int(args['load_file'][1]) #line number in the file
         trial_num = line_num
-        model_dir += str(line_num) + '/'
+        # model_dir += str(line_num) + '/'
 
     for directory in [output_dir, train_feature_dir, dev_feature_dir, model_dir]:
         if not os.path.exists(directory):

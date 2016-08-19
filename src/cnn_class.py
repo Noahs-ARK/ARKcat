@@ -18,7 +18,7 @@ class CNN:
         self.word_embeddings_new = tf.placeholder(tf.float32, [None, key_array.shape[1]])
         # print self.word_embeddings
         if params['USE_DELTA']:
-            W_delta = tf.Variable(tf.truncated_normal(shape=(key_array.shape[0], 1), mean=1.0, stdev=0.05),
+            W_delta = tf.Variable(tf.truncated_normal(shape=(key_array.shape[0], 1), mean=1.0, stddev=0.05),
                                               trainable=params['USE_DELTA'], dtype=tf.float32, name='W_delta')
             stacked_W_delta = tf.concat(1, [W_delta] * params['WORD_VECTOR_LENGTH'])
             weighted_word_embeddings = tf.mul(self.word_embeddings, stacked_W_delta)
