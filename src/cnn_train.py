@@ -80,8 +80,6 @@ def sort_examples_by_length(x, y):
             new_y.append(y[i])
     return new_x, new_y
 
-#convert x to multidimensional python list if necessary
-#MAX_EPOCH_SIZE might be useful when dealing with very large datasets
 def scramble_batches(params, x, y):
     extras = len(x) % params['BATCH_SIZE']
     x, y = shuffle_in_unison(x, y)
@@ -94,11 +92,6 @@ def scramble_batches(params, x, y):
     y.extend(duplicates_y)
     if params['FLEX'] > 0:
         x = flex(x, params)
-    # if len(x) > params['MAX_EPOCH_SIZE']:
-    #     extras = params['MAX_EPOCH_SIZE'] % params['BATCH_SIZE']
-    #     x = x[:(params['MAX_EPOCH_SIZE']) - extras]
-    #     y = y[:(params['MAX_EPOCH_SIZE']) - extras]
-    #     incomplete = False
     x, y = sort_examples_by_length(x, y)
     batches_x, batches_y = [], []
     while len(y) >= params['BATCH_SIZE']:
@@ -113,15 +106,13 @@ def separate_train_and_val(train_X, train_Y):
     val_split = len(train_X)/10
     return train_X[val_split:], train_Y[val_split:], train_X[:val_split], train_Y[:val_split]
 
-#remove any old chkpt files
+#remove any existing old chkpt files, ignore nonexistent ones
 def remove_chkpt_files(epoch, model_dir):
     for past_epoch in range(epoch):
         file_path = model_dir + 'temp_cnn_eval_epoch%i' %(past_epoch)
-        try:
+        if os.path.isfile(file_path) and os.path.isfile(file_path + '.meta'):
             os.remove(file_path)
             os.remove(file_path + '.meta')
-        except (UnboundLocalError, OSError):
-            pass
 
 def epoch_write_statements(timelog, init_time, epoch):
     timelog.write('\n\nepoch %i initial time %g' %(epoch, time.clock()))
@@ -130,11 +121,6 @@ def epoch_write_statements(timelog, init_time, epoch):
                 %(resource.getrusage(resource.RUSAGE_SELF).ru_utime +
                 resource.getrusage(resource.RUSAGE_SELF).ru_stime))
     timelog.write('\nmemory usage: %g' %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
-
-def return_current_state(trainlog, cnn, saver, sess, model_dir, epoch):
-    trainlog.write('failure to train, returning current state')
-    path_final = saver.save(sess, model_dir + 'cnn_final%i' %epoch)
-    return path_final, cnn.word_embeddings.eval(session=sess)
 
 #debug method--writes all files in model_dir to file timelog
 def print_debug_paths(model_dir, timelog):
@@ -197,11 +183,6 @@ def initial_prints(timelog, saver, sess, model_dir, val_X, val_Y, key_array, par
     timelog.write('\n%g'%time.clock())
     return best_dev_loss, init_time
 
-def new_best_model(timelog, saver, sess, cnn, path, dev_loss):
-    timelog.write('\nnew best model')
-    path_final = saver.save(sess, path)
-    return dev_loss, cnn.word_embeddings.eval(session=sess)
-
 def set_up_model(sess, params, key_array):
     cnn = CNN(params, key_array)
     loss = cnn.cross_entropy + tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
@@ -220,11 +201,14 @@ def epoch_train(train_X, train_Y, key_array, params, cnn, sess, train_step):
         train_step.run(feed_dict=feed_dict, session=sess)
         #apply l2 clipping to weights and biases
         if params['REGULARIZER'] == 'l2_clip':
-            cnn = clip_tensors(j, len(batches_x), cnn, sess, params)
+            # cnn = clip_tensors(j, len(batches_x), cnn, sess, params)
+            cnn.clip_vars(params)
     return cnn
-#make graphs as interior as possible
 
-#rename train
+def return_current_state(cnn, saver, sess, path):
+    path_final = saver.save(sess, path)
+    return path_final, cnn.word_embeddings.eval(session=sess)
+
 def train(params, input_X, input_Y, key_array, model_dir):
     train_X, train_Y, val_X, val_Y = separate_train_and_val(input_X, input_Y)
     path_final, word_embeddings = None, None
@@ -242,18 +226,19 @@ def train(params, input_X, input_Y, key_array, model_dir):
                 dev_loss = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
                 timelog.write('\ndev accuracy: %g'%dev_loss)
                 if dev_loss < best_dev_loss:
-                    best_dev_loss, word_embeddings = new_best_model(timelog, saver, sess, cnn,
-                                                    model_dir + 'cnn_final%i' %epoch, dev_loss)
+                    timelog.write('\nnew best model')
+                    best_dev_loss = dev_loss
+                    path_final, word_embeddings = return_current_state(cnn, saver, sess,
+                                                    model_dir + 'cnn_final%i' %epoch)
                 #early stop if accuracy drops significantly
-                elif dev_loss > best_dev_loss + .05:
+                elif dev_loss > best_dev_loss + .02:
                     break
+
             timelog.write('\ntypes:' + str(type(path_final)) + str(type(word_embeddings)))
             remove_chkpt_files(epoch, model_dir)
             if (path_final == None or word_embeddings == None):
-                path_final, word_embeddings = return_current_state(timelog, cnn, saver, sess, model_dir, epoch)
-                # debug
-                # timelog.write('\ntypes:2' + str(type(path_final)) + str(type(word_embeddings)))
-
+                timelog.write('failure to train, returning current state')
+                path_final, word_embeddings = return_current_state(cnn, saver, sess,
+                                                    model_dir + 'cnn_final%i' %epoch)
 
     return path_final, word_embeddings
-#tri sgd

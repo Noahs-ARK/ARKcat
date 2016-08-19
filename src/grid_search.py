@@ -1,8 +1,7 @@
-from feature_selector import *
+from space import *
 import itertools, math
 import random
 
-#breaks when num_models > 1
 #returns all combinations from a grid of hyperparameters
 
 def get_grid(model_types, search_space):
@@ -37,35 +36,37 @@ class grid_search():
             raise NotImplementedError
 
     def get_linear_model(self):
-        feature_selector = lr_feature_selector(self.search_space)
-        linear_list = [feature_selector['regularizer'],
-            feature_selector['reg_strength_list'],
-            feature_selector['converge_as_list'],
-            feature_selector['nmin_to_max_'],
-            feature_selector['binary_'],
-            feature_selector['use_idf_'],
-            feature_selector['st_wrd_']]
+        space = lr_space(self.search_space)
+        linear_list = [space['regularizer'],
+            space['reg_strength_list'],
+            space['converge_as_list'],
+            space['nmin_to_max_'],
+            space['binary_'],
+            space['use_idf_'],
+            space['st_wrd_']]
         self.enumerate_models_list = list(itertools.product(*linear_list))
         self.convert_to_dict()
 
     def get_cnn_model(self):
-        feature_selector = cnn_feature_selector(self.search_space)
-        general = [feature_selector['delta_'],
-                    self.to_list(feature_selector['flex_amt_'], feature_selector['grid'][2]),
-                    self.to_list(feature_selector['filters_'], feature_selector['grid'][3]),
-                    self.to_list(feature_selector['kernel_size_'], feature_selector['grid'][4]),
-                    self.to_list(feature_selector['kernel_increment_'], feature_selector['grid'][5]),
-                    self.to_list(feature_selector['kernel_num_'], feature_selector['grid'][6]),
-                    self.to_list(feature_selector['dropout_'], feature_selector['grid'][7]),
-                    self.to_list(feature_selector['batch_size_'], feature_selector['grid'][8]),
-                    feature_selector['activation_fn_']]
-        if feature_selector['search_lr']:
+        space = cnn_space(self.search_space)
+        general = [space['delta_'],
+                    self.to_list(space['flex_amt_'], space['grid'][2]),
+                    self.to_list(space['filters_'], space['grid'][3]),
+                    self.to_list(space['kernel_size_'], space['grid'][4]),
+                    self.to_list(space['kernel_increment_'], space['grid'][5]),
+                    self.to_list(space['kernel_num_'], space['grid'][6]),
+                    self.to_list(space['dropout_'], space['grid'][7]),
+                    self.to_list(space['batch_size_'], space['grid'][8]),
+                    space['activation_fn_']]
+        if space['search_lr']:
             general.append([.00017, .000653])
         else:
             general.append([.0003])
-        l2 = [['l2'], list(feature_selector['l2_'])] + general
-        l2_clip = [['l2_clip'], list(feature_selector['l2_clip_'])] + general
-        if feature_selector['no_reg']:
+        l2 = [['l2'], list(space['l2_'])] + general
+        l2_clip = [['l2_clip'], list(space['l2_clip_'])] + general
+        print "l2", l2
+        print "l3_cli", l2_clip
+        if space['no_reg']:
             no_reg = [[None], [0.0]] + general
             self.enumerate_models_list = list(itertools.product(*l2)) + list(itertools.product(*l2_clip)) + list(itertools.product(*no_reg))
         else:
@@ -117,7 +118,7 @@ class grid_search():
         if type(space) != tuple:
             return [space]
         elif space[0] == space[1]:
-            return space[0]
+            return [space[0]]
 
         if index == 1:
             return [float(sum(space))/len(space)]
@@ -127,7 +128,9 @@ class grid_search():
         else:
             space_list = [space[0], space[1]]
             space_range = space[1] - space[0]
+            print space_range
             for option in range(index - 2):
+                print space[0] + option * space_range / (index - 1)
                 space_list.append(space[0] + option * space_range / (index - 1))
             return space_list
 

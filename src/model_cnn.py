@@ -6,10 +6,94 @@ import scipy
 #debug
 import tensorflow as tf
 
-#extant issues:
-#test all hyperparams
-#set up and test big cnn space
-#clip_vars
+# converts list of ints into list of one_hot vectors (np arrays)
+#for purposes of calculating cross_entropy loss
+def one_hot(train_Y, CLASSES):
+    one_hot = []
+    for i in range(len(train_Y)):
+       one_hot.append([0] * CLASSES)
+       one_hot[i][train_Y[i]] = 1
+       one_hot[i] = np.asarray(one_hot[i])
+    return one_hot
+
+#returns nonzero entries in input_X as np array
+def to_dense(input_X, test_key = None):
+    max_length = 0
+    dense = []
+    for example in input_X:
+        example_transform = example[0].nonzero()[1]
+        example_transform = example_transform.tolist()
+        for i in range(len(example_transform)):
+            if test_key is not None:
+                example_transform[i] = test_key[example_transform[i]]
+            example_transform[i] += 1
+        max_length = max(max_length, len(example_transform))
+        dense.append(np.asarray(example_transform))
+    return dense, max_length
+
+#gets word vecs from word2vec_filename. those not found will be initialized later
+def init_word_vecs(word2vec_filename, key_array, vocab, params):
+    with open(word2vec_filename, 'r') as word2vec:
+        word2vec.readline()
+        for i in range(3000000):   #number of words in word2vec
+            line = tokenize(word2vec.readline().strip())
+            #check to see if it contains nonAscii (which would break the if statement)
+            try:
+                line[0].decode('ascii')
+            except UnicodeDecodeError:
+                pass
+            #turns word vectors into floats and appends to key array
+            else:
+                if line[0] in vocab:
+                    vector = []
+                    for word in line[1:]:
+                        vector.append(float(word))
+                    if len(vector) != params['WORD_VECTOR_LENGTH']:
+                        raise ValueError
+                    key_array[vocab.index(line[0])] = vector
+    return key_array
+
+#returns an array of new word vectors for that vocab,
+#and dict to link indices in test_X with indices in key_array
+def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
+    add_vocab_list = []
+    for word in new_vocab_key.itervalues():
+        if word not in vocab:
+            add_vocab_list.append(word)
+    new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
+    all_vocab = vocab + add_vocab_list
+    for key in new_vocab_key.iterkeys():
+        new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
+    return new_key_array, new_vocab_key
+
+#loads word vectors
+def dict_to_array(word2vec_filename, vocab, params, train=True):
+    key_array = [[] for item in range(len(vocab))]
+    random.seed(None)
+    if params['USE_WORD2VEC']:
+        key_array = init_word_vecs(word2vec_filename, key_array, vocab, params)
+    for i in range(len(key_array)):
+        if key_array[i] == []:
+            key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
+    if train:
+        key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
+    return np.asarray(key_array)
+
+#saves vocab from TfidfVectorizer in list. indices in self.vocab will match those in key_array
+def get_vocab(indices_to_words):
+    vocab = [None] * len(indices_to_words)
+    for key in indices_to_words:
+        vocab[key] = indices_to_words[key]
+    return vocab
+
+#transforms indices_to_words to needed form
+def fix_indices(indices_to_words):
+    for key in indices_to_words:
+        key += 1
+    #dummy key so that len() matches
+    indices_to_words[0] = None
+    return indices_to_words
+
 class Model_CNN:
     def __init__(self, params, n_labels, indices_to_words, model_dir, word2vec_filename):
         self.train_counter = 0
@@ -89,107 +173,3 @@ class Model_CNN:
     #softmax array
     def predict_prob(self, test_X, indices_to_words=None):
         return self.predict(test_X, indices_to_words=indices_to_words, measure='scores')
-
-
-
-#takes a line of text, returns an array of strings where ecah string is a word
-def tokenize(line):
-   list_of_words = []
-   word = ''
-   for char in line:
-      if char == ' ':
-         list_of_words.append(word)
-         word = ''
-      else:
-         word += char
-   list_of_words.append(word.strip())
-   return tuple(list_of_words)
-
-# converts list of ints into list of one_hot vectors (np arrays)
-#for purposes of calculating cross_entropy loss
-def one_hot(train_Y, CLASSES):
-    one_hot = []
-    for i in range(len(train_Y)):
-       one_hot.append([0] * CLASSES)
-       one_hot[i][train_Y[i]] = 1
-       one_hot[i] = np.asarray(one_hot[i])
-    return one_hot
-
-#returns nonzero entries in input_X as np array
-def to_dense(input_X, test_key = None):
-    max_length = 0
-    dense = []
-    for example in input_X:
-        example_transform = example[0].nonzero()[1]
-        example_transform = example_transform.tolist()
-        for i in range(len(example_transform)):
-            if test_key is not None:
-                example_transform[i] = test_key[example_transform[i]]
-            example_transform[i] += 1
-        max_length = max(max_length, len(example_transform))
-        dense.append(np.asarray(example_transform))
-    return dense, max_length
-
-#gets word vecs from word2vec_filename. those not found will be initialized later
-def init_word_vecs(word2vec_filename, key_array, vocab, params):
-    #with open('/Users/katya/repos/tensorflow/output-short.txt', 'r') as word2vec:
-    with open(word2vec_filename, 'r') as word2vec:
-        word2vec.readline()
-        for i in range(3000000):   #number of words in word2vec
-            line = tokenize(word2vec.readline().strip())
-            #check to see if it contains nonAscii (which would break the if statement)
-            try:
-                line[0].decode('ascii')
-            except UnicodeDecodeError:
-                pass
-            #turns word vectors into floats and appends to key array
-            else:
-                if line[0] in vocab:
-                    vector = []
-                    for word in line[1:]:
-                        vector.append(float(word))
-                    if len(vector) != params['WORD_VECTOR_LENGTH']:
-                        raise ValueError
-                    key_array[vocab.index(line[0])] = vector
-    return key_array
-
-#returns an array of new word vectors for that vocab,
-#and dict to link indices in test_X with indices in key_array
-def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
-    add_vocab_list = []
-    for word in new_vocab_key.itervalues():
-        if word not in vocab:
-            add_vocab_list.append(word)
-    new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
-    all_vocab = vocab + add_vocab_list
-    for key in new_vocab_key.iterkeys():
-        new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
-    return new_key_array, new_vocab_key
-
-#loads word vectors
-def dict_to_array(word2vec_filename, vocab, params, train=True):
-    key_array = [[] for item in range(len(vocab))]
-    random.seed(None)
-    if params['USE_WORD2VEC']:
-        key_array = init_word_vecs(word2vec_filename, key_array, vocab, params)
-    for i in range(len(key_array)):
-        if key_array[i] == []:
-            key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
-    if train:
-        key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
-    return np.asarray(key_array)
-
-#saves vocab from TfidfVectorizer in list. indices in self.vocab will match those in key_array
-def get_vocab(indices_to_words):
-    vocab = [None] * len(indices_to_words)
-    for key in indices_to_words:
-        vocab[key] = indices_to_words[key]
-    return vocab
-
-#transforms indices_to_words to needed form
-def fix_indices(indices_to_words):
-    for key in indices_to_words:
-        key += 1
-    #dummy key so that len() matches
-    indices_to_words[0] = None
-    return indices_to_words

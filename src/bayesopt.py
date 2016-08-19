@@ -1,5 +1,5 @@
 from hyperopt import fmin, tpe, hp, Trials, space_eval
-from feature_selector import cnn_feature_selector
+from space import cnn_space
 
 #uses Bayesian optimization to choose parameters of model
 
@@ -30,33 +30,33 @@ def get_xgboost_model(model_num):
         }
 
 def get_cnn_model(model_num, search_space):
-    feature_selector = cnn_feature_selector(search_space)
+    space = cnn_space(search_space)
     hparams = {'model_' + model_num: 'CNN',
             'word_vectors_' + model_num: ('word2vec', True),
             'delta_' + model_num: True,
             'flex_' + model_num: (True, .15),
-            'filters_' + model_num: hp.quniform('filters_' + model_num, *feature_selector['filters_'], 1),
-            'kernel_size_' + model_num: hp.quniform('kernel_size_' + model_num, *feature_selector['kernel_size_'], 1),
-            'kernel_increment_' + model_num: hp.quniform('kernel_increment_' + model_num, *feature_selector['kernel_increment_'], 1),
-            'kernel_num_' + model_num: hp.quniform('kernel_num_' + model_num, *feature_selector['kernel_num_'], 1),
-            'dropout_' + model_num: hp.uniform('dropout_' + model_num, *feature_selector['dropout_']),
-            'batch_size_' + model_num: hp.quniform('batch_size_' + model_num, *feature_selector['batch_size_'], 1),
-            'activation_fn_' + model_num: hp.choice('activation_fn_' + model_num, feature_selector['activation_fn_'])}
+            'filters_' + model_num: hp.quniform('filters_' + model_num, *space['filters_'], 1),
+            'kernel_size_' + model_num: hp.quniform('kernel_size_' + model_num, *space['kernel_size_'], 1),
+            'kernel_increment_' + model_num: hp.quniform('kernel_increment_' + model_num, *space['kernel_increment_'], 1),
+            'kernel_num_' + model_num: hp.quniform('kernel_num_' + model_num, *space['kernel_num_'], 1),
+            'dropout_' + model_num: hp.uniform('dropout_' + model_num, *space['dropout_']),
+            'batch_size_' + model_num: hp.quniform('batch_size_' + model_num, *space['batch_size_'], 1),
+            'activation_fn_' + model_num: hp.choice('activation_fn_' + model_num, space['activation_fn_'])}
 
-    if feature_selector['no_reg']:
+    if space['no_reg']:
         hparams['regularizer_cnn_' + model_num] = hp.choice('regularizer_cnn_' + model_num, [
                 (None, 0.0),
-                ('l2', hp.uniform('l2_strength_cnn_' + model_num, *feature_selector['l2_'])),
-                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *feature_selector['l2_clip_']))
+                ('l2', hp.uniform('l2_strength_cnn_' + model_num, *space['l2_'])),
+                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *space['l2_clip_']))
             ])
 
     else:
         hparams['regularizer_cnn_' + model_num] = hp.choice('regularizer_cnn_' + model_num, [
-                ('l2', hp.uniform('l2_strength_cnn_' + model_num, *feature_selector['l2_'])),
-                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *feature_selector['l2_clip_']))
+                ('l2', hp.uniform('l2_strength_cnn_' + model_num, *space['l2_'])),
+                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *space['l2_clip_']))
             ])
 
-    if feature_selector['search_lr']:
+    if space['search_lr']:
         hparams['learning_rate_' + model_num] = hp.lognormal('learning_rate_' + model_num, 0, 1) / 3000
     else:
         hparams['learning_rate_' + model_num] = .0003

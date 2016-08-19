@@ -1,7 +1,6 @@
 #publish code as scikit module
 import numpy as np
 import tensorflow as tf
-from cnn_methods import *
 from cnn_class import *
 import sys, os
 
@@ -15,7 +14,7 @@ def test_batch(test_X, params, embed_keys):
 #called from train to evaluate cross entropy on val set for early stopping
 def float_entropy(path, val_x, val_y, key_array, params):
     pred = evaluate(path, val_x, val_y, key_array, params, 'cross_entropy', np.zeros([0, key_array.shape[1]]))
-    return np.mean(np.asarray(pred))
+    return np.nanmean(np.asarray(pred))
 
 #called from model_cnn to evaluate dev and/or test acc
 def dev_or_test_acc(checkpoint, params, test_X, key_array, measure, new_key_embeds):
@@ -31,6 +30,7 @@ def evaluate(path, val_x, val_y, key_array, params, measure, new_key_embeds):
         saver = tf.train.Saver()
         saver.restore(sess, path)
         pred = []
+        print 'input for val:', val_x[0], val_y[0]
         while len(val_x) > 0:
             feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis=0),
                          cnn.input_y: np.expand_dims(val_y[0], axis=0),

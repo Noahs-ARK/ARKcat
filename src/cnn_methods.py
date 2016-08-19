@@ -10,5 +10,15 @@ def get_max_length(list_of_examples):
         max_length = max(max_length, len(line))
     return max_length
 
-
-if __name__ == "__main__": main()
+#takes a line of text, returns an array of strings where ecah string is a word
+def tokenize(line):
+   list_of_words = []
+   word = ''
+   for char in line:
+      if char == ' ':
+         list_of_words.append(word)
+         word = ''
+      else:
+         word += char
+   list_of_words.append(word.strip())
+   return tuple(list_of_words)
