@@ -226,7 +226,7 @@ def train(params, input_X, input_Y, key_array, model_dir):
                 
                 float_entropy_init_time = time.time()
                 dev_loss = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
-                float_entropy_time = time.time() - float_entorpy_init_time
+                float_entropy_time = time.time() - float_entropy_init_time
                 timelog.write('\ndev cross entropy: %g   (it took %g seconds to compute)' %(dev_loss, 
                                                                              float_entropy_time))
                 
