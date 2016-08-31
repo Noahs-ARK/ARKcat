@@ -4,7 +4,7 @@ from cnn_methods import *
 from cnn_class import CNN
 import cnn_eval
 import time, resource
-import os, sys #debug
+import os, sys
 
 #batching methods
 #randomly adds zero padding to some examples to increase minibatch variety
@@ -223,8 +223,13 @@ def train(params, input_X, input_Y, key_array, model_dir):
                 epoch_write_statements(timelog, init_time, epoch)
 
                 path = saver.save(sess, model_dir + 'temp_cnn_eval_epoch%i' %(epoch))
+                
+                float_entropy_init_time = time.time()
                 dev_loss = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
-                timelog.write('\ndev accuracy: %g'%dev_loss)
+                float_entropy_time = time.time() - float_entorpy_init_time
+                timelog.write('\ndev cross entropy: %g   (it took %g seconds to compute)' %(dev_loss, 
+                                                                             float_entropy_time))
+                
                 if dev_loss < best_dev_loss:
                     timelog.write('\nnew best model')
                     best_dev_loss = dev_loss

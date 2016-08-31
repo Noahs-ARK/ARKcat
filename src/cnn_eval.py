@@ -30,7 +30,6 @@ def evaluate(path, val_x, val_y, key_array, params, measure, new_key_embeds):
         saver = tf.train.Saver()
         saver.restore(sess, path)
         pred = []
-        print 'input for val:', val_x[0], val_y[0]
         while len(val_x) > 0:
             feed_dict = {cnn.input_x: np.expand_dims(val_x[0], axis=0),
                          cnn.input_y: np.expand_dims(val_y[0], axis=0),
