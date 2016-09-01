@@ -23,8 +23,7 @@ def dev_or_test_acc(checkpoint, params, test_X, key_array, measure, new_key_embe
 
 #evaluates specified measure on model saved at path
 def evaluate(path, val_x, val_y, key_array, params, measure, new_key_embeds):
-    with tf.Graph().as_default(), tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
-                                  intra_op_parallelism_threads=1, use_per_session_threads=True)) as sess:
+    with tf.Graph().as_default(), tf.Session() as sess:
 
         cnn = CNN(params, key_array, batch_size=1, train=False)
         saver = tf.train.Saver()

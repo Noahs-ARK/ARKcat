@@ -213,8 +213,7 @@ def train(params, input_X, input_Y, key_array, model_dir):
     train_X, train_Y, val_X, val_Y = separate_train_and_val(input_X, input_Y)
     path_final, word_embeddings = None, None
     with open(model_dir + 'train_log', 'a') as timelog:
-        with tf.Graph().as_default(), tf.Session(config=tf.ConfigProto(inter_op_parallelism_threads=1,
-                                      intra_op_parallelism_threads=1, use_per_session_threads=True)) as sess:
+        with tf.Graph().as_default(), tf.Session() as sess:
             cnn, loss, train_step, sess, saver = set_up_model(sess, params, key_array)
             best_dev_loss, init_time = initial_prints(timelog, saver, sess, model_dir, val_X, val_Y, key_array, params)
 
