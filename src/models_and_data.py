@@ -75,8 +75,8 @@ class Data_and_Model_Manager:
             #turns word vectors into floats and appends to key array
                 else:
                     if line[0] in vocab:
-                    vector = [float(i) for i in line[1:]]
-                    word_to_vec[line[0]] = vector
+                        vector = [float(i) for i in line[1:]]
+                        word_to_vec[line[0]] = vector
         end_time = time.time()
         print("it took " + str(end_time - init_time) + " to read the word vecs for our vocab")
         sys.exit(0)
