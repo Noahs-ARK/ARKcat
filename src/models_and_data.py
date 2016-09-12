@@ -49,7 +49,7 @@ def create_vocab(train, dev):
     
 def extract_vocab_from_data(vocab, tokenizer, data):
     for ex in data:
-        set.update(tokenizer[ex[0]])
+        vocab.update(tokenizer[ex[0]])
 
 
 class Data_and_Model_Manager:
