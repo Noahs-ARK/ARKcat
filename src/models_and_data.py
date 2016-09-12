@@ -46,15 +46,15 @@ def create_vocab(train, dev):
     vocab = set()
     t = TfidfVectorizer()
     tokenizer = t.build_tokenizer()
-    extract_vocab_from_data(vocab, tokenizer, train)
-    extract_vocab_from_data(vocab, tokenizer, dev)
+    extract_vocab_from_data(vocab, tokenizer, train[0])
+    extract_vocab_from_data(vocab, tokenizer, dev[0])
     end_time = time.time()
     print("it took " + str(end_time - init_time) + "to create the vocabulary")
     return vocab
     
 def extract_vocab_from_data(vocab, tokenizer, data):
     for ex in data:
-        vocab.update(tokenizer(ex[0]))
+        vocab.update(tokenizer(ex))
 
 
 class Data_and_Model_Manager:
