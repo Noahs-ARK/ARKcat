@@ -35,6 +35,8 @@ def read_word_vecs_from_file(word_vec_filename, train, dev):
     print("it took " + str(end_time - init_time) + " to read the word vecs for our vocab")
     print("vocab is size: " + str(len(vocab)))
     print("number of word vecs: " + str(len(word_to_vec)))
+    print('size of train: ' + len(train))
+    print('size of dev: ' + len(dev))
     sys.exit(0)
     return word_to_vec
 
