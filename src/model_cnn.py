@@ -3,7 +3,6 @@ import cnn_train
 import cnn_eval
 from cnn_methods import *
 import scipy
-#debug
 import tensorflow as tf
 
 # converts list of ints into list of one_hot vectors (np arrays)
@@ -32,11 +31,15 @@ def to_dense(input_X, test_key = None):
     return dense, max_length
 
 #gets word vecs from word2vec_filename. those not found will be initialized later
+#vocab is a dict, word->index
 def init_word_vecs(word2vec_filename, key_array, vocab, params):
-    with open(word2vec_filename, 'r') as word2vec:
-        word2vec.readline()
-        for i in range(3000000):   #number of words in word2vec
-            line = tokenize(word2vec.readline().strip())
+    with open(word2vec_filename, 'r') as f:
+        first_line = True
+        for line in f:
+            if first_line:
+                first_line = False
+                continue
+            line = line.strip().split(' ')
             #check to see if it contains nonAscii (which would break the if statement)
             try:
                 line[0].decode('ascii')
@@ -45,12 +48,10 @@ def init_word_vecs(word2vec_filename, key_array, vocab, params):
             #turns word vectors into floats and appends to key array
             else:
                 if line[0] in vocab:
-                    vector = []
-                    for word in line[1:]:
-                        vector.append(float(word))
+                    vector = [float(i) for i in line[1:]]
                     if len(vector) != params['WORD_VECTOR_LENGTH']:
                         raise ValueError
-                    key_array[vocab.index(line[0])] = vector
+                    key_array[vocab[line[0]]] = vector
     return key_array
 
 #returns an array of new word vectors for that vocab,
@@ -69,7 +70,6 @@ def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
 #loads word vectors
 def dict_to_array(word2vec_filename, vocab, params, train=True):
     key_array = [[] for item in range(len(vocab))]
-    random.seed(None)
     if params['USE_WORD2VEC']:
         key_array = init_word_vecs(word2vec_filename, key_array, vocab, params)
     for i in range(len(key_array)):
@@ -81,9 +81,9 @@ def dict_to_array(word2vec_filename, vocab, params, train=True):
 
 #saves vocab from TfidfVectorizer in list. indices in self.vocab will match those in key_array
 def get_vocab(indices_to_words):
-    vocab = [None] * len(indices_to_words)
+    vocab = {}
     for key in indices_to_words:
-        vocab[key] = indices_to_words[key]
+        vocab[indices_to_word[key]] = key
     return vocab
 
 #transforms indices_to_words to needed form
@@ -144,6 +144,8 @@ class Model_CNN:
 
     def train(self, train_X, train_Y):
         self.vocab = get_vocab(self.indices_to_words)
+        #DEBUGGING
+        #THIS NEEDS TO BE IN THE INITIALIZATION NOT HERE
         self.key_array = dict_to_array(self.word2vec_filename, self.vocab, self.params)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])

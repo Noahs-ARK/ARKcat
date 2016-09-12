@@ -115,12 +115,14 @@ def remove_chkpt_files(epoch, model_dir):
             os.remove(file_path + '.meta')
 
 def epoch_write_statements(timelog, init_time, epoch):
-    timelog.write('\n\nepoch %i initial time %g' %(epoch, time.clock()))
-    timelog.write('\n epoch time %i\navg time: %g' %((time.time() - init_time), (time.time() - init_time)/ (epoch + 1)))
-    timelog.write('\nCPU usage: %g'
+    timelog.write('\n\n')
+    timelog.write('epoch %i start time %g\n' %(epoch, time.clock()))
+    timelog.write('total time spent since epoch 1: %i\n' %((time.time() - init_time)))
+    timelog.write('avg time per epoch: %g\n' %((time.time() - init_time)/ (epoch + 1)))
+    timelog.write('CPU usage: %g\n'
                 %(resource.getrusage(resource.RUSAGE_SELF).ru_utime +
                 resource.getrusage(resource.RUSAGE_SELF).ru_stime))
-    timelog.write('\nmemory usage: %g' %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
+    timelog.write('memory usage: %g' %(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss))
 
 #debug method--writes all files in model_dir to file timelog
 def print_debug_paths(model_dir, timelog):

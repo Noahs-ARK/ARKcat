@@ -5,12 +5,13 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from model_xgb import Model_XGB
 from model_lr import Model_LR
 from model_cnn import Model_CNN
+import time
 import re
 
 class Data_and_Model_Manager:
-    def __init__(self, f_and_p, model_dir, word2vec_filename):
+    def __init__(self, f_and_p, model_dir, word_vec_filename):
         self.model_dir = model_dir
-        self.word2vec_filename = word2vec_filename
+        self.word_vec_filename = word_vec_filename
         self.feats_and_params = f_and_p
         self.trained_models = {}
         self.vectorizers = {}
@@ -26,7 +27,7 @@ class Data_and_Model_Manager:
         elif params['model_type'] == 'XGBoost':
             return Model_XGB(params, n_labels)
         elif params['model_type'] == 'CNN':
-            return Model_CNN(params, n_labels, index_to_word, self.model_dir, self.word2vec_filename)
+            return Model_CNN(params, n_labels, index_to_word, self.model_dir, self.word_vecs)
         else:
             raise TypeError("you're trying to train this kind of model (which isn't implemented):" +
                             self.hp['model_type'])
@@ -52,6 +53,50 @@ class Data_and_Model_Manager:
         dev_x, dev_y = self.read_data_and_labels(dev_data_filename, dev_label_filename)
         self.train = [train_x, train_y]
         self.dev = [dev_x, dev_y]
+        self.word_vecs = read_word_vecs_from_file()
+        #DEBUGGING here should load the word vectors
+
+    def read_word_vecs_from_file():
+        vocab = create_vocab()
+        word_to_vec = {}
+        init_time = time.time()
+        with open(self.word_vec_filename, 'r') as f:
+            first_line = True
+            for line in f:
+                if first_line:
+                    first_line = False
+                    continue
+                line = line.strip().split(' ')
+            #check to see if it contains nonAscii (which would break the if statement)
+                try:
+                    line[0].decode('ascii')
+                except UnicodeDecodeError:
+                    pass
+            #turns word vectors into floats and appends to key array
+                else:
+                    if line[0] in vocab:
+                    vector = [float(i) for i in line[1:]]
+                    word_to_vec[line[0]] = vector
+        end_time = time.time()
+        print("it took " + str(end_time - init_time) + " to read the word vecs for our vocab")
+        sys.exit(0)
+        return word_to_vec
+
+    #to create a set which contains all the individual words
+    def create_vocab(self):
+        init_time = time.time()
+        vocab = set()
+        t = TfidfVectorizer()
+        tokenizer = t.build_tokenizer()
+        self.extract_vocab_from_data(vocab, tokenizer, self.train)
+        self.extract_vocab_from_data(vocab, tokenizer, self.dev)
+        end_time = time.time()
+        print("it took " + str(end_time - init_time) + "to create the vocabulary")
+        return vocab
+        
+    def extract_vocab_from_data(self, vocab, tokenizer, data):
+        for ex in data:
+            set.update(tokenizer[ex[0]])
 
     def k_fold_cv(self, num_folds):
         if num_folds == 1 and len(self.dev[0]) > 0:
@@ -97,12 +142,13 @@ class Data_and_Model_Manager:
             index_to_word[key] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", index_to_word[key])
         return train_X, index_to_word
 
-    def train_models(self, train_X_raw, train_Y_raw):
+    def train_model(sself, train_X_raw, train_Y_raw):
         if len(train_X_raw) == 0:
             raise IOError("problem! the training set is empty.")
 
         probs = {}
         train_Y = self.convert_labels(train_Y_raw)
+        
         for i, feat_and_param in self.feats_and_params.items():
             if feat_and_param['params']['model_type'] == 'CNN':
                 train_X, index_to_word = self.transform_cnn_data(train_X_raw, feat_and_param)
