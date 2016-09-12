@@ -8,6 +8,50 @@ from model_cnn import Model_CNN
 import time
 import re
 
+
+def read_word_vecs_from_file(word_vec_filename, train, dev):
+    vocab = create_vocab(train, dev)
+    word_to_vec = {}
+    init_time = time.time()
+    with open(word_vec_filename, 'r') as f:
+        first_line = True
+        for line in f:
+            if first_line:
+                first_line = False
+                continue
+            line = line.strip().split(' ')
+            #check to see if it contains nonAscii (which would break the if statement)
+            try:
+                line[0].decode('ascii')
+            except UnicodeDecodeError:
+                pass
+            #turns word vectors into floats and appends to key array
+            else:
+                if line[0] in vocab:
+                    vector = [float(i) for i in line[1:]]
+                    word_to_vec[line[0]] = vector
+    end_time = time.time()
+    print("it took " + str(end_time - init_time) + " to read the word vecs for our vocab")
+    sys.exit(0)
+    return word_to_vec
+
+#to create a set which contains all the individual words
+def create_vocab(train, dev):
+    init_time = time.time()
+    vocab = set()
+    t = TfidfVectorizer()
+    tokenizer = t.build_tokenizer()
+    extract_vocab_from_data(vocab, tokenizer, train)
+    extract_vocab_from_data(vocab, tokenizer, dev)
+    end_time = time.time()
+    print("it took " + str(end_time - init_time) + "to create the vocabulary")
+    return vocab
+    
+def extract_vocab_from_data(vocab, tokenizer, data):
+    for ex in data:
+        set.update(tokenizer[ex[0]])
+
+
 class Data_and_Model_Manager:
     def __init__(self, f_and_p, model_dir, word_vec_filename):
         self.model_dir = model_dir
@@ -53,50 +97,8 @@ class Data_and_Model_Manager:
         dev_x, dev_y = self.read_data_and_labels(dev_data_filename, dev_label_filename)
         self.train = [train_x, train_y]
         self.dev = [dev_x, dev_y]
-        self.word_vecs = read_word_vecs_from_file()
+        self.word_vecs = read_word_vecs_from_file(self.word_vec_filename, self.train, self.dev)
         #DEBUGGING here should load the word vectors
-
-    def read_word_vecs_from_file():
-        vocab = create_vocab()
-        word_to_vec = {}
-        init_time = time.time()
-        with open(self.word_vec_filename, 'r') as f:
-            first_line = True
-            for line in f:
-                if first_line:
-                    first_line = False
-                    continue
-                line = line.strip().split(' ')
-            #check to see if it contains nonAscii (which would break the if statement)
-                try:
-                    line[0].decode('ascii')
-                except UnicodeDecodeError:
-                    pass
-            #turns word vectors into floats and appends to key array
-                else:
-                    if line[0] in vocab:
-                        vector = [float(i) for i in line[1:]]
-                        word_to_vec[line[0]] = vector
-        end_time = time.time()
-        print("it took " + str(end_time - init_time) + " to read the word vecs for our vocab")
-        sys.exit(0)
-        return word_to_vec
-
-    #to create a set which contains all the individual words
-    def create_vocab(self):
-        init_time = time.time()
-        vocab = set()
-        t = TfidfVectorizer()
-        tokenizer = t.build_tokenizer()
-        self.extract_vocab_from_data(vocab, tokenizer, self.train)
-        self.extract_vocab_from_data(vocab, tokenizer, self.dev)
-        end_time = time.time()
-        print("it took " + str(end_time - init_time) + "to create the vocabulary")
-        return vocab
-        
-    def extract_vocab_from_data(self, vocab, tokenizer, data):
-        for ex in data:
-            set.update(tokenizer[ex[0]])
 
     def k_fold_cv(self, num_folds):
         if num_folds == 1 and len(self.dev[0]) > 0:
