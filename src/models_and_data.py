@@ -37,7 +37,6 @@ def read_word_vecs_from_file(word_vec_filename, train, dev):
     print("number of word vecs: " + str(len(word_to_vec)))
     print('size of train: ' + str(len(train)))
     print('size of dev: ' + str(len(dev)))
-    sys.exit(0)
     return word_to_vec
 
 #to create a set which contains all the individual words
@@ -149,7 +148,7 @@ class Data_and_Model_Manager:
             index_to_word[key] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", index_to_word[key])
         return train_X, index_to_word
 
-    def train_model(sself, train_X_raw, train_Y_raw):
+    def train_models(self, train_X_raw, train_Y_raw):
         if len(train_X_raw) == 0:
             raise IOError("problem! the training set is empty.")
 

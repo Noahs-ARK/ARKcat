@@ -32,6 +32,7 @@ def to_dense(input_X, test_key = None):
 
 #gets word vecs from word2vec_filename. those not found will be initialized later
 #vocab is a dict, word->index
+#DEBUGGING Probably remove this
 def init_word_vecs(word2vec_filename, key_array, vocab, params):
     with open(word2vec_filename, 'r') as f:
         first_line = True
@@ -95,15 +96,15 @@ def fix_indices(indices_to_words):
     return indices_to_words
 
 class Model_CNN:
-    def __init__(self, params, n_labels, indices_to_words, model_dir, word2vec_filename):
+    def __init__(self, params, n_labels, indices_to_words, model_dir, word_vecs):
         self.train_counter = 0
         self.hp = params
         self.num_labels = n_labels
         self.indices_to_words = fix_indices(indices_to_words)
-        # self.indices_to_words = indices_to_words
         self.model_dir = model_dir
-        self.word2vec_filename = word2vec_filename
+        self.word_vecs = word_vecs
         self.set_params()
+        
 
     #grayed out options force model to stay away from expensive options, speeding DEBUGGING
     #you can also reduce the number of epochs
