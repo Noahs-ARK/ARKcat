@@ -69,6 +69,8 @@ def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
     return new_key_array, new_vocab_key
 
 #loads word vectors
+#returns key_array, which is an array where the index of the array corresponds
+#to the vocab number from the vocab object. it's an array of arrays. 
 def dict_to_array(word2vec_filename, vocab, params, train=True):
     key_array = [[] for item in range(len(vocab))]
     if params['USE_WORD2VEC']:
@@ -79,6 +81,27 @@ def dict_to_array(word2vec_filename, vocab, params, train=True):
     if train:
         key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
     return np.asarray(key_array)
+
+
+#DEBUGGING
+#USE THIS INSTEAD OF THE ABOVE
+def make_array_of_vecs(vocab, word_vecs, params, train=True):
+    #what we have: 
+    #word_vecs:= word->vec
+    #vocab:= word->index
+    #what we want:
+    #array, where at index i we have an array of word vector with vocab index i
+    word_vec_array = [None] * len(vocab)
+    if params['USE_WORD2VEC']:
+        for word in word_vecs:
+            word_vec_array[vocab[word]] = word_vecs[word]
+    for i in range(len(word_vec_array)):
+        if word_vec_array[i] == None:
+            word_vec_array[i] = np.random.uniform(-0.25,0.25, params['WORD_VECTOR_LENGTH'])
+    if train:
+        word_vec_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
+    return word_vec_array
+    
 
 #saves vocab from TfidfVectorizer in list. indices in self.vocab will match those in key_array
 def get_vocab(indices_to_words):
