@@ -1,9 +1,10 @@
-import numpy as np
+import numpy as npp
 import cnn_train
 import cnn_eval
 from cnn_methods import *
 import scipy
 import tensorflow as tf
+import time
 
 # converts list of ints into list of one_hot vectors (np arrays)
 #for purposes of calculating cross_entropy loss
@@ -33,7 +34,7 @@ def to_dense(input_X, test_key = None):
 #gets word vecs from word2vec_filename. those not found will be initialized later
 #vocab is a dict, word->index
 #DEBUGGING Probably remove this
-def init_word_vecs(word2vec_filename, key_array, vocab, params):
+def init_word_vecs(word2vec_filename, word_vec_array, vocab, params):
     with open(word2vec_filename, 'r') as f:
         first_line = True
         for line in f:
@@ -52,35 +53,35 @@ def init_word_vecs(word2vec_filename, key_array, vocab, params):
                     vector = [float(i) for i in line[1:]]
                     if len(vector) != params['WORD_VECTOR_LENGTH']:
                         raise ValueError
-                    key_array[vocab[line[0]]] = vector
-    return key_array
+                    word_vec_array[vocab[line[0]]] = vector
+    return word_vec_array
 
 #returns an array of new word vectors for that vocab,
-#and dict to link indices in test_X with indices in key_array
+#and dict to link indices in test_X with indices in word_vec_array
 def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
     add_vocab_list = []
     for word in new_vocab_key.itervalues():
         if word not in vocab:
             add_vocab_list.append(word)
-    new_key_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
+    new_word_vec_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
     all_vocab = vocab + add_vocab_list
     for key in new_vocab_key.iterkeys():
         new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
-    return new_key_array, new_vocab_key
+    return new_word_vec_array, new_vocab_key
 
 #loads word vectors
-#returns key_array, which is an array where the index of the array corresponds
+#returns word_vec_array, which is an array where the index of the array corresponds
 #to the vocab number from the vocab object. it's an array of arrays. 
 def dict_to_array(word2vec_filename, vocab, params, train=True):
-    key_array = [[] for item in range(len(vocab))]
+    word_vec_array = [[] for item in range(len(vocab))]
     if params['USE_WORD2VEC']:
-        key_array = init_word_vecs(word2vec_filename, key_array, vocab, params)
-    for i in range(len(key_array)):
-        if key_array[i] == []:
-            key_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
+        word_vec_array = init_word_vecs(word2vec_filename, word_vec_array, vocab, params)
+    for i in range(len(word_vec_array)):
+        if word_vec_array[i] == []:
+            word_vec_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
     if train:
-        key_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
-    return np.asarray(key_array)
+        word_vec_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
+    return np.asarray(word_vec_array)
 
 
 #DEBUGGING
@@ -103,7 +104,7 @@ def make_array_of_vecs(vocab, word_vecs, params, train=True):
     return word_vec_array
     
 
-#saves vocab from TfidfVectorizer in list. indices in self.vocab will match those in key_array
+#saves vocab from TfidfVectorizer in list. indices in self.vocab will match those in word_vec_array
 def get_vocab(indices_to_words):
     vocab = {}
     for key in indices_to_words:
@@ -168,9 +169,14 @@ class Model_CNN:
 
     def train(self, train_X, train_Y):
         self.vocab = get_vocab(self.indices_to_words)
-        #DEBUGGING
-        #THIS NEEDS TO BE IN THE INITIALIZATION NOT HERE
-        self.key_array = make_array_of_vecs(self.vocab, self.word_vecs, self.params, train=True)
+
+        self.word_vec_array = make_array_of_vecs(self.vocab, self.word_vecs, self.params, train=True)
+        #DEBUGGING        
+        print("length of word_vec_array: " + str(len(self.word_vec_array)))
+        print("length of vocab: " + str(len(self.vocab)))
+        print("length of word_vecs: " + str(len(self.word_vecs)))
+        print("current time: " + str(time.time()))
+        sys.exit(0)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
         # train_X = collapse_vectors(train_X, params['WORD_VECTOR_LENGTH'])
@@ -178,23 +184,23 @@ class Model_CNN:
             self.params['FLEX'] = int(self.hp['flex_amt'] * self.params['MAX_LENGTH'])
         else:
             self.params['FLEX'] = 0
-        self.best_epoch_path, self.key_array = cnn_train.train(self.params,
-                                train_X, train_Y, self.key_array, self.model_dir)
+        self.best_epoch_path, self.word_vec_array = cnn_train.train(self.params,
+                                train_X, train_Y, self.word_vec_array, self.model_dir)
 
     def predict(self, test_X, indices_to_words=None, measure='predict'):
         if 'numpy' not in str(type(test_X)):
             #if called on dev or test
             if indices_to_words is not None:
-                test_key_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
+                test_word_vec_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key=test_vocab_key)
                 return cnn_eval.dev_or_test_acc(self.best_epoch_path, self.params, test_X,
-                                     self.key_array, measure, test_key_array)
+                                     self.word_vec_array, measure, test_word_vec_array)
             #called on train
             else:
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
 
-        return cnn_eval.dev_or_test_acc(self.best_epoch_path, self.params, test_X, self.key_array,
-                                 measure, np.zeros([0, self.key_array.shape[1]]))
+        return cnn_eval.dev_or_test_acc(self.best_epoch_path, self.params, test_X, self.word_vec_array,
+                                 measure, np.zeros([0, self.word_vec_array.shape[1]]))
 
     #softmax array
     def predict_prob(self, test_X, indices_to_words=None):
