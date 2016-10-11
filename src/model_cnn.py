@@ -170,7 +170,7 @@ class Model_CNN:
         self.vocab = get_vocab(self.indices_to_words)
         #DEBUGGING
         #THIS NEEDS TO BE IN THE INITIALIZATION NOT HERE
-        self.key_array = dict_to_array(self.word2vec_filename, self.vocab, self.params)
+        self.key_array = make_array_of_vecs(self.vocab, self.word_vecs, self.params, train=True)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
         # train_X = collapse_vectors(train_X, params['WORD_VECTOR_LENGTH'])
