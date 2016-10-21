@@ -5,6 +5,7 @@ from cnn_methods import *
 import scipy
 import tensorflow as tf
 import time
+import cProfile, pstats
 
 # converts list of ints into list of one_hot vectors (np arrays)
 #for purposes of calculating cross_entropy loss
@@ -92,23 +93,23 @@ def make_array_of_vecs(vocab, word_vecs, params, train=True):
     #vocab:= word->index
     #what we want:
     #array, where at index i we have an array of word vector with vocab index i
-    word_vec_array = [None] * len(vocab)
+    word_vec_array = [None] * max(vocab.values())
     if params['USE_WORD2VEC']:
-        for word in word_vecs:
-            word_vec_array[vocab[word]] = word_vecs[word]
+        for word in vocab:
+            if word in word_vecs: 
+                word_vec_array[vocab[word]-1] = word_vecs[word]
     for i in range(len(word_vec_array)):
         if word_vec_array[i] == None:
             word_vec_array[i] = np.random.uniform(-0.25,0.25, params['WORD_VECTOR_LENGTH'])
     if train:
         word_vec_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
-    return word_vec_array
+    return np.asarray(word_vec_array)
     
-
 #saves vocab from TfidfVectorizer in list. indices in self.vocab will match those in word_vec_array
 def get_vocab(indices_to_words):
     vocab = {}
     for key in indices_to_words:
-        vocab[indices_to_word[key]] = key
+        vocab[indices_to_words[key]] = key
     return vocab
 
 #transforms indices_to_words to needed form
@@ -171,21 +172,15 @@ class Model_CNN:
         self.vocab = get_vocab(self.indices_to_words)
 
         self.word_vec_array = make_array_of_vecs(self.vocab, self.word_vecs, self.params, train=True)
-        #DEBUGGING        
-        print("length of word_vec_array: " + str(len(self.word_vec_array)))
-        print("length of vocab: " + str(len(self.vocab)))
-        print("length of word_vecs: " + str(len(self.word_vecs)))
-        print("current time: " + str(time.time()))
-        sys.exit(0)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
-        # train_X = collapse_vectors(train_X, params['WORD_VECTOR_LENGTH'])
         if self.hp['flex']:
             self.params['FLEX'] = int(self.hp['flex_amt'] * self.params['MAX_LENGTH'])
         else:
             self.params['FLEX'] = 0
         self.best_epoch_path, self.word_vec_array = cnn_train.train(self.params,
                                 train_X, train_Y, self.word_vec_array, self.model_dir)
+
 
     def predict(self, test_X, indices_to_words=None, measure='predict'):
         if 'numpy' not in str(type(test_X)):

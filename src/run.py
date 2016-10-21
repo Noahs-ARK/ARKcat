@@ -1,6 +1,8 @@
 import os, sys
 import codecs
 import datetime
+import time
+
 import cPickle as pickle
 import Queue as queue
 
@@ -11,6 +13,8 @@ from hyperopt import fmin, tpe, hp, Trials, space_eval#, MongoTrials (for parall
 import classify_test
 import space_manager
 from grid_search import *
+
+import cProfile, pstats
 
 #Note on running: use cbr.sh or cbr_long.sh for bayesopt; run_file.sh for reading file
 
@@ -206,15 +210,25 @@ def printing_best(trials):
 
 def main(args):
     print("Made it to the start of main!")
+    print("the time at the start: " + str(time.time()))
     set_globals(args)
     trials = Trials()
     if args['run_bayesopt']:
         space = space_manager.get_space(num_models, model_types, search_space)
-        best = fmin(call_experiment,
-                    space=space,
-                    algo=tpe.suggest,
-                    max_evals=max_iter,
-                    trials=trials)
+        #DEBUGGING
+        profile = cProfile.Profile()
+        try:
+            profile.enable()
+            best = fmin(call_experiment,
+                        space=space,
+                        algo=tpe.suggest,
+                        max_evals=max_iter,
+                        trials=trials)
+            profile.disable()
+        finally:
+            profile = pstats.Stats(profile).sort_stats('cumulative')
+            profile.print_stats()
+
         print space_eval(space, best)
         printing_best(trials)
     #loading models from file

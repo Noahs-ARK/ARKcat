@@ -8,7 +8,7 @@ SEARCH_TYPE=bayes_opt
 SEARCH_SPACE=reg
 NUM_ITERS=5
 NUM_FOLDS=3
-SAVE_LOC=/home/ec2-user/ARKcat/output/$DATASET,nmodels=$NUM_MODELS,mdl_tpe=$MODEL_TYPE,srch_tpe=$SEARCH_TYPE,spce=$SEARCH_SPACE,iters=$NUM_ITERS
+SAVE_LOC=/data/output/$DATASET,nmodels=$NUM_MODELS,mdl_tpe=$MODEL_TYPE,srch_tpe=$SEARCH_TYPE,spce=$SEARCH_SPACE,iters=$NUM_ITERS
 
 
 echo "save location: $SAVE_LOC"

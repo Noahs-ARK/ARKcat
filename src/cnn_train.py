@@ -173,78 +173,93 @@ def clip_tensors(j, length, cnn, sess, params):
         cnn.clip_vars(params)
     return cnn
 
-def initial_prints(timelog, saver, sess, model_dir, val_X, val_Y, key_array, params):
+def initial_prints(timelog, saver, sess, model_dir, val_X, val_Y, word_vec_array, params):
     timelog.write('\n\n\nNew Model:')
     init_time = time.time()
     timelog.write(str(init_time))
-
     path = saver.save(sess, model_dir + 'temp_cnn_eval_epoch%i' %0)
-    best_dev_loss = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
+
+    best_dev_loss = cnn_eval.float_entropy(path, val_X, val_Y, word_vec_array, params)
 
     timelog.write( '\ndebug dev loss %g' %best_dev_loss)
     timelog.write('\n%g'%time.clock())
     return best_dev_loss, init_time
 
-def set_up_model(sess, params, key_array):
-    cnn = CNN(params, key_array)
-    loss = cnn.cross_entropy + tf.mul(tf.constant(params['REG_STRENGTH']), cnn.reg_loss)
-    train_step = cnn.optimizer.minimize(loss)
-    sess.run(tf.initialize_all_variables())
-    saver = tf.train.Saver(tf.all_variables(), max_to_keep=None)
-    return cnn, loss, train_step, sess, saver
+def set_up_model(params, word_vec_array):
+    cnn = CNN(params, word_vec_array)
+    train_step = cnn.train_op # optimizer.minimize(loss)
+    with cnn.graph.as_default():
+        saver = tf.train.Saver(tf.all_variables())
+    return cnn, cnn.loss, train_step, saver
 
-def epoch_train(train_X, train_Y, key_array, params, cnn, sess, train_step):
+def epoch_train(train_X, train_Y, word_vec_array, params, cnn, train_step, timelog):
     batches_x, batches_y = scramble_batches(params, train_X, train_Y)
 
+    total_train_step_time = 0
+    total_clip_time = 0
     for j in range(len(batches_x)):
         feed_dict = {cnn.input_x: batches_x[j], cnn.input_y: batches_y[j],
                      cnn.dropout: params['TRAIN_DROPOUT'],
-                     cnn.word_embeddings_new: np.zeros([0, key_array.shape[1]])}
-        train_step.run(feed_dict=feed_dict, session=sess)
+                     cnn.word_embeddings_new: np.zeros([0, word_vec_array.shape[1]])}
+        start_train_step_time = time.time()
+        train_step.run(feed_dict=feed_dict, session=cnn.sess)
+        total_train_step_time = total_train_step_time + (time.time() - start_train_step_time)
+
         #apply l2 clipping to weights and biases
-        if params['REGULARIZER'] == 'l2_clip':
-            # cnn = clip_tensors(j, len(batches_x), cnn, sess, params)
+        #DEBUGGING
+        if params['REGULARIZER'] == 'l2_clip' and False:
+            start_clip_time = time.time()
             cnn.clip_vars(params)
+            total_clip_time = total_clip_time + (time.time() - start_clip_time)
+    timelog.write('\nthe amount of time the training step takes: %g' %(total_train_step_time))
+    timelog.write('\nthe amount of time clipping_vars takes: %g' %(total_clip_time))
     return cnn
 
-def return_current_state(cnn, saver, sess, path):
-    path_final = saver.save(sess, path)
-    return path_final, cnn.word_embeddings.eval(session=sess)
-
-def train(params, input_X, input_Y, key_array, model_dir):
+def train(params, input_X, input_Y, word_vec_array, model_dir):
+    
     train_X, train_Y, val_X, val_Y = separate_train_and_val(input_X, input_Y)
     path_final, word_embeddings = None, None
     with open(model_dir + 'train_log', 'a') as timelog:
-        with tf.Graph().as_default(), tf.Session() as sess:
-            cnn, loss, train_step, sess, saver = set_up_model(sess, params, key_array)
-            best_dev_loss, init_time = initial_prints(timelog, saver, sess, model_dir, val_X, val_Y, key_array, params)
+        # with tf.Graph().as_default(), tf.Session() as sess:
+        cnn, loss, train_step, saver = set_up_model(params, word_vec_array)
+        best_dev_loss, init_time = initial_prints(timelog, saver, cnn.sess, model_dir, val_X, val_Y, word_vec_array, params)
 
-            for epoch in range(params['EPOCHS']):
-                cnn = epoch_train(train_X, train_Y, key_array, params, cnn, sess, train_step)
-                epoch_write_statements(timelog, init_time, epoch)
+        for epoch in range(params['EPOCHS']):
+            cnn = epoch_train(train_X, train_Y, word_vec_array, params, cnn, train_step, timelog)
+            epoch_write_statements(timelog, init_time, epoch)
 
-                path = saver.save(sess, model_dir + 'temp_cnn_eval_epoch%i' %(epoch))
-                
-                float_entropy_init_time = time.time()
-                dev_loss = cnn_eval.float_entropy(path, val_X, val_Y, key_array, params)
-                float_entropy_time = time.time() - float_entropy_init_time
-                timelog.write('\ndev cross entropy: %g   (it took %g seconds to compute)' %(dev_loss, 
-                                                                             float_entropy_time))
-                
-                if dev_loss < best_dev_loss:
-                    timelog.write('\nnew best model')
-                    best_dev_loss = dev_loss
-                    path_final, word_embeddings = return_current_state(cnn, saver, sess,
-                                                    model_dir + 'cnn_final%i' %epoch)
-                #early stop if accuracy drops significantly
-                elif dev_loss > best_dev_loss + .02:
-                    break
+            start_save_time = time.time()
+            path = saver.save(cnn.sess, model_dir + 'temp_cnn_eval_epoch%i' %(epoch))
+            total_save_time = time.time() - start_save_time
+            timelog.write("\nthe amount of time it takes to save the model: %g" %(total_save_time))
 
-            timelog.write('\ntypes:' + str(type(path_final)) + str(type(word_embeddings)))
-            remove_chkpt_files(epoch, model_dir)
-            if (path_final == None or word_embeddings == None):
-                timelog.write('failure to train, returning current state')
-                path_final, word_embeddings = return_current_state(cnn, saver, sess,
-                                                    model_dir + 'cnn_final%i' %epoch)
+            float_entropy_init_time = time.time()
+            dev_loss = cnn_eval.float_entropy(path, val_X, val_Y, word_vec_array, params)
+            float_entropy_time = time.time() - float_entropy_init_time
+            timelog.write('\ndev cross entropy: %g   (it took %g seconds to compute)' %(dev_loss, 
+                                                                         float_entropy_time))
+
+            timelog.write('\nthe result of tf.get_collection(tf.GraphKeys.VARIABLES): ')
+            timelog.write(str([v.name for v in tf.get_collection(tf.GraphKeys.VARIABLES)]))
+            timelog.flush()
+
+            start_save_best_time = time.time()
+            if dev_loss < best_dev_loss:
+                timelog.write('\nnew best model')
+                best_dev_loss = dev_loss
+                path_final = saver.save(cnn.sess, model_dir + 'cnn_final%i' %epoch)
+                word_embeddings = cnn.word_embeddings.eval(session=cnn.sess)
+            #early stop if accuracy drops significantly
+            elif dev_loss > best_dev_loss + .02:
+                break
+            total_save_best_time = time.time() - start_save_best_time
+            timelog.write('\nhow long saving the best model at the end takes: %g' %(total_save_best_time))
+
+        timelog.write('\ntypes:' + str(type(path_final)) + str(type(word_embeddings)))
+        remove_chkpt_files(epoch, model_dir)
+        if (path_final == None or word_embeddings == None):
+            timelog.write('failure to train, returning current state')
+            path_final = saver.save(cnn.sess, model_dir + 'cnn_final%i' %epoch)
+            word_embeddings = cnn.word_embeddings.eval(session=cnn.sess)
 
     return path_final, word_embeddings

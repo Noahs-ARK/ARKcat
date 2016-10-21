@@ -10,8 +10,8 @@ import re
 import sys
 
 
-def read_word_vecs_from_file(word_vec_filename, train, dev):
-    vocab = create_vocab(train, dev)
+def read_word_vecs_from_file(word_vec_filename, train):
+    vocab = create_vocab(train)
     word_to_vec = {}
     init_time = time.time()
     with open(word_vec_filename, 'r') as f:
@@ -36,24 +36,19 @@ def read_word_vecs_from_file(word_vec_filename, train, dev):
     print("vocab is size: " + str(len(vocab)))
     print("number of word vecs: " + str(len(word_to_vec)))
     print('size of train: ' + str(len(train)))
-    print('size of dev: ' + str(len(dev)))
     return word_to_vec
 
 #to create a set which contains all the individual words
-def create_vocab(train, dev):
+def create_vocab(train):
     init_time = time.time()
     vocab = set()
     t = TfidfVectorizer()
     tokenizer = t.build_tokenizer()
-    extract_vocab_from_data(vocab, tokenizer, train[0])
-    extract_vocab_from_data(vocab, tokenizer, dev[0])
+    for ex in train[0]:
+        vocab.update(tokenizer(ex))
     end_time = time.time()
     print("it took " + str(end_time - init_time) + "to create the vocabulary")
     return vocab
-    
-def extract_vocab_from_data(vocab, tokenizer, data):
-    for ex in data:
-        vocab.update(tokenizer(ex))
 
 
 class Data_and_Model_Manager:
@@ -101,7 +96,7 @@ class Data_and_Model_Manager:
         dev_x, dev_y = self.read_data_and_labels(dev_data_filename, dev_label_filename)
         self.train = [train_x, train_y]
         self.dev = [dev_x, dev_y]
-        self.word_vecs = read_word_vecs_from_file(self.word_vec_filename, self.train, self.dev)
+        self.word_vecs = read_word_vecs_from_file(self.word_vec_filename, self.train)
         #DEBUGGING here should load the word vectors
 
     def k_fold_cv(self, num_folds):
@@ -120,7 +115,6 @@ class Data_and_Model_Manager:
                 folds = StratifiedKFold(self.train[1], num_folds, shuffle=True)
             avg_dev_acc = 0
             for train_indxs, dev_indxs in folds:
-
                 cur_train_X = [self.train[0][i] for i in train_indxs]
                 cur_train_Y = [self.train[1][i] for i in train_indxs]
                 cur_dev_X = [self.train[0][i] for i in dev_indxs]
@@ -130,6 +124,7 @@ class Data_and_Model_Manager:
             return {'train_acc':self.train_models(self.train[0], self.train[1]), 'dev_acc':avg_dev_acc}
 
     def transform_cnn_data(self, X_raw, feat_and_param):
+        #DEBUGGING
         feat_and_param['feats']['ngram_range'] = (1,1)
         feat_and_param['feats']['use_idf'] = False
         feat_and_param['feats']['binary'] = False
