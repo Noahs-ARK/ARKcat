@@ -5,7 +5,7 @@ from cnn_methods import *
 import scipy
 import tensorflow as tf
 import time
-import cProfile, pstats
+import cProfile, pstats, sys
 
 # converts list of ints into list of one_hot vectors (np arrays)
 #for purposes of calculating cross_entropy loss
@@ -18,118 +18,60 @@ def one_hot(train_Y, CLASSES):
     return one_hot
 
 #returns nonzero entries in input_X as np array
-def to_dense(input_X, test_key = None):
+#if all_word_to_index != None, it remaps the elements of input_X to use the new vocab
+#passed in all_word_to_index
+def to_dense(input_X, all_word_to_index=None, test_index_to_word=None):
     max_length = 0
     dense = []
     for example in input_X:
         example_transform = example[0].nonzero()[1]
         example_transform = example_transform.tolist()
         for i in range(len(example_transform)):
-            if test_key is not None:
-                example_transform[i] = test_key[example_transform[i]]
-            example_transform[i] += 1
+            if all_word_to_index is not None:
+                example_transform[i] = all_word_to_index[test_index_to_word[example_transform[i]]]
         max_length = max(max_length, len(example_transform))
         dense.append(np.asarray(example_transform))
     return dense, max_length
 
-#gets word vecs from word2vec_filename. those not found will be initialized later
-#vocab is a dict, word->index
-#DEBUGGING Probably remove this
-def init_word_vecs(word2vec_filename, word_vec_array, vocab, params):
-    with open(word2vec_filename, 'r') as f:
-        first_line = True
-        for line in f:
-            if first_line:
-                first_line = False
-                continue
-            line = line.strip().split(' ')
-            #check to see if it contains nonAscii (which would break the if statement)
-            try:
-                line[0].decode('ascii')
-            except UnicodeDecodeError:
-                pass
-            #turns word vectors into floats and appends to key array
-            else:
-                if line[0] in vocab:
-                    vector = [float(i) for i in line[1:]]
-                    if len(vector) != params['WORD_VECTOR_LENGTH']:
-                        raise ValueError
-                    word_vec_array[vocab[line[0]]] = vector
-    return word_vec_array
-
-#returns an array of new word vectors for that vocab,
-#and dict to link indices in test_X with indices in word_vec_array
-def process_test_vocab(word2vec_filename, vocab, new_vocab_key, params):
-    add_vocab_list = []
-    for word in new_vocab_key.itervalues():
-        if word not in vocab:
-            add_vocab_list.append(word)
-    new_word_vec_array = dict_to_array(word2vec_filename, add_vocab_list, params, train=False)
-    all_vocab = vocab + add_vocab_list
-    for key in new_vocab_key.iterkeys():
-        new_vocab_key[key] = all_vocab.index(new_vocab_key[key])
-    return new_word_vec_array, new_vocab_key
-
-#loads word vectors
-#returns word_vec_array, which is an array where the index of the array corresponds
-#to the vocab number from the vocab object. it's an array of arrays. 
-def dict_to_array(word2vec_filename, vocab, params, train=True):
-    word_vec_array = [[] for item in range(len(vocab))]
+#what we have: 
+#word_vecs:= word->vec
+#word_to_index:= word->index
+#what we want:
+#array, where at index i we have an array of word vector with word_to_index index i
+def make_array_of_vecs(word_to_index, word_vecs, params, train=True):
+    word_vec_array = [None] * len(word_to_index)
     if params['USE_WORD2VEC']:
-        word_vec_array = init_word_vecs(word2vec_filename, word_vec_array, vocab, params)
-    for i in range(len(word_vec_array)):
-        if word_vec_array[i] == []:
-            word_vec_array[i] = np.random.uniform(-0.25,0.25,params['WORD_VECTOR_LENGTH'])
-    if train:
-        word_vec_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
-    return np.asarray(word_vec_array)
-
-
-#DEBUGGING
-#USE THIS INSTEAD OF THE ABOVE
-def make_array_of_vecs(vocab, word_vecs, params, train=True):
-    #what we have: 
-    #word_vecs:= word->vec
-    #vocab:= word->index
-    #what we want:
-    #array, where at index i we have an array of word vector with vocab index i
-    word_vec_array = [None] * max(vocab.values())
-    if params['USE_WORD2VEC']:
-        for word in vocab:
-            if word in word_vecs: 
-                word_vec_array[vocab[word]-1] = word_vecs[word]
+        for word in word_to_index:
+            if word in word_vecs:
+                word_vec_array[word_to_index[word]] = word_vecs[word]
     for i in range(len(word_vec_array)):
         if word_vec_array[i] == None:
             word_vec_array[i] = np.random.uniform(-0.25,0.25, params['WORD_VECTOR_LENGTH'])
-    if train:
-        word_vec_array.insert(0, [0] * params['WORD_VECTOR_LENGTH'])
     return np.asarray(word_vec_array)
     
-#saves vocab from TfidfVectorizer in list. indices in self.vocab will match those in word_vec_array
-def get_vocab(indices_to_words):
-    vocab = {}
-    for key in indices_to_words:
-        vocab[indices_to_words[key]] = key
-    return vocab
-
-#transforms indices_to_words to needed form
-def fix_indices(indices_to_words):
-    for key in indices_to_words:
-        key += 1
-    #dummy key so that len() matches
-    indices_to_words[0] = None
-    return indices_to_words
-
+#saves word_to_index from TfidfVectorizer in list. indices in self.word_to_index will match those in word_vec_array
+def get_word_to_index(index_to_word):
+    word_to_index = {}
+    for key in index_to_word:
+        if index_to_word[key] in word_to_index:
+            #DEBUGGING
+            #This shouldn't happen, it only happens when the vocab has duplicates
+            print("in model_cnn.get_word_to_index()")
+            print("found word that's already in word_to_index, trying to add it again! bad news bears:",
+                  (key, index_to_word[key]))
+            sys.stdout.flush()
+        word_to_index[index_to_word[key]] = key
+    return word_to_index
+            
 class Model_CNN:
-    def __init__(self, params, n_labels, indices_to_words, model_dir, word_vecs):
+    def __init__(self, params, n_labels, index_to_word, model_dir, train_word_vecs):
         self.train_counter = 0
         self.hp = params
         self.num_labels = n_labels
-        self.indices_to_words = fix_indices(indices_to_words)
+        self.word_to_index = get_word_to_index(index_to_word)
         self.model_dir = model_dir
-        self.word_vecs = word_vecs
+        self.train_word_vecs = train_word_vecs
         self.set_params()
-        
 
     #grayed out options force model to stay away from expensive options, speeding DEBUGGING
     #you can also reduce the number of epochs
@@ -169,9 +111,8 @@ class Model_CNN:
             self.params['KERNEL_SIZES'].append(self.hp['kernel_size'] + i * self.hp['kernel_increment'])
 
     def train(self, train_X, train_Y):
-        self.vocab = get_vocab(self.indices_to_words)
-
-        self.word_vec_array = make_array_of_vecs(self.vocab, self.word_vecs, self.params, train=True)
+        self.word_vec_array = make_array_of_vecs(self.word_to_index, self.train_word_vecs, 
+                                                 self.params, train=True)
         train_X, self.params['MAX_LENGTH'] = to_dense(train_X)
         train_Y = one_hot(train_Y, self.params['CLASSES'])
         if self.hp['flex']:
@@ -179,17 +120,47 @@ class Model_CNN:
         else:
             self.params['FLEX'] = 0
         self.best_epoch_path, self.word_vec_array = cnn_train.train(self.params,
-                                train_X, train_Y, self.word_vec_array, self.model_dir)
+                                train_X, train_Y, self.word_vec_array, self.model_dir)        
+        
 
+    #helper method
+    #takes two maps: all_word_to_index, and test_word_to_vec
+    #returns array of word vecs, in the order suggested by 
+    #takes train and test word_to_indexularies and test_word_to_vec
+    #returns new word_to_index which has all words from train with original indices,
+    #and the new words from test with incides greater than the original train indices,
+    #and returns array of new word vectors which is in the same order as the new indices
+    def get_all_word_to_index(self, test_index_to_word, train_word_to_index, test_word_to_vec):
+        test_word_vec_array = []
+        all_word_to_index = {}
+        word_to_index_size = max(train_word_to_index.values())
+        for word in train_word_to_index:
+            all_word_to_index[word] = train_word_to_index[word]
+        for test_word in test_index_to_word.values():
+            if test_word not in train_word_to_index:
 
-    def predict(self, test_X, indices_to_words=None, measure='predict'):
+                word_to_index_size += 1
+                all_word_to_index[test_word] = word_to_index_size
+                if test_word in test_word_to_vec:
+                    test_word_vec_array.append(test_word_to_vec[test_word])
+                else:
+                    test_word_vec_array.append(np.random.uniform(-0.25,0.25,
+                                                                 self.params['WORD_VECTOR_LENGTH']))
+        return all_word_to_index, test_word_vec_array
+
+    def predict(self, test_X, test_index_to_word=None, test_word_to_vec=None, measure='predict'):
         if 'numpy' not in str(type(test_X)):
             #if called on dev or test
-            if indices_to_words is not None:
-                test_word_vec_array, test_vocab_key = process_test_vocab(self.word2vec_filename, self.vocab, indices_to_words, self.params)
-                test_X, self.params['MAX_LENGTH'] = to_dense(test_X, test_key=test_vocab_key)
+            if test_index_to_word is not None:
+                all_word_to_index, test_word_vec_array = self.get_all_word_to_index(test_index_to_word, 
+                                                                self.word_to_index, test_word_to_vec)
+                test_X, self.params['MAX_LENGTH'] = to_dense(test_X, 
+                                                             all_word_to_index=all_word_to_index,
+                                                             test_index_to_word=test_index_to_word)
                 return cnn_eval.dev_or_test_acc(self.best_epoch_path, self.params, test_X,
                                      self.word_vec_array, measure, test_word_vec_array)
+                
+                
             #called on train
             else:
                 test_X, self.params['MAX_LENGTH'] = to_dense(test_X)
@@ -198,5 +169,6 @@ class Model_CNN:
                                  measure, np.zeros([0, self.word_vec_array.shape[1]]))
 
     #softmax array
-    def predict_prob(self, test_X, indices_to_words=None):
-        return self.predict(test_X, indices_to_words=indices_to_words, measure='scores')
+    def predict_prob(self, test_X, test_index_to_word=None, test_word_to_vec=None):
+        return self.predict(test_X, test_index_to_word=test_index_to_word, 
+                            test_word_to_vec=test_word_to_vec, measure='scores')

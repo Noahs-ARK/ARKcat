@@ -35,7 +35,6 @@ def read_word_vecs_from_file(word_vec_filename, train):
     print("it took " + str(end_time - init_time) + " to read the word vecs for our vocab")
     print("vocab is size: " + str(len(vocab)))
     print("number of word vecs: " + str(len(word_to_vec)))
-    print('size of train: ' + str(len(train)))
     return word_to_vec
 
 #to create a set which contains all the individual words
@@ -70,7 +69,7 @@ class Data_and_Model_Manager:
         elif params['model_type'] == 'XGBoost':
             return Model_XGB(params, n_labels)
         elif params['model_type'] == 'CNN':
-            return Model_CNN(params, n_labels, index_to_word, self.model_dir, self.word_vecs)
+            return Model_CNN(params, n_labels, index_to_word, self.model_dir, self.train_word_vecs)
         else:
             raise TypeError("you're trying to train this kind of model (which isn't implemented):" +
                             self.hp['model_type'])
@@ -96,8 +95,7 @@ class Data_and_Model_Manager:
         dev_x, dev_y = self.read_data_and_labels(dev_data_filename, dev_label_filename)
         self.train = [train_x, train_y]
         self.dev = [dev_x, dev_y]
-        self.word_vecs = read_word_vecs_from_file(self.word_vec_filename, self.train)
-        #DEBUGGING here should load the word vectors
+        self.train_word_vecs = read_word_vecs_from_file(self.word_vec_filename, self.train)
 
     def k_fold_cv(self, num_folds):
         if num_folds == 1 and len(self.dev[0]) > 0:
@@ -139,8 +137,8 @@ class Data_and_Model_Manager:
                 example[i] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", example[i])
             train_X.append([vectorizer.transform(example)])
         index_to_word = {v:k for k,v in vectorizer.vocabulary_.items()}
-        for key in index_to_word:
-            index_to_word[key] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", index_to_word[key])
+        #for key in index_to_word:
+        #    index_to_word[key] = re.sub(r"[^A-Za-z0-9(),!?\'\`]", "", index_to_word[key])
         return train_X, index_to_word
 
     def train_models(self, train_X_raw, train_Y_raw):
@@ -178,13 +176,15 @@ class Data_and_Model_Manager:
             new_Y.append(self.label_dict[y])
         return new_Y
 
-    def predict_acc(self, test_X_raw, test_Y):
+    def predict_acc(self, test_X_raw, test_Y):        
         pred_probs = {}
         for i, feat_and_param in self.feats_and_params.items():
             if feat_and_param['params']['model_type'] == 'CNN':
                 test_X, index_to_word  = self.transform_cnn_data(test_X_raw, feat_and_param)
-
-                pred_probs[i] = self.trained_models[i].predict_prob(test_X, index_to_word)
+                test_word_to_vecs = read_word_vecs_from_file(self.word_vec_filename, 
+                                                             [test_X_raw, test_Y])
+                pred_probs[i] = self.trained_models[i].predict_prob(test_X, index_to_word, 
+                                                                    test_word_to_vecs)
             else:
                 test_X = self.vectorizers[i].transform(test_X_raw)
                 pred_probs[i] = self.trained_models[i].predict_prob(test_X)

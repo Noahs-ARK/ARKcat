@@ -1,13 +1,14 @@
 DATA_BASE=/home/ec2-user/datasets
 DATASET=stanford_sentiment_binary
+#DATASET=debugging
 DATA_LOC=${DATA_BASE}/${DATASET}
 W2V_LOC=${DATA_BASE}/${DATASET}/${DATASET}_vecs.txt
 NUM_MODELS=1
 MODEL_TYPE=cnn
 SEARCH_TYPE=bayes_opt
 SEARCH_SPACE=reg
-NUM_ITERS=5
-NUM_FOLDS=3
+NUM_ITERS=7
+NUM_FOLDS=1
 SAVE_LOC=/data/output/$DATASET,nmodels=$NUM_MODELS,mdl_tpe=$MODEL_TYPE,srch_tpe=$SEARCH_TYPE,spce=$SEARCH_SPACE,iters=$NUM_ITERS
 
 

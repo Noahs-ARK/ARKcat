@@ -23,7 +23,6 @@ def dev_or_test_acc(checkpoint, params, test_X, word_vec_array, measure, new_key
 
 #evaluates specified measure on model saved at path
 def evaluate(path, val_x, val_y, word_vec_array, params, measure, new_key_embeds):
-
     cnn = CNN(params, word_vec_array, batch_size=1, train=False)
     with cnn.graph.as_default():
         saver = tf.train.Saver()

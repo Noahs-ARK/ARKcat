@@ -222,7 +222,8 @@ def train(params, input_X, input_Y, word_vec_array, model_dir):
     with open(model_dir + 'train_log', 'a') as timelog:
         # with tf.Graph().as_default(), tf.Session() as sess:
         cnn, loss, train_step, saver = set_up_model(params, word_vec_array)
-        best_dev_loss, init_time = initial_prints(timelog, saver, cnn.sess, model_dir, val_X, val_Y, word_vec_array, params)
+        best_dev_loss, init_time = initial_prints(timelog, saver, cnn.sess, model_dir, val_X, 
+                                                  val_Y, word_vec_array, params)
 
         for epoch in range(params['EPOCHS']):
             cnn = epoch_train(train_X, train_Y, word_vec_array, params, cnn, train_step, timelog)
@@ -231,16 +232,14 @@ def train(params, input_X, input_Y, word_vec_array, model_dir):
             start_save_time = time.time()
             path = saver.save(cnn.sess, model_dir + 'temp_cnn_eval_epoch%i' %(epoch))
             total_save_time = time.time() - start_save_time
-            timelog.write("\nthe amount of time it takes to save the model: %g" %(total_save_time))
+            timelog.write("\nthe amount of time it takes to save the model at epoch " + 
+                          str(epoch) + ": %g" %(total_save_time))
 
             float_entropy_init_time = time.time()
             dev_loss = cnn_eval.float_entropy(path, val_X, val_Y, word_vec_array, params)
             float_entropy_time = time.time() - float_entropy_init_time
             timelog.write('\ndev cross entropy: %g   (it took %g seconds to compute)' %(dev_loss, 
                                                                          float_entropy_time))
-
-            timelog.write('\nthe result of tf.get_collection(tf.GraphKeys.VARIABLES): ')
-            timelog.write(str([v.name for v in tf.get_collection(tf.GraphKeys.VARIABLES)]))
             timelog.flush()
 
             start_save_best_time = time.time()
@@ -255,9 +254,8 @@ def train(params, input_X, input_Y, word_vec_array, model_dir):
             total_save_best_time = time.time() - start_save_best_time
             timelog.write('\nhow long saving the best model at the end takes: %g' %(total_save_best_time))
 
-        timelog.write('\ntypes:' + str(type(path_final)) + str(type(word_embeddings)))
         remove_chkpt_files(epoch, model_dir)
-        if (path_final == None or word_embeddings == None):
+        if (path_final is None or word_embeddings is None):
             timelog.write('failure to train, returning current state')
             path_final = saver.save(cnn.sess, model_dir + 'cnn_final%i' %epoch)
             word_embeddings = cnn.word_embeddings.eval(session=cnn.sess)
