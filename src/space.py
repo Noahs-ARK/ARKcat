@@ -29,7 +29,7 @@ grid: size of grid for each hyperparameter. For example, 4 at the index of dropo
 
 def cnn_space(search_space):
     if search_space == 'reg':
-        return {'model_': 'CNN',
+        return {'model_type_': 'CNN',
                 'delta_': [False],
                 'flex_amt_': (0.15, 0.15),
                 'filters_': (100, 100),
@@ -46,8 +46,8 @@ def cnn_space(search_space):
                 'grid': [1,1,1,1,1,1,1,4,1,1,4,3]
         }
     elif search_space == 'arch':
-        return {'model_': 'CNN',
-                'delta_': [True,False],
+        return {'model_type_': 'CNN',
+                'delta_': [False],#not implemented
                 'flex_amt_': (0.0,0.3),
                 'filters_': (100,600),
                 'kernel_size_': (2,10),
@@ -64,8 +64,8 @@ def cnn_space(search_space):
                 'grid': [1,2,2,2,2,2,2,2,2,3,2,2]
         }
     elif search_space == 'big':
-        return {'model_': 'CNN',
-                'delta_': [True,False],
+        return {'model_type_': 'CNN',
+                'delta_': [False],#not implemented
                 'flex_amt_': (0.0,0.3),
                 'filters_': (100,600),
                 'kernel_size_': (2,30),

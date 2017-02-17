@@ -3,6 +3,11 @@ from space import *
 
 #grid search disregards # models, uses only type of model_types[0]
 def get_space(num_models, model_types, search_space):
+    #DEBUGGING
+    if search_space == 'debug':
+        return {'uniform_0_1': hp.uniform('uniform_0_1', 0,1), 
+                'loguniform_-5_5': hp.loguniform("loguniform_-5_5",-5,5)}
+
     print num_models, model_types, search_space
     space = {}
     for i in range(num_models):
@@ -65,10 +70,11 @@ def get_xgboost_model(model_num):
 #therefore, necessary to concatenate any remaining elements
 def get_cnn_model(model_num, search_space):
     space = cnn_space(search_space)
-    hparams = {'model_' + model_num: 'CNN',
+
+    hparams = {'model_type_' + model_num: 'CNN',
             'word_vectors_' + model_num: ('word2vec', True),
             'delta_' + model_num: hp.choice('delta_' + model_num, space['delta_']),
-            'flex_' + model_num: (True, hp.uniform('flex_amt_' + model_num, *space['flex_amt_'])),
+            'flex_amt_' + model_num: hp.uniform('flex_amt_' + model_num, *space['flex_amt_']),
             'filters_' + model_num: hp.quniform('filters_' + model_num, *(space['filters_'] + (1,))),
             'kernel_size_' + model_num: hp.quniform('kernel_size_' + model_num, *(space['kernel_size_'] + (1,))),
             'kernel_increment_' + model_num: hp.quniform('kernel_increment_' + model_num, *(space['kernel_increment_'] + (1,))),
@@ -91,7 +97,7 @@ def get_cnn_model(model_num, search_space):
             ])
 
     if space['search_lr']:
-        hparams['learning_rate_' + model_num] = hp.lognormal('learning_rate_' + model_num, 0, 1) / 3000
+        hparams['learning_rate_' + model_num] = hp.loguniform('learning_rate_' + model_num, -5,5)
     else:
         hparams['learning_rate_' + model_num] = .0003
     return hparams

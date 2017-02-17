@@ -8,7 +8,7 @@ import Queue as queue
 
 import argparse
 import numpy as np
-from hyperopt import fmin, tpe, hp, Trials, space_eval#, MongoTrials (for parallel search)
+from hyperopt import fmin, tpe, hp, Trials, space_eval, rand, anneal, dpp
 
 import classify_test
 import space_manager
@@ -22,6 +22,8 @@ import cProfile, pstats
 #lines from file save to model_dir/.
 
 def call_experiment(args):
+    import pdb; pdb.set_trace()
+    
     global trial_num
     trial_num = trial_num + 1
     print model_dir
@@ -63,7 +65,7 @@ def wrangle_params(args, model_num):
     print('the args:')
     print(args)
 
-    model = args['model_' + model_num]['model_' + model_num]
+    model = args['model_' + model_num]['model_type_' + model_num]
     kwargs['model_type'] = model
     if model == 'LR':
         kwargs['regularizer'] = args['model_' + model_num]['regularizer_lr_' + model_num][0]
@@ -83,8 +85,8 @@ def wrangle_params(args, model_num):
         kwargs['word_vector_init'] = args['model_' + model_num]['word_vectors_' + model_num][0]
         kwargs['word_vector_update'] = args['model_' + model_num]['word_vectors_' + model_num][1]
         kwargs['delta'] = args['model_' + model_num]['delta_' + model_num]
-        kwargs['flex'] = (args['model_' + model_num]['flex_' + model_num])[0]
-        kwargs['flex_amt'] = (args['model_' + model_num]['flex_' + model_num])[1]
+        kwargs['flex'] = True #DEBUGGING can search over this in space_manager
+        kwargs['flex_amt'] = (args['model_' + model_num]['flex_amt_' + model_num])
         kwargs['kernel_size'] = int(args['model_' + model_num]['kernel_size_' + model_num])
         kwargs['kernel_increment'] = int(args['model_' + model_num]['kernel_increment_' + model_num])
         kwargs['kernel_num'] = int(args['model_' + model_num]['kernel_num_' + model_num])
@@ -215,19 +217,31 @@ def main(args):
     trials = Trials()
     if args['run_bayesopt']:
         space = space_manager.get_space(num_models, model_types, search_space)
-        #DEBUGGING
-        profile = cProfile.Profile()
+        if args['algorithm'] == "bayes_opt":
+            algorithm = tpe.suggest
+        elif args['algorithm'] == "random":
+            algorithm = rand.suggest
+        elif args['algorithm'] == "anneal":
+            algorithm = anneal.suggest
+        elif args['algorithm'] == "dpp":
+            algorithm = dpp.suggest
+        else: 
+            raise NameError("Unknown algorithm for search")
+
+        #DEBUGGING: this is for profiling. it prints where the program has spent the most time
+        #profile = cProfile.Profile()
         try:
-            profile.enable()
+            #profile.enable()
             best = fmin(call_experiment,
                         space=space,
-                        algo=tpe.suggest,
+                        algo=algorithm,
                         max_evals=max_iter,
                         trials=trials)
-            profile.disable()
+            #profile.disable()
         finally:
-            profile = pstats.Stats(profile).sort_stats('cumulative')
-            profile.print_stats()
+            #profile = pstats.Stats(profile).sort_stats('cumulative')
+            #profile.print_stats()
+            print('')
 
         print space_eval(space, best)
         printing_best(trials)
@@ -246,6 +260,8 @@ if __name__ == '__main__':
     parser.add_argument('word2vec_filename', nargs=1, type=str, help='')
     parser.add_argument('output_dir', nargs=1, type=str, help='')
     parser.add_argument('num_folds', nargs=1, type=int, help='')
+    parser.add_argument('algorithm', nargs=1, type=str, 
+                        help='the algorithm to use. must be random or bayes_opt')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-b', nargs=3, type=str, dest='run_bayesopt',
                         help='model types, search space, number of iters')

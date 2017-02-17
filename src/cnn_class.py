@@ -14,7 +14,7 @@ class CNN:
         with tf.variable_scope("CNN"), graph.as_default():
             if batch_size == None:
                 batch_size = params['BATCH_SIZE']
-            self.input_x = tf.placeholder(tf.int32, [batch_size, None], name='input_x') #tf.ones([batch_size, params['MAX_LENGTH']], dtype=tf.int32)
+            self.input_x = tf.placeholder(tf.int32, [batch_size, None], name='input_x')
             self.input_y = tf.placeholder(tf.float32, [batch_size, params['CLASSES']], name='input_y')
             self.dropout = tf.placeholder(tf.float32, name='dropout')
             self.word_embeddings = tf.Variable(tf.convert_to_tensor(key_array, dtype=tf.float32),
@@ -51,6 +51,8 @@ class CNN:
                     activ = tf.sigmoid(tf.nn.bias_add(conv, b))
                 else:
                     activ = conv
+                #DEBUGGING:
+                #check this max pooling size is correct
                 pooled = tf.nn.max_pool(activ, ksize=[1, params['MAX_LENGTH'], 1, 1],
                     strides=[1, params['MAX_LENGTH'], 1, 1], padding='SAME') #name='max_pool')
 
@@ -58,8 +60,8 @@ class CNN:
                 self.weights.append(W)
                 self.biases.append(b)
             self.h_pool = tf.concat(3, slices)
-            self.h_pool_drop = tf.nn.dropout(self.h_pool, self.dropout)
-            self.h_pool_flat = tf.reshape(self.h_pool_drop, [batch_size, -1])
+            self.h_pool_flat = tf.reshape(self.h_pool, [batch_size, -1])
+            self.h_pool_drop = tf.nn.dropout(self.h_pool_flat, self.dropout)
             #fully connected softmax layer
             self.W_fc = self.weight_variable([len(params['KERNEL_SIZES']) * params['FILTERS'],
                                     params['CLASSES']], 'W_fc')

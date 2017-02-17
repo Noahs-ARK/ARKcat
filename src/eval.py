@@ -34,6 +34,7 @@ def eval_k_best_models(models, print_k_models_per_iter):
         print('best models for iter ' + str(i + 1))
         for j in range(print_k_models_per_iter):
             dev_acc, iteration, test_acc, model = ordered_models.get()
+            print('iteration: ' + str(iteration))
             print('test acc: ' + str(test_acc))
             print('dev acc:  ' + str(dev_acc))
             print('hyperparams: ')
