@@ -49,7 +49,7 @@ def cnn_space(search_space):
         return {'model_type_': 'CNN',
                 'delta_': [False],#not implemented
                 'flex_amt_': (0.0,0.3),
-                'filters_': (100,600),
+                'filters_': (50,200),
                 'kernel_size_': (2,10),
                 'kernel_increment_': (0,3),
                 'kernel_num_': (3,5),
