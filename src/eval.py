@@ -25,22 +25,38 @@ def eval_k_best_models(models, print_k_models_per_iter):
         model_counter = model_counter + 1
     sys.stdout.flush()
     print('best ' + str(print_k_models_per_iter) + ' models per iter:')
-
+    
+    
     for i in range(len(models)):
+        print('')
+        cur_dev, cur_iter, cur_test, cur_model = models_and_acc[i+1]
+        print("{},".format(round(-cur_dev,4))),
+        print("{},".format(round(-cur_test,4))),
+
         ordered_models = Queue.PriorityQueue()
         for j in range(i + 1):
             ordered_models.put(models_and_acc[j + 1])
-        print('')
-        print('best models for iter ' + str(i + 1))
+
         for j in range(print_k_models_per_iter):
             dev_acc, iteration, test_acc, model = ordered_models.get()
-            print('iteration: ' + str(iteration))
-            print('test acc: ' + str(test_acc))
-            print('dev acc:  ' + str(dev_acc))
-            print('hyperparams: ')
-            print(model[2]['model'].feats_and_params)
-            print('')
-        print('')
+            print("{},".format(round(-dev_acc,4))),
+            print("{},".format(iteration)),
+
+        #to print the hyperparams evaluated at iteration i
+        for hparam in cur_model[2]['model'].feats_and_params[0]['params']:
+            if type(cur_model[2]['model'].feats_and_params[0]['params'][hparam]) == type(0.0):
+                print("{}: {} ".format(hparam, round(
+                    cur_model[2]['model'].feats_and_params[0]['params'][hparam],5))),
+            else:
+                print("{}: {} ".format(hparam, 
+                    cur_model[2]['model'].feats_and_params[0]['params'][hparam])),
+        for hparam in cur_model[2]['model'].feats_and_params[0]['feats']:
+            if type(cur_model[2]['model'].feats_and_params[0]['feats'][hparam]) == type(0.0):
+                print("{}: {} ".format(hparam, round(
+                    cur_model[2]['model'].feats_and_params[0]['feats'][hparam],5))),
+            else:
+                print("{}: {} ".format(hparam, 
+                    cur_model[2]['model'].feats_and_params[0]['feats'][hparam])),
         sys.stdout.flush()
 
 def set_globals(args):
@@ -85,7 +101,6 @@ def main():
         for directory in os.listdir(model_dir):
             models, model_counter = find_models_in_dir(model_dir + directory + '/', model_counter, models)
     print_k_models_per_iter = 1
-    print models
     eval_k_best_models(models, print_k_models_per_iter)
 
 if __name__ == '__main__':

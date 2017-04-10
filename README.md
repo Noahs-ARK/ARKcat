@@ -39,6 +39,9 @@ python setup.py install
 
 installing with anaconda:
 conda create --name arkcat python numpy scipy scikit-learn setuptools tensorflow matplotlib
+#not sure why this is needed. there's a bug report about it here: https://github.com/ContinuumIO/anaconda-issues/issues/720 seems like it's only a problem on ubuntu
+conda install  -f  numpy
+
 
 #for hyperopt:
 cd hyperopt

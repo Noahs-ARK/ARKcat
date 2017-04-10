@@ -83,19 +83,6 @@ def cnn_space(search_space):
         print 'search space not implemented for CNN'
         raise NotImplementedError
 
-def lr_space():
-        return {'model': 'LR',
-        'regularizer': ['l1', 'l2'],
-        #reg str
-        'reg_strength': [-5, 5],
-        'reg_strength_list': range(-5,6),
-        #converges to
-        'converge': [-10, -1],
-        'converge_as_list': range(-10,0),
-        'nmin_to_max_': [(1,1),(1,2),(1,3),(2,2),(2,3)],
-        'binary_': [True, False],
-        'use_idf_': [True, False],
-        'st_wrd_': [None, 'english']}
 
 def cnn_feats(model_num):
     return {'nmin_to_max_' + model_num: (1,1),

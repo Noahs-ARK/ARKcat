@@ -8,7 +8,7 @@ import Queue as queue
 
 import argparse
 import numpy as np
-from hyperopt import fmin, tpe, hp, Trials, space_eval, rand, anneal, dpp
+from hyperopt import fmin, tpe, hp, Trials, space_eval, rand, anneal, dpp, dpp_random
 
 import classify_test
 import space_manager
@@ -22,7 +22,14 @@ import cProfile, pstats
 #lines from file save to model_dir/.
 
 def call_experiment(args):
-    import pdb; pdb.set_trace()
+    #in case we want to debug the BO algorithms
+    #import pdb; pdb.set_trace()
+    debug_mode = False
+    if debug_mode:
+        import random
+        from hyperopt import STATUS_OK
+        return {'loss':random.random(), 'status': STATUS_OK}
+
     
     global trial_num
     trial_num = trial_num + 1
@@ -225,6 +232,8 @@ def main(args):
             algorithm = anneal.suggest
         elif args['algorithm'] == "dpp":
             algorithm = dpp.suggest
+        elif args['algorithm'] == "dpp_random":
+            algorithm = dpp_random.suggest
         else: 
             raise NameError("Unknown algorithm for search")
 
@@ -232,6 +241,7 @@ def main(args):
         #profile = cProfile.Profile()
         try:
             #profile.enable()
+            #import pdb; pdb.set_trace()
             best = fmin(call_experiment,
                         space=space,
                         algo=algorithm,
@@ -261,7 +271,7 @@ if __name__ == '__main__':
     parser.add_argument('output_dir', nargs=1, type=str, help='')
     parser.add_argument('num_folds', nargs=1, type=int, help='')
     parser.add_argument('algorithm', nargs=1, type=str, 
-                        help='the algorithm to use. must be random or bayes_opt')
+                        help='the algorithm to use. must be random, bayes_opt, dpp')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-b', nargs=3, type=str, dest='run_bayesopt',
                         help='model types, search space, number of iters')

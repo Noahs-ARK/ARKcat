@@ -44,10 +44,9 @@ def add_model(model_num, space, model_types, search_space):
             'use_idf_' + model_num: hp.choice('transform_' + model_num, [True, False]),
             'st_wrd_' + model_num: hp.choice('st_word_' + model_num, [None, 'english'])}
 
-#uses Bayesian optimization to choose parameters of model
 
 def get_linear_model(model_num):
-    return {'model_' + model_num: 'LR',
+    return {'model_type_' + model_num: 'LR',
         'regularizer_lr_' + model_num: hp.choice('regularizer_lr_' + model_num,[
             ('l1', hp.loguniform('l1_strength_lr_' + model_num, -5,5)),
             ('l2', hp.loguniform('l2_strength_lr_' + model_num, -5,5))
@@ -56,7 +55,7 @@ def get_linear_model(model_num):
     }
 
 def get_xgboost_model(model_num):
-    return {'model_' + model_num: 'XGBoost',
+    return {'model_type_' + model_num: 'XGBoost',
             'eta_' + model_num: hp.loguniform('eta_' + model_num,-5,0),
             'gamma_' + model_num: hp.uniform('gamma_' + model_num,0,10),
             'max_depth_' + model_num: hp.quniform('max_depth_' + model_num, 1,30,1),
