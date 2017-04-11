@@ -42,6 +42,7 @@ conda create --name arkcat python numpy scipy scikit-learn setuptools tensorflow
 #not sure why this is needed. there's a bug report about it here: https://github.com/ContinuumIO/anaconda-issues/issues/720 seems like it's only a problem on ubuntu
 conda install  -f  numpy
 
+source activate arkcat
 
 #for hyperopt:
 cd hyperopt
@@ -59,3 +60,9 @@ pip install GPyOpt
 pip install matlab_wrapper
 
 #make sure matlab is in $PATH. if it's not, add it to .bashrc with something like export PATH="/projects/matlab2016a/bin:$PATH"
+#or, download matlab runtime from here: https://www.mathworks.com/products/compiler/mcr.html
+# unzip, then cd into the dir
+#if x11 forwarding doesn't work:
+./install -mode silent -agreeToLicense yes -destinationFolder <folder>
+#if it does work, you can use the gui
+
