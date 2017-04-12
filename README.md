@@ -66,3 +66,6 @@ pip install matlab_wrapper
 ./install -mode silent -agreeToLicense yes -destinationFolder <folder>
 #if it does work, you can use the gui
 
+#then, add something like this (dependent on destinationFolder) to ~/.bashrc
+export PYTHONPATH=$PYTHONPATH:/home/ec2-user/projects/MATLAB/MATLAB_Runtime/v901/extern/engines/python/dist
+
