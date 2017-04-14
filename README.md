@@ -65,6 +65,9 @@ pip install matlab_wrapper
 #if x11 forwarding doesn't work:
 ./install -mode silent -agreeToLicense yes -destinationFolder <folder>
 #if x11 does work, you can use the gui
+#the gui will tell you to append something like this next line to your ~/.bashrc file, but using "-mode silent" will omit it:
+export LD_LIBRARY_PATH="/home/jesse/software/matlab/v901/runtime/glnxa64:/home/jesse/software/matlab/v901/bin/glnxa64:/home/jesse/software/matlab/v901/sys/os/glnxa64:$LD_LIBRARY_PATH"
+
 
 #then, add something like this (dependent on destinationFolder) to ~/.bashrc
 export PYTHONPATH=$PYTHONPATH:/home/ec2-user/projects/MATLAB/MATLAB_Runtime/v901/extern/engines/python/dist
