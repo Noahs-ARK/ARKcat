@@ -67,6 +67,7 @@ pip install matlab_wrapper
 #if x11 does work, you can use the gui
 #the gui will tell you to append something like this next line to your ~/.bashrc file, but using "-mode silent" will omit it:
 export LD_LIBRARY_PATH="/home/jesse/software/matlab/v901/runtime/glnxa64:/home/jesse/software/matlab/v901/bin/glnxa64:/home/jesse/software/matlab/v901/sys/os/glnxa64:$LD_LIBRARY_PATH"
+#unfortunately, having LD_LIBRARY_PATH not be the empty string causes SSL authentication to break for all git repos on aws ec2. this is super dumb, i don't understand.
 
 
 #then, add something like this (dependent on destinationFolder) to ~/.bashrc
