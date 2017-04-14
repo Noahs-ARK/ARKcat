@@ -37,7 +37,7 @@ python setup.py install
 
 ################################
 
-installing with anaconda:
+#installing with anaconda:
 conda create --name arkcat python numpy scipy scikit-learn setuptools tensorflow matplotlib
 #not sure why this is needed. there's a bug report about it here: https://github.com/ContinuumIO/anaconda-issues/issues/720 seems like it's only a problem on ubuntu
 conda install  -f  numpy
@@ -64,7 +64,7 @@ pip install matlab_wrapper
 # unzip, then cd into the dir
 #if x11 forwarding doesn't work:
 ./install -mode silent -agreeToLicense yes -destinationFolder <folder>
-#if it does work, you can use the gui
+#if x11 does work, you can use the gui
 
 #then, add something like this (dependent on destinationFolder) to ~/.bashrc
 export PYTHONPATH=$PYTHONPATH:/home/ec2-user/projects/MATLAB/MATLAB_Runtime/v901/extern/engines/python/dist
