@@ -38,9 +38,16 @@ python setup.py install
 ################################
 
 #installing with anaconda:
-conda create --name arkcat python numpy scipy scikit-learn setuptools tensorflow matplotlib
+conda create --name arkcat python numpy 
+pip install --upgrade numpy #it needs to be numpy 1.12.1
+pip install scipy 
+pip install scikit-learn
+pip install setuptools
+pip install tensorflow
+pip install matplotlib
+
 #not sure why this is needed. there's a bug report about it here: https://github.com/ContinuumIO/anaconda-issues/issues/720 seems like it's only a problem on ubuntu
-conda install  -f  numpy
+#conda install  -f  numpy
 
 source activate arkcat
 
