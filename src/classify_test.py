@@ -1,11 +1,11 @@
 import os
 import sys
 from optparse import OptionParser
-import codecs
-import json
+
+
 
 import numpy as np
-import pandas as pd
+
 from scipy import sparse
 
 from hyperopt import STATUS_OK

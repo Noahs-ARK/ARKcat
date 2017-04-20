@@ -5,7 +5,6 @@ import codecs
 
 import cPickle as pickle
 
-import pandas as pd
 
 def get_basename(input_filename):
     parts = os.path.split(input_filename)
