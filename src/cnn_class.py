@@ -10,7 +10,8 @@ class CNN:
     def __init__(self, params, key_array, batch_size=None, train=True):
         self.graph = graph = tf.Graph()
         self.sess = sess = tf.Session(graph=graph)
-        
+        #DEBUGGING
+        import pdb; pdb.set_trace()
         with tf.variable_scope("CNN"), graph.as_default():
             if batch_size == None:
                 batch_size = params['BATCH_SIZE']
