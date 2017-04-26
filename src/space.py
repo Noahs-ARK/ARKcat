@@ -40,7 +40,7 @@ def cnn_space(search_space):
                 'batch_size_': (50, 50),
                 'activation_fn_': ['relu'],
                 'l2_': (-5.0, -1.0),
-                'l2_clip_': (1.0, 5.0),
+                #'l2_clip_': (1.0, 5.0), #not implemented correctly
                 'no_reg': True,
                 'search_lr': True,
                 'grid': [1,1,1,1,1,1,1,4,1,1,4,3]
@@ -50,7 +50,7 @@ def cnn_space(search_space):
                 'delta_': [False],#not implemented
                 'flex_amt_': (0.0,0.3),
                 'filters_': (50,200),
-                'kernel_size_': (2,10),
+                'kernel_size_': (2,5),
                 'kernel_increment_': (0,3),
                 'kernel_num_': (3,5),
                 'dropout_': (0.25,0.75),
@@ -58,7 +58,7 @@ def cnn_space(search_space):
                 'activation_fn_': ['iden', 'relu', 'elu'],
                 #not sure
                 'l2_': (-8.0,-2.0),
-                'l2_clip_': (2.0,10.0),
+                #'l2_clip_': (2.0,10.0), #not implemented correctly
                 'no_reg': False,
                 'search_lr': False,
                 'grid': [1,2,2,2,2,2,2,2,2,3,2,2]
@@ -68,14 +68,14 @@ def cnn_space(search_space):
                 'delta_': [False],#not implemented
                 'flex_amt_': (0.0,0.3),
                 'filters_': (100,600),
-                'kernel_size_': (2,30),
+                'kernel_size_': (2,5),
                 'kernel_increment_': (0,5),
                 'kernel_num_': (1,8),
                 'dropout_': (0,1),
                 'batch_size_': (10,200),
                 'activation_fn_': ['iden', 'relu', 'elu', 'tanh', 'sigmoid'],
                 'l2_': (-8.0,-2.0),
-                'l2_clip_': (2.0,10.0),
+                #'l2_clip_': (2.0,10.0), #not implemented correctly
                 'no_reg': True,
                 'search_lr': True,
                 'grid': [1,2,2,2,2,2,2,2,2,5,2,2]}

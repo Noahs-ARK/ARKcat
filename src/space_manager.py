@@ -90,14 +90,14 @@ def get_cnn_model(model_num, search_space):
     if space['no_reg']:
         hparams['regularizer_cnn_' + model_num] = hp.choice('regularizer_cnn_' + model_num, [
                 (None, 0.0),
-                ('l2', hp.uniform('l2_strength_cnn_' + model_num, *space['l2_'])),
-                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *space['l2_clip_']))
+                ('l2', hp.uniform('l2_strength_cnn_' + model_num, *space['l2_']))
+                #('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *space['l2_clip_']))
             ])
 
     else:
         hparams['regularizer_cnn_' + model_num] = hp.choice('regularizer_cnn_' + model_num, [
                 ('l2', hp.uniform('l2_strength_cnn_' + model_num, *space['l2_'])),
-                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *space['l2_clip_']))
+                #('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *space['l2_clip_']))
             ])
 
     if space['search_lr']:
