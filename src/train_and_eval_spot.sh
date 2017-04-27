@@ -53,4 +53,4 @@ cp -ar $SAVE_LOC $ARCHIVE_DIR
 EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive/${1}_${2}_$(date +%s)
 ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "mkdir -p $EC2_STORAGE_DIR"
 scp -i "/home/ec2-user/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no -r $SAVE_LOC ec2-user@${3}:$EC2_STORAGE_DIR
-#ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "aws ec2 terminate-instances --instance-ids ${4}"
+ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "aws ec2 terminate-instances --instance-ids ${4}"
