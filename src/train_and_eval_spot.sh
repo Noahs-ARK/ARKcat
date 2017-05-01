@@ -36,7 +36,6 @@ echo "done with run.py."
 echo 'run time:'
 echo $(($RUN_TIME - $START_TIME))
 
-exit 1
 
 python eval.py $SAVE_LOC/saved_models/ $DATA_LOC/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
 echo "done with eval.py"
