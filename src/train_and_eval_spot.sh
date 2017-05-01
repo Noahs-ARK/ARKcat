@@ -8,7 +8,7 @@ NUM_MODELS=1
 MODEL_TYPE=cnn
 SEARCH_TYPE=${1}
 SEARCH_SPACE=reg
-NUM_ITERS=10
+NUM_ITERS=50
 NUM_FOLDS=5
 SAVE_BASE=/home/ec2-user/projects/ARKcat/output
 #SAVE_BASE=/homes/gws/jessedd/projects/ARKcat/output # this is for running jobs on pinot
@@ -36,6 +36,7 @@ echo "done with run.py."
 echo 'run time:'
 echo $(($RUN_TIME - $START_TIME))
 
+exit 1
 
 python eval.py $SAVE_LOC/saved_models/ $DATA_LOC/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
 echo "done with eval.py"
@@ -50,7 +51,7 @@ cp -ar $SAVE_LOC $ARCHIVE_DIR
 
 ######### this is to copy from one ec2 instance to another ###########                                                                                                    
 
-EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive/${1}_${2}_$(date +%s)
+EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive_iter=${NUM_ITERS}/${1}_${2}_$(date +%s)
 ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "mkdir -p $EC2_STORAGE_DIR"
 scp -i "/home/ec2-user/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${3}:$EC2_STORAGE_DIR
 ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "aws ec2 terminate-instances --instance-ids ${4}"
