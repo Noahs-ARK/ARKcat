@@ -1,4 +1,4 @@
-SPOT_REQUEST_ID=`aws ec2 request-spot-instances --spot-price "1.0" --instance-count 1 --type "one-time" --launch-specification file://specification.json | grep SpotInstanceRequestId | awk '{print $2}' | sed s/,// | sed s/\"// | sed s/\"//`
+SPOT_REQUEST_ID=`aws ec2 request-spot-instances --spot-price "2.69" --instance-count 1 --type "one-time" --launch-specification file://specification.json | grep SpotInstanceRequestId | awk '{print $2}' | sed s/,// | sed s/\"// | sed s/\"//`
 
 
 ####
@@ -62,7 +62,7 @@ CUR_IP=`curl -s http://169.254.169.254/latest/meta-data/public-ipv4`
 
 ###
 # train models and move 
-ssh -i "/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no ec2-user@ec2-${SPOT_IP}.us-west-2.compute.amazonaws.com "source activate arkcat; cd /home/ec2-user/projects/hyperopt; git checkout hyperopt/dpp.py; git pull; cd /home/ec2-user/projects/ARKcat/src; git checkout train_and_eval_pinot.sh; git pull; bash train_and_eval_spot.sh ${1} ${2} $CUR_IP $SPOT_INST_ID"
+ssh -i "/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no ec2-user@ec2-${SPOT_IP}.us-west-2.compute.amazonaws.com "source activate arkcat; cd /home/ec2-user/projects/hyperopt; git checkout hyperopt/dpp.py; git pull; cd /home/ec2-user/projects/ARKcat/src; git checkout train_and_eval_pinot.sh; git pull; bash train_and_eval_spot.sh ${1} ${2} $CUR_IP $SPOT_INST_ID ${3}"
 
 
 ###
