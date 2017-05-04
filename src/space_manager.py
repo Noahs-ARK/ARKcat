@@ -7,9 +7,10 @@ def get_space(num_models, model_types, search_space):
     if search_space == 'debug':
         return {'uniform_0_1': hp.uniform('uniform_0_1', 0,1), 
                 'loguniform_-5_5': hp.loguniform("loguniform_-5_5",-5,5),
-                'choice':hp.choice('choice', [
-                    ('c1_lu', hp.loguniform('c1_lu_name',-3,0)),
-                    ('c2_lu', hp.loguniform('c2_lu_name',-3,0))])}
+                #'choice':hp.choice('choice', [
+                #    ('c1_lu', hp.loguniform('c1_lu_name',-3,0)),
+                #    ('c2_lu', hp.loguniform('c2_lu_name',-3,0))])}
+                'choice':hp.choice('choice', ['choice1', 'choice2', 'choice3'])}
         
         
 

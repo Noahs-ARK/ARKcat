@@ -37,7 +37,7 @@ echo 'run time:'
 echo $(($RUN_TIME - $START_TIME))
 
 
-#python eval.py $SAVE_LOC/saved_models/ $DATA_LOC/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
+python eval.py $SAVE_LOC/saved_models/ $DATA_LOC/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
 echo "done with eval.py"
 echo $8
 echo 'eval time:'
@@ -53,4 +53,5 @@ cp -ar $SAVE_LOC $ARCHIVE_DIR
 EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive_${RUN_INFO}/${1}_${2}_$(date +%s)
 ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "mkdir -p $EC2_STORAGE_DIR"
 scp -i "/home/ec2-user/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${3}:$EC2_STORAGE_DIR
+scp -i "/home/ec2-user/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no $SAVE_LOC/errfile.txt ec2-user@${3}:$EC2_STORAGE_DIR
 ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "aws ec2 terminate-instances --instance-ids ${4}"

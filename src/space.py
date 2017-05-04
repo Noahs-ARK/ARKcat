@@ -28,6 +28,23 @@ grid: size of grid for each hyperparameter. For example, 4 at the index of dropo
 '''
 
 def cnn_space(search_space):
+    if search_space == 'debug':
+        return {'model_type_': 'CNN',
+                'delta_': [False],
+                'flex_amt_': (0.15, 0.15),
+                'filters_': (100, 100),
+                'kernel_size_': (3, 3),
+                'kernel_increment_': (1, 1),
+                'kernel_num_': (3, 3),
+                'dropout_': (0, 0.75),
+                'batch_size_': (50, 50),
+                'activation_fn_': ['relu'],
+                'l2_': (-3.0, -3.0),
+                #'l2_clip_': (1.0, 5.0), #not implemented correctly
+                'no_reg': False,
+                'search_lr': True,
+                'grid': [1,1,1,1,1,1,1,4,1,1,4,3]
+        }
     if search_space == 'reg':
         return {'model_type_': 'CNN',
                 'delta_': [False],
@@ -55,7 +72,7 @@ def cnn_space(search_space):
                 'kernel_num_': (3,5),
                 'dropout_': (0,0.75),
                 'batch_size_': (50,50),
-                'activation_fn_': ['iden', 'relu', 'tanh'],
+                'activation_fn_': ['tanh'],
                 #not sure
                 'l2_': (-5.0,-1.0),
                 #'l2_clip_': (2.0,10.0), #not implemented correctly
