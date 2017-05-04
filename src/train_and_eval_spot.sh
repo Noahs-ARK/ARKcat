@@ -7,15 +7,15 @@ W2V_LOC=${DATA_BASE}/${DATASET}/${DATASET}_vecs.txt
 NUM_MODELS=1
 MODEL_TYPE=cnn
 SEARCH_TYPE=${1}
-SEARCH_SPACE=reg
+SEARCH_SPACE=arch
 NUM_ITERS=${5}
 NUM_FOLDS=5
 SAVE_BASE=/home/ec2-user/projects/ARKcat/output
 #SAVE_BASE=/homes/gws/jessedd/projects/ARKcat/output # this is for running jobs on pinot
 
     
-
-SAVE_LOC=${SAVE_BASE}/$DATASET,nmodels=$NUM_MODELS,mdl_tpe=$MODEL_TYPE,srch_tpe=$SEARCH_TYPE,spce=$SEARCH_SPACE,iters=$NUM_ITERS,rand_init=${2}
+RUN_INFO=$DATASET,nmodels=$NUM_MODELS,mdl_tpe=$MODEL_TYPE,srch_tpe=$SEARCH_TYPE,spce=$SEARCH_SPACE,iters=$NUM_ITERS
+SAVE_LOC=${SAVE_BASE}/${RUN_INFO},rand_init=${2}
 
 
 
@@ -37,7 +37,7 @@ echo 'run time:'
 echo $(($RUN_TIME - $START_TIME))
 
 
-python eval.py $SAVE_LOC/saved_models/ $DATA_LOC/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
+#python eval.py $SAVE_LOC/saved_models/ $DATA_LOC/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
 echo "done with eval.py"
 echo $8
 echo 'eval time:'
@@ -50,7 +50,7 @@ cp -ar $SAVE_LOC $ARCHIVE_DIR
 
 ######### this is to copy from one ec2 instance to another ###########                                                                                                    
 
-EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive_iter=${NUM_ITERS}/${1}_${2}_$(date +%s)
+EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive_${RUN_INFO}/${1}_${2}_$(date +%s)
 ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "mkdir -p $EC2_STORAGE_DIR"
 scp -i "/home/ec2-user/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${3}:$EC2_STORAGE_DIR
 ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "aws ec2 terminate-instances --instance-ids ${4}"

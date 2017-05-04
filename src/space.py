@@ -48,16 +48,16 @@ def cnn_space(search_space):
     elif search_space == 'arch':
         return {'model_type_': 'CNN',
                 'delta_': [False],#not implemented
-                'flex_amt_': (0.0,0.3),
+                'flex_amt_': (0.15,0.15),
                 'filters_': (50,200),
                 'kernel_size_': (2,5),
                 'kernel_increment_': (0,3),
                 'kernel_num_': (3,5),
-                'dropout_': (0.25,0.75),
+                'dropout_': (0,0.75),
                 'batch_size_': (50,50),
-                'activation_fn_': ['iden', 'relu', 'elu'],
+                'activation_fn_': ['iden', 'relu', 'tanh'],
                 #not sure
-                'l2_': (-8.0,-2.0),
+                'l2_': (-5.0,-1.0),
                 #'l2_clip_': (2.0,10.0), #not implemented correctly
                 'no_reg': False,
                 'search_lr': False,

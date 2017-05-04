@@ -101,7 +101,7 @@ def get_cnn_model(model_num, search_space):
             ])
 
     if space['search_lr']:
-        hparams['learning_rate_' + model_num] = hp.loguniform('learning_rate_' + model_num, -5,5)
+        hparams['learning_rate_' + model_num] = hp.loguniform('learning_rate_' + model_num, -5,-1)
     else:
         hparams['learning_rate_' + model_num] = .0003
     return hparams
