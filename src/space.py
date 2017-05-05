@@ -72,7 +72,7 @@ def cnn_space(search_space):
                 'kernel_num_': (3,5),
                 'dropout_': (0,0.75),
                 'batch_size_': (50,50),
-                'activation_fn_': ['tanh', 'relu'],
+                'activation_fn_': ['tanh'],
                 #not sure
                 'l2_': (-5.0,-1.0),
                 #'l2_clip_': (2.0,10.0), #not implemented correctly
