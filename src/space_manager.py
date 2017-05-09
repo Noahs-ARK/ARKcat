@@ -51,7 +51,7 @@ def get_linear_model(model_num):
         'regularizer_lr_' + model_num: hp.choice('regularizer_lr_' + model_num,[
             ('l1', hp.loguniform('l1_strength_lr_' + model_num, -5,5)),
             ('l2', hp.loguniform('l2_strength_lr_' + model_num, -5,5))
-        ]),
+7        ]),
         'converg_tol_' + model_num: hp.loguniform('converg_tol_' + model_num, -10, -1)
     }
 
@@ -102,7 +102,7 @@ def get_cnn_model(model_num, search_space):
             ])
 
     if space['search_lr']:
-        hparams['learning_rate_' + model_num] = hp.loguniform('learning_rate_' + model_num, -5,-3)
+        hparams['learning_rate_' + model_num] = hp.loguniform('learning_rate_' + model_num, -10,-3)
     else:
         hparams['learning_rate_' + model_num] = .0003
     return hparams
