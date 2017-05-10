@@ -8,14 +8,14 @@ NUM_MODELS=1
 MODEL_TYPE=cnn
 SEARCH_TYPE=${1}
 SEARCH_SPACE=reg
-NUM_ITERS=3
+NUM_ITERS=${5}
 NUM_FOLDS=5
 SAVE_BASE=/home/ec2-user/projects/ARKcat/output
 #SAVE_BASE=/homes/gws/jessedd/projects/ARKcat/output # this is for running jobs on pinot
 
     
-
-SAVE_LOC=${SAVE_BASE}/$DATASET,nmodels=$NUM_MODELS,mdl_tpe=$MODEL_TYPE,srch_tpe=$SEARCH_TYPE,spce=$SEARCH_SPACE,iters=$NUM_ITERS,rand_init=${2}
+RUN_INFO=$DATASET,nmodels=$NUM_MODELS,mdl_tpe=$MODEL_TYPE,srch_tpe=$SEARCH_TYPE,spce=$SEARCH_SPACE,iters=$NUM_ITERS
+SAVE_LOC=${SAVE_BASE}/${RUN_INFO},rand_init=${2}
 
 
 
@@ -50,7 +50,8 @@ cp -ar $SAVE_LOC $ARCHIVE_DIR
 
 ######### this is to copy from one ec2 instance to another ###########                                                                                                    
 
-EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive/${1}_${2}_$(date +%s)
+EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive_${RUN_INFO}/${1}_${2}_$(date +%s)
 ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "mkdir -p $EC2_STORAGE_DIR"
-scp -i "/home/ec2-user/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no -r $SAVE_LOC ec2-user@${3}:$EC2_STORAGE_DIR
+scp -i "/home/ec2-user/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${3}:$EC2_STORAGE_DIR
+scp -i "/home/ec2-user/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no $SAVE_LOC/errfile.txt ec2-user@${3}:$EC2_STORAGE_DIR
 ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${3} "aws ec2 terminate-instances --instance-ids ${4}"

@@ -7,9 +7,10 @@ def get_space(num_models, model_types, search_space):
     if search_space == 'debug':
         return {'uniform_0_1': hp.uniform('uniform_0_1', 0,1), 
                 'loguniform_-5_5': hp.loguniform("loguniform_-5_5",-5,5),
-                'choice':hp.choice('choice', [
-                    ('c1_lu', hp.loguniform('c1_lu_name',-3,0)),
-                    ('c2_lu', hp.loguniform('c2_lu_name',-3,0))])}
+                #'choice':hp.choice('choice', [
+                #    ('c1_lu', hp.loguniform('c1_lu_name',-3,0)),
+                #    ('c2_lu', hp.loguniform('c2_lu_name',-3,0))])}
+                'choice':hp.choice('choice', ['choice1', 'choice2', 'choice3'])}
         
         
 
@@ -90,18 +91,18 @@ def get_cnn_model(model_num, search_space):
     if space['no_reg']:
         hparams['regularizer_cnn_' + model_num] = hp.choice('regularizer_cnn_' + model_num, [
                 (None, 0.0),
-                ('l2', hp.uniform('l2_strength_cnn_' + model_num, *space['l2_'])),
-                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *space['l2_clip_']))
+                ('l2', hp.uniform('l2_strength_cnn_' + model_num, *space['l2_']))
+                #('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *space['l2_clip_']))
             ])
 
     else:
         hparams['regularizer_cnn_' + model_num] = hp.choice('regularizer_cnn_' + model_num, [
                 ('l2', hp.uniform('l2_strength_cnn_' + model_num, *space['l2_'])),
-                ('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *space['l2_clip_']))
+                #('l2_clip', hp.uniform('l2_clip_norm_' + model_num, *space['l2_clip_']))
             ])
 
     if space['search_lr']:
-        hparams['learning_rate_' + model_num] = hp.loguniform('learning_rate_' + model_num, -5,5)
+        hparams['learning_rate_' + model_num] = hp.loguniform('learning_rate_' + model_num, -10,-3)
     else:
         hparams['learning_rate_' + model_num] = .0003
     return hparams
