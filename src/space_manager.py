@@ -74,6 +74,17 @@ def get_xgboost_model(model_num):
 #note: for unpacking lists/tuples, must unpack last element only (in python 2.7)
 #therefore, necessary to concatenate any remaining elements
 def get_cnn_model(model_num, search_space):
+    if 'bad_lr' in search_space:
+        lr_lower_bound = -5
+        lr_upper_bound = 5
+    elif 'half_lr' in search_space:
+        lr_lower_bound = -5
+        lr_upper_bound = -1
+    else:
+        lr_lower_bound = -10
+        lr_upper_bound = -3
+    search_space = search_space.split('_')[0]
+
     space = cnn_space(search_space)
 
     hparams = {'model_type_' + model_num: 'CNN',
@@ -102,7 +113,7 @@ def get_cnn_model(model_num, search_space):
             ])
 
     if space['search_lr']:
-        hparams['learning_rate_' + model_num] = hp.loguniform('learning_rate_' + model_num, -10,-3)
+        hparams['learning_rate_' + model_num] = hp.loguniform('learning_rate_' + model_num, lr_lower_bound, lr_upper_bound)
     else:
         hparams['learning_rate_' + model_num] = .0003
     return hparams
