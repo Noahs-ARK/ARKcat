@@ -24,7 +24,7 @@ import cProfile, pstats
 def call_experiment(args):
     #in case we want to debug the BO algorithms
     #import pdb; pdb.set_trace()
-    debug_mode = False
+    debug_mode = True
     if debug_mode:
         import random
         from hyperopt import STATUS_OK
@@ -222,6 +222,8 @@ def main(args):
     print("the time at the start: " + str(time.time()))
     set_globals(args)
     trials = Trials()
+    # a hacky solution to pass parameters to hyperopt
+    trials.dpp_ham = False
     if args['run_bayesopt']:
         space = space_manager.get_space(num_models, model_types, search_space)
         if args['algorithm'] == "bayes_opt":
@@ -232,6 +234,9 @@ def main(args):
             algorithm = anneal.suggest
         elif args['algorithm'] == "dpp":
             algorithm = dpp.suggest
+        elif args['algorithm'] == "dpp_ham":
+            trials.dpp_ham = True
+            algorithm = dpp.suggest            
         elif args['algorithm'] == "dpp_random":
             algorithm = dpp_random.suggest
         else: 

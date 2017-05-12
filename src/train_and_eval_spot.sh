@@ -1,3 +1,8 @@
+# usage:
+# bash train_and_eval_spot.sh SEARCH_TYPE RAND_INIT CUR_IP SPOT_ID NUM_ITERS
+# example: 
+# bash train_and_eval_spot.sh dpp 0 cur_ip spot_id 10
+
 DATA_BASE=/home/ec2-user/data/text_cat
 #DATA_BASE=/homes/gws/jessedd/data/text_cat # this is for running jobs on pinot
 DATASET=stanford_sentiment_binary
