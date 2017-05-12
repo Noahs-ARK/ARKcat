@@ -3,7 +3,7 @@ SPOT_REQUEST_ID=`aws ec2 request-spot-instances --spot-price "2.69" --instance-c
 
 ####
 # to get info about the spot bid:
-WAIT_SECONDS=1
+WAIT_SECONDS=5
 while true; do 
     SPOT_INST_ID=`aws ec2 describe-spot-instance-requests --spot-instance-request-ids $SPOT_REQUEST_ID | grep InstanceId | awk '{print $2}' | sed s/,// | sed s/\"// | sed s/\"//`
     if [ ! -z "$SPOT_INST_ID" ]; then
