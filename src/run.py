@@ -216,6 +216,14 @@ def printing_best(trials):
         print('')
     print('')
 
+def set_discretize_num(trials):
+    if search_space == 'arch':
+        trials.discretize_num = 4
+    elif 'reg' in search_space:
+        trials.discretize_num = 15
+    else:
+        raise ValueError("you tried to use " + search_space + " as a search space, but we don't know how many "+
+                         "values we should discretize to (for the dpp)")
 
 def main(args):
     print("Made it to the start of main!")
@@ -224,6 +232,7 @@ def main(args):
     trials = Trials()
     # a hacky solution to pass parameters to hyperopt
     trials.dpp_ham = False
+    set_discretize_num(trials)
     if args['run_bayesopt']:
         space = space_manager.get_space(num_models, model_types, search_space)
         if args['algorithm'] == "bayes_opt":
