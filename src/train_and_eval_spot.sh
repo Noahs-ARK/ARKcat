@@ -39,13 +39,11 @@ mkdir -p $SAVE_LOC/
 
 echo "about to run.py"
 START_TIME=$(date +%s)
-python run.py  $DATA_LOC/ $W2V_LOC $SAVE_LOC $NUM_FOLDS $SEARCH_TYPE -b $MODEL_TYPE $SEARCH_SPACE $NUM_ITERS #> $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
+python run.py  $DATA_LOC/ $W2V_LOC $SAVE_LOC $NUM_FOLDS $SEARCH_TYPE -b $MODEL_TYPE $SEARCH_SPACE $NUM_ITERS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
 RUN_TIME=$(date +%s)
 echo "done with run.py."
 echo 'run time:'
 echo $(($RUN_TIME - $START_TIME))
-
-exit 1
 
 
 python eval.py $SAVE_LOC/saved_models/ $DATA_LOC/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
