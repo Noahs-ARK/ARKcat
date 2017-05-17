@@ -12,11 +12,41 @@ def plot_one_thing(val, prop, avg, subplot_num, xlabel):
     plt.ylabel('proportion of times observed', color='b')
     plt.tick_params('y',colors='b')
     plt.xticks(pos, val, rotation=70)
+    #plt.ylim([.9,1])
     plt.twinx()
     plt.plot(pos, avg, color='r')
     plt.ylabel('average accuracy', color='r')
     plt.tick_params('y',colors='r')
     plt.ylim([0.5, 0.85])
+    
+def add_hist(dpp_info, ham_info, prop_to_use):
+    num_vals = len(dpp_info['prop_counts']['learning_rate']['vals'])
+    pos = np.arange(num_vals)
+    num_vals = num_vals * 1.0
+    prob_point_not_covered = 1-((num_vals-1.0)/num_vals)**dpp_info['num_iters']
+    
+    dpp_prop_counts = dpp_info[prop_to_use]['learning_rate']['prop']
+    ham_prop_counts = ham_info[prop_to_use]['learning_rate']['prop']
+    rand_prop_counts = [prob_point_not_covered] * len(dpp_prop_counts)
+    
+    plt.bar([x - 0.2 for x in pos], dpp_prop_counts, width=0.2, color='green', align='center')
+    plt.bar(pos, ham_prop_counts, width=0.2, color='orange', align='center')
+    plt.bar([x + 0.2 for x in pos], rand_prop_counts, width=0.2,color='blue', align='center')
+    plt.xticks(pos, dpp_info['prop_counts']['learning_rate']['vals'], rotation=70)
+
+    plt.twinx()
+    # make average accuracy:
+    avg_acc = []
+    for i in range(len(dpp_info['avg_acc_by_val']['learning_rate'])):
+        avg_acc.append((dpp_info['avg_acc_by_val']['learning_rate'][i] + ham_info['avg_acc_by_val']['learning_rate'][i])/2.0)
+    plt.plot(pos, avg_acc, color='r')
+    plt.tick_params('y',colors='r')
+    plt.ylim(0.5,0.85)
+    
+    
+    
+    
+    
 
 
 def get_data(d):
@@ -41,7 +71,7 @@ def get_data(d):
 #learning_rate_val, learning_rate_count, learning_rate_avg, l2_strength_val, l2_strength_avg, l2_strength_count, dropout_val, dropout_avg, dropout_count = get_data('10_iter_half_good_lr')
 
 
-def plot_hists(props, avgs):
+def plot_hists(props, avgs, num_samples, num_iters, space):
 
     matplotlib.rcParams.update({'font.size': 5})
 
@@ -53,5 +83,5 @@ def plot_hists(props, avgs):
         cur_avgs = avgs[hparam]
         plot_one_thing(vals, proportions, cur_avgs, counter, hparam)
     plt.tight_layout()
-    plt.savefig('100_samples_of_10_as_multinomial_good_lr.pdf')
+    plt.savefig('plot_drafts/{}_samples_of_{}_propCount_space={}.pdf'.format(num_samples, num_iters, space))
 
