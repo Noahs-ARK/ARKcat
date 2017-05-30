@@ -1,7 +1,9 @@
-
 import sys
 import numpy as np
-
+import matplotlib.pyplot as plt
+import matplotlib
+import sample_histograms
+import scatter_with_error_bars
 
 def extract_single_example(example):
     example[4] = example[4].replace('7e-05', '0.00007')
@@ -17,6 +19,15 @@ def extract_single_example(example):
             hparams[cur_hparam] = ''
         else :
             hparams[cur_hparam] += hp
+    for hparam in hparams:
+        if 'learning_rate' in hparam:
+            hparams[hparam] = float(hparams[hparam])
+        elif 'reg_strength' in hparam:
+            hparams[hparam] = round(np.exp(float(hparams[hparam])),5)
+        elif 'dropout' in hparam:
+            hparams[hparam] = float(hparams[hparam])
+        elif 'filters' in hparam:
+            hparams[hparam] = int(hparams[hparam])
     example[4] = hparams
 
 def extract_examples(lines):
@@ -167,21 +178,74 @@ def get_avg_and_std_dev(file_loc):
         
         
         
-        return avg_best, avg_best_ci, total_counts, num_sets_each_val, avg_acc_by_val
+        return avg_best, avg_best_ci, total_counts, num_sets_each_val, avg_acc_by_val, len(examples), len(examples[0])
+
+
+def make_into_dict(avg_best, avg_best_ci, prop_counts, num_sets_each_val, avg_acc_by_val, num_samples, num_iters):
+    info = {}
+    info['avg_best'] = avg_best
+    info['ci'] = avg_best_ci
+    info['prop_counts'] = prop_counts
+    info['num_sets_each_val'] = num_sets_each_val
+    info['avg_acc_by_val'] = avg_acc_by_val
+    info['num_samples'] = num_samples
+    info['num_iters'] = num_iters
+    return info
+
+def make_scatter_and_hist():
+    #import pdb; pdb.set_trace() 
+    all_info = {}
+    for space in ['reg_bad_lr', 'reg_half_bad_lr', 'reg']:
+        all_info[space] = {}
+        for dist in ['dpp', 'dpp_ham', 'dpp_rand']:
+            things = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/20_iter/stanford_sentiment_binary,mdl_tpe=cnn,srch_tpe={},spce={}.txt'.format(dist, space))
+            all_info[space][dist] = make_into_dict(*things)
+        
+    counter = 0
+    matplotlib.rcParams.update({'font.size': 4})
+    for space in ['reg_bad_lr', 'reg_half_bad_lr', 'reg']:
+        counter = counter + 1
+        plt.subplot(2,3,counter)
+        scatter_with_error_bars.add_scatter(all_info[space]['dpp'], all_info[space]['dpp_ham'], all_info[space]['dpp_rand'], space)
+
+    for space in ['reg_bad_lr', 'reg_half_bad_lr', 'reg']:
+        counter = counter + 1
+        plt.subplot(2,3,counter)
+        sample_histograms.add_hist(all_info[space]['dpp'], all_info[space]['dpp_ham'], 'num_sets_each_val')
+
+    plt.savefig('plot_drafts/DEBUG_TRYING_ALL_THREE.pdf')
+    
+
+            
+    
+make_scatter_and_hist()
+    
+    
+
+
+
+
 
 
 iters = '20'
-space = 'reg'
+space = 'reg_half_bad_lr'
 model = 'cnn'
+dist = '_ham'
 
-dpp_avg_best, dpp_avg_best_ci, dpp_total_counts, dpp_num_sets_each_val, dpp_avg_acc_by_val = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/output/plotting/results/10_iter/stanford_sentiment_binary,mdl_tpe=cnn,srch_tpe=dpp,spce=reg.txt')
+dpp_avg_best, dpp_avg_best_ci, dpp_prop_counts, dpp_num_sets_each_val, dpp_avg_acc_by_val, dpp_num_samples, dpp_num_iters = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/{}_iter/stanford_sentiment_binary,mdl_tpe={},srch_tpe=dpp{},spce={}.txt'.format(iters, model, dist, space))
 
-rand_avg_best, rand_avg_best_ci, rand_total_counts, rand_num_sets_each_val, rand_avg_acc_by_val = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/output/plotting/results/10_iter/stanford_sentiment_binary,mdl_tpe=cnn,srch_tpe=dpp_random,spce=reg.txt')
-
-
-import sample_histograms
-sample_histograms.plot_hists(dpp_total_counts, dpp_avg_acc_by_val)
+rand_avg_best, rand_avg_best_ci, rand_prop_counts, rand_num_sets_each_val, rand_avg_acc_by_val, rand_num_samples, rand_num_iters = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/{}_iter/stanford_sentiment_binary,mdl_tpe={},srch_tpe=dpp_rand,spce={}.txt'.format(iters, model, space))
+#rand_avg_best2, rand_avg_best_ci2, rand_prop_counts2, rand_num_sets_each_val2, rand_avg_acc_by_val2, rand_num_samples2, rand_num_iters2 = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/{}_iter/stanford_sentiment_binary,mdl_tpe={},srch_tpe=dpp_rand,spce={}_SECOND_HUNDRED.txt'.format(iters, model, space))
 
 
-import scatter_with_error_bars
-scatter_with_error_bars.make_scatter(dpp_avg_best, dpp_avg_best_ci, rand_avg_best, rand_avg_best_ci)
+#import sample_histograms
+#import scatter_with_error_bars
+
+#sample_histograms.plot_hists(dpp_num_sets_each_val, dpp_avg_acc_by_val, dpp_num_samples, dpp_num_iters, space + dist)
+
+#sample_histograms.plot_hists(rand_num_sets_each_val2, rand_avg_acc_by_val2, rand_num_samples2, rand_num_iters2, space + '_random_SECOND_HUNDRED')
+
+#scatter_with_error_bars.make_scatter(dpp_avg_best, dpp_avg_best_ci, rand_avg_best, rand_avg_best_ci, dpp_num_samples, rand_num_samples, dpp_num_iters, space + dist)
+
+
+
