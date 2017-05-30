@@ -24,7 +24,7 @@ import cProfile, pstats
 def call_experiment(args):
     #in case we want to debug the BO algorithms
     #import pdb; pdb.set_trace()
-    debug_mode = False
+    debug_mode = True
     if debug_mode:
         import random
         from hyperopt import STATUS_OK
@@ -232,7 +232,8 @@ def main(args):
     trials = Trials()
     # a hacky solution to pass parameters to hyperopt
     trials.dpp_ham = False
-    set_discretize_num(trials)
+    if "dpp" in args['algorithm']:
+        set_discretize_num(trials)
     if args['run_bayesopt']:
         space = space_manager.get_space(num_models, model_types, search_space)
         if args['algorithm'] == "bayes_opt":
@@ -248,7 +249,7 @@ def main(args):
             algorithm = dpp.suggest            
         elif args['algorithm'] == "dpp_random":
             algorithm = dpp_random.suggest
-        else: 
+        else:
             raise NameError("Unknown algorithm for search")
 
         #DEBUGGING: this is for profiling. it prints where the program has spent the most time
