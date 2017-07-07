@@ -231,7 +231,6 @@ def main(args):
     set_globals(args)
     trials = Trials()
     # a hacky solution to pass parameters to hyperopt
-    trials.dpp_ham = False
     if "dpp" in args['algorithm']:
         set_discretize_num(trials)
     if args['run_bayesopt']:
@@ -242,11 +241,15 @@ def main(args):
             algorithm = rand.suggest
         elif args['algorithm'] == "anneal":
             algorithm = anneal.suggest
-        elif args['algorithm'] == "dpp":
+        elif args['algorithm'] == "dpp_cos":
+            trials.dpp_dist = "cos"
             algorithm = dpp.suggest
         elif args['algorithm'] == "dpp_ham":
-            trials.dpp_ham = True
-            algorithm = dpp.suggest            
+            trials.dpp_dist = "ham"
+            algorithm = dpp.suggest
+        elif args['algorithm'] == "dpp_l2":
+            trials.dpp_dist = "l2"
+            algorithm = dpp.suggest
         elif args['algorithm'] == "dpp_random":
             algorithm = dpp_random.suggest
         else:

@@ -1,7 +1,7 @@
 # usage:
 # bash train_and_eval_spot.sh SEARCH_TYPE RAND_INIT CUR_IP SPOT_ID NUM_ITERS SEARCH_SPACE
 # example: 
-# bash train_and_eval_spot.sh dpp 0 cur_ip spot_id 10 reg_bad_lr
+# bash train_and_eval_spot.sh dpp_cos 999 0 0 10 reg_bad_lr
 
 SEARCH_TYPE=${1}
 RAND_INIT=${2}
