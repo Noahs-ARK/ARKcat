@@ -230,9 +230,12 @@ def main(args):
     print("the time at the start: " + str(time.time()))
     set_globals(args)
     trials = Trials()
+    trials.discretize_space = True
     # a hacky solution to pass parameters to hyperopt
     if "dpp" in args['algorithm']:
         set_discretize_num(trials)
+        # DEBUGGING
+        # trials.discretize_num = 5
     if args['run_bayesopt']:
         space = space_manager.get_space(num_models, model_types, search_space)
         if args['algorithm'] == "bayes_opt":
