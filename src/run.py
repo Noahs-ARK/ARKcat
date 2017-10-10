@@ -8,7 +8,8 @@ import Queue as queue
 
 import argparse
 import numpy as np
-from hyperopt import fmin, tpe, hp, Trials, space_eval, rand, anneal, dpp, dpp_random
+from hyperopt import fmin, tpe, hp, Trials, space_eval, rand, anneal
+from hyperopt import dpp, dpp_random, sample_hparam_space
 
 import classify_test
 import space_manager
@@ -23,7 +24,7 @@ import cProfile, pstats
 
 def call_experiment(args):
     #in case we want to debug the BO algorithms
-    #import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
     debug_mode = False
     if debug_mode:
         import random
@@ -221,6 +222,8 @@ def set_discretize_num(trials):
         trials.discretize_num = 4
     elif 'reg' in search_space:
         trials.discretize_num = 15
+    elif 'debug' in search_space:
+        trials.discretize_num = None
     else:
         raise ValueError("you tried to use " + search_space + " as a search space, but we don't know how many "+
                          "values we should discretize to (for the dpp)")
@@ -260,9 +263,11 @@ def main(args):
 
         #DEBUGGING: this is for profiling. it prints where the program has spent the most time
         #profile = cProfile.Profile()
+        #import pdb; pdb.set_trace()
+        #tmp = sample_hparam_space(space, algorithm, max_iter, 'l2', True, 15)
         try:
             #profile.enable()
-            #import pdb; pdb.set_trace()
+
             best = fmin(call_experiment,
                         space=space,
                         algo=algorithm,
