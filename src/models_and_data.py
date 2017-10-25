@@ -98,6 +98,7 @@ class Data_and_Model_Manager:
         self.train_word_vecs = read_word_vecs_from_file(self.word_vec_filename, self.train)
 
     def k_fold_cv(self, num_folds):
+        import pdb; pdb.set_trace()
         if num_folds == 1 and len(self.dev[0]) > 0:
             train_acc = self.train_models(self.train[0], self.train[1])
 
@@ -112,7 +113,11 @@ class Data_and_Model_Manager:
             else:
                 folds = StratifiedKFold(self.train[1], num_folds, shuffle=True)
             avg_dev_acc = 0
+            cv_counter = 0
             for train_indxs, dev_indxs in folds:
+                cv_counter += 1
+                if cv_counter > num_folds:
+                    break
                 cur_train_X = [self.train[0][i] for i in train_indxs]
                 cur_train_Y = [self.train[1][i] for i in train_indxs]
                 cur_dev_X = [self.train[0][i] for i in dev_indxs]
