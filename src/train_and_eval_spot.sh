@@ -17,7 +17,7 @@ DATA_LOC=${DATA_BASE}/${DATASET}
 W2V_LOC=${DATA_BASE}/${DATASET}/${DATASET}_vecs.txt
 NUM_MODELS=1
 MODEL_TYPE=cnn
-NUM_FOLDS=5
+NUM_FOLDS=1
 SAVE_BASE=/home/ec2-user/projects/ARKcat/output
 #SAVE_BASE=/homes/gws/jessedd/projects/ARKcat/output # this is for running jobs on pinot
     
@@ -53,7 +53,7 @@ echo 'eval time:'
 echo $(($(date +%s) - $RUN_TIME))
 ARCHIVE_DIR=${SAVE_BASE}/archive/${SEARCH_TYPE}_${RAND_INIT}_$(date +%s)/
 mkdir -p $ARCHIVE_DIR
-mv -ar $SAVE_LOC $ARCHIVE_DIR
+cp -ar $SAVE_LOC $ARCHIVE_DIR
 
 
 
@@ -61,7 +61,7 @@ mv -ar $SAVE_LOC $ARCHIVE_DIR
 
 KEYPAIR_LOC=/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem
 EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive_${RUN_INFO}/${SEARCH_TYPE}_${RAND_INIT}_$(date +%s)
-ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${CUR_IP} "mkdir -p $EC2_STORAGE_DIR"
+ssh -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no ec2-user@${CUR_IP} "mkdir -p $EC2_STORAGE_DIR"
 scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${CUR_IP}:$EC2_STORAGE_DIR
 scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/errfile.txt ec2-user@${CUR_IP}:$EC2_STORAGE_DIR
 
