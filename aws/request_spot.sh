@@ -1,4 +1,14 @@
-SPOT_REQUEST_ID=`aws ec2 request-spot-instances --spot-price "2.69" --instance-count 1 --type "one-time" --launch-specification file://specification.json | grep SpotInstanceRequestId | awk '{print $2}' | sed s/,// | sed s/\"// | sed s/\"//`
+if [ "$STY" = "" ]
+then
+    echo "not in screen! please start a screen session to run this script"
+    exit 1
+fi
+
+
+
+
+NUM_INST=2
+SPOT_REQUEST_ID=`aws ec2 request-spot-instances --spot-price "2.69" --instance-count $NUM_INST --type "one-time" --launch-specification file://specification.json | grep SpotInstanceRequestId | awk '{print $2}' | sed s/,// | sed s/\"// | sed s/\"//`
 
 
 ####
@@ -6,7 +16,9 @@ SPOT_REQUEST_ID=`aws ec2 request-spot-instances --spot-price "2.69" --instance-c
 WAIT_SECONDS=5
 while true; do 
     SPOT_INST_ID=`aws ec2 describe-spot-instance-requests --spot-instance-request-ids $SPOT_REQUEST_ID | grep InstanceId | awk '{print $2}' | sed s/,// | sed s/\"// | sed s/\"//`
-    if [ ! -z "$SPOT_INST_ID" ]; then
+    NUM_IDS=`echo ${SPOT_INST_ID} | wc -w`
+    if [ "${NUM_IDS}" == "${NUM_INST}" ]; then
+    #if [ ! -z "$SPOT_INST_ID" ]; then
 	echo "successfully got spot instance id: $SPOT_INST_ID"
 	break
     else
@@ -20,7 +32,8 @@ done
 # to get the ip address:
 while true; do
     SPOT_IP=`aws ec2 describe-instances --instance-ids $SPOT_INST_ID | grep PublicIpAddress | awk '{print $2}' | sed s/,// | sed s/\"// | sed s/\"// | sed 's/\./-/g'` 
-    if [ ! -z "$SPOT_IP" ]; then
+    NUM_IPS=`echo ${SPOT_IP} | wc -w`
+    if [ "${NUM_IPS}" == "${NUM_INST}" ]; then
 	echo "successfully got ip address: $SPOT_IP"
 	break
     else
@@ -31,28 +44,16 @@ done
 
 
 while true; do
-    STATE=`aws ec2 describe-instances --instance-ids $SPOT_INST_ID | grep \"Name\" | awk '{print $2}' | sed s/\"//g`
-    if [ "$STATE" == "running" ]; then 
+    NUM_LINES_PASSED_INIT=`aws ec2 describe-instance-status --instance-ids $SPOT_INST_ID | grep "\"Status\": \"passed\"" | wc -l`
+    if [ "$NUM_LINES_PASSED_INIT" == "$(($NUM_INST * 2))" ]; then 
 	break
     else
-	echo "waiting $WAIT_SECONDS second(s) for instance to be in 'running' mode"
+	echo "waiting $WAIT_SECONDS second(s) for instance to pass initialization. requires both system status checks and instance status checks to finish. currenty $(( ${NUM_LINES_PASSED_INIT} / 2 )) have passed."
 	sleep $WAIT_SECONDS
     fi
 done
 
 
-###
-# for some reason we have to wait for scp to work
-for i in `seq 1 100`; do
-    echo "waiting for 100 seconds, $i seconds have passed..."
-    sleep 1
-done
-
-###
-# to copy the .pem file over:
-echo "about to copy .pem file over..."
-scp -i "/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no -r /home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem ec2-user@ec2-${SPOT_IP}.us-west-2.compute.amazonaws.com:/home/ec2-user/
-echo "copied!"
 
 
 ###
@@ -60,9 +61,40 @@ echo "copied!"
 CUR_IP=`curl -s http://169.254.169.254/latest/meta-data/public-ipv4`
 
 
+# options: dpp_ham, dpp_cos, dpp_l2, dpp_random, random, bayes_opt
+# options: reg, reg_half_lr, reg_bad_lr, arch
+SRCH_TPE="dpp_l2"
+ITERS="2"
+SPACE="reg_bad_lr"
+
+
+###
+# train models and move
+COUNTER=0
+for ONE_SPOT_IP in ${SPOT_IP}; do
+    echo "About to try $ONE_SPOT_IP, with COUNTER=${COUNTER}"
+
+    COMMANDS=""
+    COMMANDS="${COMMANDS} source activate arkcat;"
+    COMMANDS="${COMMANDS} cd /home/ec2-user/projects/hyperopt;"
+    COMMANDS="${COMMANDS} git pull;"
+    COMMANDS="${COMMANDS} cd /home/ec2-user/projects/dpp_mixed_mcmc;"
+    COMMANDS="${COMMANDS} git pull;"
+    COMMANDS="${COMMANDS} cd /home/ec2-user/projects/ARKcat/src;"
+    COMMANDS="${COMMANDS} git pull;"
+    COMMANDS="${COMMANDS} bash train_and_eval_spot.sh ${SRCH_TPE} 0${COUNTER} $CUR_IP $SPOT_INST_ID ${ITERS} ${SPACE}"
+    COMMANDS="${COMMANDS} bash /home/ec2-user/projects/ARKcat/aws/kill_this_instance.sh;"
+
+
+    ssh -i "/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no ec2-user@ec2-${ONE_SPOT_IP}.us-west-2.compute.amazonaws.com ${COMMANDS} &
+    let COUNTER+=1
+done
+
+
+
 ###
 # train models and move 
-ssh -i "/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no ec2-user@ec2-${SPOT_IP}.us-west-2.compute.amazonaws.com "source activate arkcat; cd /home/ec2-user/projects/hyperopt; git checkout hyperopt/dpp.py; git pull; cd /home/ec2-user/projects/ARKcat/src; git checkout train_and_eval_pinot.sh; git pull; bash train_and_eval_spot.sh ${1} ${2} $CUR_IP $SPOT_INST_ID ${3} ${4}"
+#ssh -i "/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no ec2-user@ec2-${SPOT_IP}.us-west-2.compute.amazonaws.com "source activate arkcat; cd /home/ec2-user/projects/hyperopt; git checkout hyperopt/dpp.py; git pull; cd /home/ec2-user/projects/ARKcat/src; git checkout train_and_eval_pinot.sh; git pull; bash train_and_eval_spot.sh ${1} ${2} $CUR_IP $SPOT_INST_ID ${3} ${4}"
 
 
 ###

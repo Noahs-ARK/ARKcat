@@ -8,9 +8,8 @@ then
 fi
 
 
-
-# options: dpp_ham, dpp_cos, dpp_l2, dpp_random, random, bayes_opt
-# options: reg, reg_half_lr, reg_bad_lr, arch
+echo "THIS IS DEPRECATED!"
+exit 1
 
 
 for SPACE in reg_bad_lr; do
