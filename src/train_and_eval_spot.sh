@@ -17,7 +17,7 @@ DATA_LOC=${DATA_BASE}/${DATASET}
 W2V_LOC=${DATA_BASE}/${DATASET}/${DATASET}_vecs.txt
 NUM_MODELS=1
 MODEL_TYPE=cnn
-NUM_FOLDS=1
+NUM_FOLDS=3
 SAVE_BASE=/home/ec2-user/projects/ARKcat/output
 #SAVE_BASE=/homes/gws/jessedd/projects/ARKcat/output # this is for running jobs on pinot
     

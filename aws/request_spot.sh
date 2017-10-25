@@ -5,9 +5,13 @@ then
 fi
 
 
+# options: dpp_ham, dpp_cos, dpp_l2, dpp_random, random, bayes_opt
+# options: reg, reg_half_lr, reg_bad_lr, arch
+SRCH_TPE="mixed_dpp_rbf"
+ITERS="20"
+SPACE="reg_bad_lr"
 
-
-NUM_INST=2
+NUM_INST=100
 SPOT_REQUEST_ID=`aws ec2 request-spot-instances --spot-price "2.69" --instance-count $NUM_INST --type "one-time" --launch-specification file://specification.json | grep SpotInstanceRequestId | awk '{print $2}' | sed s/,// | sed s/\"// | sed s/\"//`
 
 
@@ -78,15 +82,16 @@ for ONE_SPOT_IP in ${SPOT_IP}; do
     COMMANDS="${COMMANDS} source activate arkcat;"
     COMMANDS="${COMMANDS} cd /home/ec2-user/projects/hyperopt;"
     COMMANDS="${COMMANDS} git fetch;"
-    COMMANDS="git reset --hard origin/master;;"
+    COMMANDS="${COMMANDS} git reset --hard origin/master;"
+    COMMANDS="${COMMANDS} rm /home/ec2-user/projects/hyperopt/hyperopt/*.pyc;"
     COMMANDS="${COMMANDS} cd /home/ec2-user/projects/dpp_mixed_mcmc;"
     COMMANDS="${COMMANDS} git fetch;"
-    COMMANDS="git reset --hard origin/master;;"
+    COMMANDS="${COMMANDS} git reset --hard origin/master;"
     COMMANDS="${COMMANDS} cd /home/ec2-user/projects/ARKcat/src;"
     COMMANDS="${COMMANDS} git fetch;"
-    COMMANDS="git reset --hard origin/master;;"
+    COMMANDS="${COMMANDS} git reset --hard origin/master;"
     COMMANDS="${COMMANDS} bash train_and_eval_spot.sh ${SRCH_TPE} 0${COUNTER} ${CUR_IP} ${ITERS} ${SPACE}"
-    #COMMANDS="${COMMANDS} bash /home/ec2-user/projects/ARKcat/aws/kill_this_instance.sh;"
+    COMMANDS="${COMMANDS} bash /home/ec2-user/projects/ARKcat/aws/kill_this_instance.sh;"
 
 
     ssh -i "/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no ec2-user@ec2-${ONE_SPOT_IP}.us-west-2.compute.amazonaws.com ${COMMANDS} &
