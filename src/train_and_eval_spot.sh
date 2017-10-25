@@ -1,14 +1,13 @@
 # usage:
-# bash train_and_eval_spot.sh SEARCH_TYPE RAND_INIT CUR_IP SPOT_ID NUM_ITERS SEARCH_SPACE
+# bash train_and_eval_spot.sh SEARCH_TYPE RAND_INIT CUR_IP NUM_ITERS SEARCH_SPACE
 # example: 
 # bash train_and_eval_spot.sh dpp_cos 999 0 0 10 reg_bad_lr
 
 SEARCH_TYPE=${1}
 RAND_INIT=${2}
 CUR_IP=${3}
-SPOT_INST_ID=${4}
-NUM_ITERS=${5}
-SEARCH_SPACE=${6}
+NUM_ITERS=${4}
+SEARCH_SPACE=${5}
 
 DATA_BASE=/home/ec2-user/data/text_cat
 #DATA_BASE=/homes/gws/jessedd/data/text_cat # this is for running jobs on pinot

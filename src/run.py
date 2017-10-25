@@ -233,7 +233,7 @@ def main(args):
     print("the time at the start: " + str(time.time()))
     set_globals(args)
     trials = Trials()
-    trials.discretize_space = False
+    trials.discretize_space = True
     # a hacky solution to pass parameters to hyperopt
     if trials.discretize_space:
         set_discretize_num(trials)
@@ -256,9 +256,10 @@ def main(args):
         elif args['algorithm'] == "dpp_l2":
             trials.dpp_dist = "l2"
             algorithm = dpp.suggest
-        elif args['algorithm'] == 'dpp_rbf':
+        elif args['algorithm'] == 'mixed_dpp_rbf':
             trials.dpp_dist = "rbf"
             algorithm = dpp.suggest
+            trials.discretize_space = False
         elif args['algorithm'] == "dpp_random":
             algorithm = dpp_random.suggest
         else:

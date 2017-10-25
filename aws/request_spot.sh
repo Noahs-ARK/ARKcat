@@ -63,7 +63,7 @@ CUR_IP=`curl -s http://169.254.169.254/latest/meta-data/public-ipv4`
 
 # options: dpp_ham, dpp_cos, dpp_l2, dpp_random, random, bayes_opt
 # options: reg, reg_half_lr, reg_bad_lr, arch
-SRCH_TPE="dpp_l2"
+SRCH_TPE="mixed_dpp_rbf"
 ITERS="2"
 SPACE="reg_bad_lr"
 
@@ -77,13 +77,16 @@ for ONE_SPOT_IP in ${SPOT_IP}; do
     COMMANDS=""
     COMMANDS="${COMMANDS} source activate arkcat;"
     COMMANDS="${COMMANDS} cd /home/ec2-user/projects/hyperopt;"
-    COMMANDS="${COMMANDS} git pull;"
+    COMMANDS="${COMMANDS} git fetch;"
+    COMMANDS="git reset --hard origin/master;;"
     COMMANDS="${COMMANDS} cd /home/ec2-user/projects/dpp_mixed_mcmc;"
-    COMMANDS="${COMMANDS} git pull;"
+    COMMANDS="${COMMANDS} git fetch;"
+    COMMANDS="git reset --hard origin/master;;"
     COMMANDS="${COMMANDS} cd /home/ec2-user/projects/ARKcat/src;"
-    COMMANDS="${COMMANDS} git pull;"
-    COMMANDS="${COMMANDS} bash train_and_eval_spot.sh ${SRCH_TPE} 0${COUNTER} $CUR_IP $SPOT_INST_ID ${ITERS} ${SPACE}"
-    COMMANDS="${COMMANDS} bash /home/ec2-user/projects/ARKcat/aws/kill_this_instance.sh;"
+    COMMANDS="${COMMANDS} git fetch;"
+    COMMANDS="git reset --hard origin/master;;"
+    COMMANDS="${COMMANDS} bash train_and_eval_spot.sh ${SRCH_TPE} 0${COUNTER} ${CUR_IP} ${ITERS} ${SPACE}"
+    #COMMANDS="${COMMANDS} bash /home/ec2-user/projects/ARKcat/aws/kill_this_instance.sh;"
 
 
     ssh -i "/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no ec2-user@ec2-${ONE_SPOT_IP}.us-west-2.compute.amazonaws.com ${COMMANDS} &
