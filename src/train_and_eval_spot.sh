@@ -46,7 +46,6 @@ echo 'run time:'
 echo $(($RUN_TIME - $START_TIME))
 
 
-
 python eval.py $SAVE_LOC/saved_models/ $DATA_LOC/ $SAVE_LOC/ >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
 echo "done with eval.py"
 echo $8
@@ -60,10 +59,11 @@ mv -ar $SAVE_LOC $ARCHIVE_DIR
 
 ######### this is to copy from one ec2 instance to another ###########                                                                                                    
 
+KEYPAIR_LOC=/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem
 EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive_${RUN_INFO}/${SEARCH_TYPE}_${RAND_INIT}_$(date +%s)
 ssh -i ~/jesse-key-pair-uswest2.pem -oStrictHostKeyChecking=no ec2-user@${CUR_IP} "mkdir -p $EC2_STORAGE_DIR"
-scp -i "/home/ec2-user/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${CUR_IP}:$EC2_STORAGE_DIR
-scp -i "/home/ec2-user/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no $SAVE_LOC/errfile.txt ec2-user@${CUR_IP}:$EC2_STORAGE_DIR
+scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${CUR_IP}:$EC2_STORAGE_DIR
+scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/errfile.txt ec2-user@${CUR_IP}:$EC2_STORAGE_DIR
 
 #to kill the current instance
 #aws ec2 terminate-instances --instance-ids $(curl -s http://169.254.169.254/latest/meta-data/instance-id)
