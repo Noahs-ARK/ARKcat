@@ -36,7 +36,6 @@ fi
 echo "making the dir to save output..."
 mkdir -p $SAVE_LOC/
 
-exit
 
 echo "about to run.py"
 START_TIME=$(date +%s)
