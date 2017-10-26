@@ -98,7 +98,7 @@ class Data_and_Model_Manager:
         self.train_word_vecs = read_word_vecs_from_file(self.word_vec_filename, self.train)
 
     def k_fold_cv(self, num_folds):
-        import pdb; pdb.set_trace()
+
         if num_folds == 1 and len(self.dev[0]) > 0:
             train_acc = self.train_models(self.train[0], self.train[1])
 

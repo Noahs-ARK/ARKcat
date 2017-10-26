@@ -260,6 +260,10 @@ def main(args):
             trials.dpp_dist = "rbf"
             algorithm = dpp.suggest
             trials.discretize_space = False
+        elif args['algorithm'] == 'mixed_dpp_rbf_clip':
+            trials.dpp_dist = "rbf_clip"
+            algorithm = dpp.suggest
+            trials.discretize_space = False
         elif args['algorithm'] == "dpp_random":
             algorithm = dpp_random.suggest
         else:
