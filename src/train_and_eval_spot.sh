@@ -1,7 +1,7 @@
 # usage:
 # bash train_and_eval_spot.sh SEARCH_TYPE RAND_INIT CUR_IP NUM_ITERS SEARCH_SPACE
 # example: 
-# bash train_and_eval_spot.sh dpp_cos 999 0 0 10 reg_bad_lr
+# bash train_and_eval_spot.sh dpp_cos 999 0 10 reg_bad_lr
 
 SEARCH_TYPE=${1}
 RAND_INIT=${2}
@@ -17,7 +17,7 @@ DATA_LOC=${DATA_BASE}/${DATASET}
 W2V_LOC=${DATA_BASE}/${DATASET}/${DATASET}_vecs.txt
 NUM_MODELS=1
 MODEL_TYPE=cnn
-NUM_FOLDS=3
+NUM_FOLDS=5
 SAVE_BASE=/home/ec2-user/projects/ARKcat/output
 #SAVE_BASE=/homes/gws/jessedd/projects/ARKcat/output # this is for running jobs on pinot
     
