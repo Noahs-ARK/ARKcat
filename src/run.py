@@ -259,6 +259,9 @@ def main(args):
         elif args['algorithm'] == "dpp_rbf":
             trials.dpp_dist = "rbf"
             algorithm = dpp.suggest
+        elif args['algorithm'] == "dpp_rbf_narrow":
+            trials.dpp_dist = "rbf_narrow"
+            algorithm = dpp.suggest
         elif args['algorithm'] == 'mixed_dpp_rbf':
             trials.dpp_dist = "rbf"
             algorithm = dpp.suggest
