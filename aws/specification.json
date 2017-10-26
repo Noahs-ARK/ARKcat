@@ -1,5 +1,5 @@
 {
-    "ImageId": "ami-be73b1c6",
+    "ImageId": "ami-d74e81af",
     "KeyName": "jesse-key-pair-uswest2",
     "InstanceType": "c4.8xlarge",
     "SubnetId":"subnet-de3067ba"

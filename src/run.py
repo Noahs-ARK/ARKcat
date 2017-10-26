@@ -238,7 +238,7 @@ def main(args):
     if trials.discretize_space:
         set_discretize_num(trials)
         # DEBUGGING
-        trials.discretize_num = 5
+        #trials.discretize_num = 5
     if args['run_bayesopt']:
         space = space_manager.get_space(num_models, model_types, search_space)
         if args['algorithm'] == "bayes_opt":
@@ -255,6 +255,9 @@ def main(args):
             algorithm = dpp.suggest
         elif args['algorithm'] == "dpp_l2":
             trials.dpp_dist = "l2"
+            algorithm = dpp.suggest
+        elif args['algorithm'] == "dpp_rbf":
+            trials.dpp_dist = "rbf"
             algorithm = dpp.suggest
         elif args['algorithm'] == 'mixed_dpp_rbf':
             trials.dpp_dist = "rbf"
