@@ -59,7 +59,7 @@ cp -ar $SAVE_LOC $ARCHIVE_DIR
 
 ######### this is to copy from one ec2 instance to another ###########                                                                                                    
 
-KEYPAIR_LOC=/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem
+KEYPAIR_LOC=/home/ec2-user/projects/dpp_mixed_mcmc/synth_experiments/aws/jesse-key-pair-uswest2.pem
 EC2_STORAGE_DIR=/home/ec2-user/projects/ARKcat/output/archive_${RUN_INFO}/${SEARCH_TYPE}_${RAND_INIT}_$(date +%s)
 ssh -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no ec2-user@${CUR_IP} "mkdir -p $EC2_STORAGE_DIR"
 scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${CUR_IP}:$EC2_STORAGE_DIR
