@@ -271,6 +271,10 @@ def main(args):
             trials.dpp_dist = "rbf_narrow"
             algorithm = dpp.suggest
             trials.discretize_space = False
+        elif args['algorithm'] == 'mixed_dpp_rbf_vnarrow':
+            trials.dpp_dist = "rbf_vnarrow"
+            algorithm = dpp.suggest
+            trials.discretize_space = False
         elif args['algorithm'] == "dpp_random":
             algorithm = dpp_random.suggest
         else:
