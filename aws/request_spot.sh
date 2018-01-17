@@ -5,11 +5,11 @@ then
 fi
 
 
-# options: dpp_ham, dpp_cos, dpp_l2, dpp_random, random, bayes_opt
+# options: dpp_ham, dpp_cos, dpp_l2, dpp_random, random, bayes_opt, mixed_dpp_rbf, mixed_dpp_rbf_clip, mixed_dpp_rbf_narrow, mixed_dpp_rbf_vnarrow, dpp_rbf, dpp_rbf_narrow
 # options: reg, reg_half_lr, reg_bad_lr, arch
-SRCH_TPE="mixed_dpp_rbf_clip"
+SRCH_TPE="dpp_random"
 ITERS="20"
-SPACE="reg_half_lr"
+SPACE="arch"
 
 NUM_INST=50
 SPOT_REQUEST_ID=`aws ec2 request-spot-instances --spot-price "2.69" --instance-count $NUM_INST --type "one-time" --launch-specification file://specification.json | grep SpotInstanceRequestId | awk '{print $2}' | sed s/,// | sed s/\"// | sed s/\"//`
@@ -85,7 +85,7 @@ for ONE_SPOT_IP in ${SPOT_IP}; do
     COMMANDS="${COMMANDS} git fetch;"
     COMMANDS="${COMMANDS} git reset --hard origin/master;"
     COMMANDS="${COMMANDS} bash train_and_eval_spot.sh ${SRCH_TPE} 0${COUNTER} ${CUR_IP} ${ITERS} ${SPACE};"
-    #COMMANDS="${COMMANDS} bash /home/ec2-user/projects/ARKcat/aws/kill_this_instance.sh;"
+    COMMANDS="${COMMANDS} bash /home/ec2-user/projects/ARKcat/aws/kill_this_instance.sh;"
 
 
     ssh -i "/home/ec2-user/projects/ARKcat/aws/jesse-key-pair-uswest2.pem" -oStrictHostKeyChecking=no ec2-user@ec2-${ONE_SPOT_IP}.us-west-2.compute.amazonaws.com ${COMMANDS} &

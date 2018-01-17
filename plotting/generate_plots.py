@@ -395,7 +395,7 @@ def make_empirical_hists():
         
     
 def print_best_acc():
-    for space in ['reg_bad_lr', 'reg_half_bad_lr', 'reg', 'arch']:
+    for space in ['arch']#['reg_bad_lr', 'reg_half_bad_lr', 'reg', 'arch']:
         for dist in ['dpp_rand', 'dpp_ham', 'dpp']:
 
             avg_best, avg_best_ci, prop_counts, num_sets_each_val, avg_acc_by_val, num_samples, num_iters = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/20_iter/stanford_sentiment_binary,mdl_tpe=cnn,srch_tpe={},spce={}.txt'.format(dist, space))
@@ -410,20 +410,20 @@ def print_best_acc():
 #make_arch_scatter()
 #make_linear_scatter()
 #make_empirical_hists()
-#print_best_acc()
+print_best_acc()
 
 
-things = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/20_iter/stanford_sentiment_binary,mdl_tpe=cnn,srch_tpe=dpp_rand,spce=reg_half_bad_lr.txt')
-things = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/20_iter/stanford_sentiment_binary,mdl_tpe=cnn,srch_tpe=dpp_ham,spce=reg_half_bad_lr.txt')
-things = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/20_iter/stanford_sentiment_binary,mdl_tpe=cnn,srch_tpe=dpp,spce=reg_half_bad_lr.txt')
+#things = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/20_iter/stanford_sentiment_binary,mdl_tpe=cnn,srch_tpe=dpp_rand,spce=reg_half_bad_lr.txt')
+#things = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/20_iter/stanford_sentiment_binary,mdl_tpe=cnn,srch_tpe=dpp_ham,spce=reg_half_bad_lr.txt')
+#things = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/20_iter/stanford_sentiment_binary,mdl_tpe=cnn,srch_tpe=dpp,spce=reg_half_bad_lr.txt')
 #all_info[space] = make_into_dict(*things)
 
 
 
-iters = '20'
-space = 'reg_half_bad_lr'
-model = 'cnn'
-dist = '_ham'
+#iters = '20'
+#space = 'reg_half_bad_lr'
+#model = 'cnn'
+#dist = '_ham'
 
 #dpp_avg_best, dpp_avg_best_ci, dpp_prop_counts, dpp_num_sets_each_val, dpp_avg_acc_by_val, dpp_num_samples, dpp_num_iters = get_avg_and_std_dev('/homes/gws/jessedd/projects/ARKcat/plotting/results/{}_iter/stanford_sentiment_binary,mdl_tpe={},srch_tpe=dpp{},spce={}.txt'.format(iters, model, dist, space))
 
