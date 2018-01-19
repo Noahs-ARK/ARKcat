@@ -217,28 +217,31 @@ def printing_best(trials):
         print('')
     print('')
 
-def set_discretize_num(trials):
+def set_discretize_num(trials,):
     if search_space == 'arch':
         trials.discretize_num = 4
     elif 'reg' in search_space:
         trials.discretize_num = 15
     elif 'debug' in search_space:
         trials.discretize_num = None
+    elif 'default' in search_space:
+        trials.discretize_num = 5
     else:
         raise ValueError("you tried to use " + search_space + " as a search space, but we don't know how many "+
                          "values we should discretize to (for the dpp)")
 
 def main(args):
     print("Made it to the start of main!")
-    print("the time at the start: " + str(time.time()))
+    start_time = time.time()
+    print("the time at the start: " + str(start_time))
     set_globals(args)
     trials = Trials()
     trials.discretize_space = True
+
     # a hacky solution to pass parameters to hyperopt
     if trials.discretize_space:
         set_discretize_num(trials)
-        # DEBUGGING
-        #trials.discretize_num = 5
+
     if args['run_bayesopt']:
         space = space_manager.get_space(num_models, model_types, search_space)
         if args['algorithm'] == "bayes_opt":
@@ -303,6 +306,7 @@ def main(args):
 
         print space_eval(space, best)
         printing_best(trials)
+
     #loading models from file
     else:
         with open(model_path) as f:
@@ -311,6 +315,7 @@ def main(args):
 
             space = eval(f.readline())
             best = call_experiment(space)
+    print("the total runtime: {}".format(time.time() - start_time))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='need to write one')
@@ -326,3 +331,4 @@ if __name__ == '__main__':
     group.add_argument('-f', nargs=2, type=str, dest='load_file')
     print vars(parser.parse_args(sys.argv[1:]))
     main(vars(parser.parse_args(sys.argv[1:])))
+    

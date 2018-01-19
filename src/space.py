@@ -79,6 +79,23 @@ def cnn_space(search_space):
                 'no_reg': True,
                 'search_lr': True,
                 'grid': [1,2,2,2,2,2,2,2,2,5,2,2]}
+    elif search_space == 'default':
+        return {'model_type_': 'CNN',
+                'delta_': [False],
+                'flex_amt_': (0.15, 0.15),
+                'filters_': (100, 100),
+                'kernel_size_': (3, 3),
+                'kernel_increment_': (1, 1),
+                'kernel_num_': (3, 3),
+                'dropout_': (0.3, 0.3),
+                'batch_size_': (50, 50),
+                'activation_fn_': ['relu'],
+                'l2_': (-3.0, -3.0),
+                #'l2_clip_': (1.0, 5.0), #not implemented correctly
+                'no_reg': False,
+                'search_lr': False,
+                'grid': [1,1,1,1,1,1,1,4,1,1,4,3]
+        }
     else:
         print 'search space not implemented for CNN'
         raise NotImplementedError

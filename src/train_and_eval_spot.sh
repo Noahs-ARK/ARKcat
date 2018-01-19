@@ -51,6 +51,7 @@ echo "done with eval.py"
 echo $8
 echo 'eval time:'
 echo $(($(date +%s) - $RUN_TIME))
+echo "total train and eval time: $(($(date +%s) - $START_TIME))" >> $SAVE_LOC/outfile.txt 2>> $SAVE_LOC/errfile.txt
 ARCHIVE_DIR=${SAVE_BASE}/archive/${SEARCH_TYPE}_${RAND_INIT}_$(date +%s)/
 mkdir -p $ARCHIVE_DIR
 cp -ar $SAVE_LOC $ARCHIVE_DIR
