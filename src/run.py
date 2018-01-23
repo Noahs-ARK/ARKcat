@@ -13,7 +13,7 @@ from hyperopt import dpp, dpp_random, sample_hparam_space
 
 import classify_test
 import space_manager
-from grid_search import *
+
 
 import cProfile, pstats
 
@@ -318,6 +318,9 @@ def main(args):
     print("the total runtime: {}".format(time.time() - start_time))
 
 if __name__ == '__main__':
+    #print [key for key in locals().keys()
+    #       if isinstance(locals()[key], type(sys)) and not key.startswith('__')]
+    #sys.exit()
     parser = argparse.ArgumentParser(description='need to write one')
     parser.add_argument('dataset', nargs=1, type=str, help='')
     parser.add_argument('word2vec_filename', nargs=1, type=str, help='')

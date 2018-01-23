@@ -1,6 +1,5 @@
 import cPickle as pickle
 from optparse import OptionParser
-from classify_test import load_features
 from sklearn import metrics
 import numpy as np
 import Queue
