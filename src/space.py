@@ -87,7 +87,7 @@ def cnn_space(search_space):
                 'kernel_size_': (3, 3),
                 'kernel_increment_': (1, 1),
                 'kernel_num_': (3, 3),
-                'dropout_': (0.3, 0.3),
+                'dropout_': (0.5, 0.5),
                 'batch_size_': (50, 50),
                 'activation_fn_': ['relu'],
                 'l2_': (-3.0, -3.0),
