@@ -1,7 +1,7 @@
 # usage:
 # bash azure.sh SEARCH_TYPE RAND_INIT NUM_ITERS SEARCH_SPACE
 # example: 
-# bash azure.sh dpp_rbf 999 1 reg_bad_lr
+# bash azure.sh spearmint 999 1 arch
 
 SEARCH_TYPE=${1}
 RAND_INIT=${2}
@@ -15,7 +15,7 @@ DATA_LOC=${DATA_BASE}/${DATASET}
 W2V_LOC=${DATA_BASE}/${DATASET}/${DATASET}_vecs.txt
 NUM_MODELS=1
 MODEL_TYPE=cnn
-NUM_FOLDS=5
+NUM_FOLDS=3
 SAVE_BASE=/home/jessedd/projects/ARKcat/output
     
 RUN_INFO=$DATASET,nmodels=$NUM_MODELS,mdl_tpe=$MODEL_TYPE,srch_tpe=$SEARCH_TYPE,spce=$SEARCH_SPACE,iters=$NUM_ITERS
@@ -30,4 +30,4 @@ START_TIME=$(date +%s)
 bash train.sh ${SEARCH_TYPE} ${RAND_INIT} ${NUM_ITERS} ${NUM_FOLDS} ${SEARCH_SPACE} ${SAVE_LOC} ${DATA_LOC} ${W2V_LOC} ${MODEL_TYPE} ${START_TIME}
 
 
-bash eval.sh ${SEARCH_TYPE} ${RAND_INIT} ${SAVE_BASE} ${SAVE_LOC} ${DATA_LOC} ${START_TIME}
+#bash eval.sh ${SEARCH_TYPE} ${RAND_INIT} ${SAVE_BASE} ${SAVE_LOC} ${DATA_LOC} ${START_TIME}

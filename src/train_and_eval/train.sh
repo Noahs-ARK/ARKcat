@@ -21,7 +21,7 @@ mkdir -p $SAVE_LOC/
 
 
 echo "about to run.py"
-python run.py  $DATA_LOC/ $W2V_LOC $SAVE_LOC $NUM_FOLDS $SEARCH_TYPE -b $MODEL_TYPE $SEARCH_SPACE $NUM_ITERS > $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
+python controller.py  $DATA_LOC/ $W2V_LOC $SAVE_LOC $NUM_FOLDS $SEARCH_TYPE -b $MODEL_TYPE $SEARCH_SPACE $NUM_ITERS #> $SAVE_LOC/outfile.txt 2> $SAVE_LOC/errfile.txt
 RUN_TIME=$(date +%s)
 echo "done with run.py."
 echo 'run time:'
