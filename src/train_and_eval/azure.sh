@@ -1,7 +1,7 @@
 # usage:
 # bash azure.sh SEARCH_TYPE RAND_INIT NUM_ITERS SEARCH_SPACE
 # example: 
-# bash azure.sh spearmint 999 1 arch
+# bash azure.sh spearmint_seq 999 1 arch
 
 SEARCH_TYPE=${1}
 RAND_INIT=${2}

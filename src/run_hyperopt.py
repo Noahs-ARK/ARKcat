@@ -88,7 +88,7 @@ def hyperopt_main(num_models, model_types, search_space, max_iter, args, call_ex
 
         #DEBUGGING: this is for profiling. it prints where the program has spent the most time
         #profile = cProfile.Profile()
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         #tmp = sample_hparam_space(space, algorithm, max_iter, 'l2', True, 15)
         try:
             #profile.enable()

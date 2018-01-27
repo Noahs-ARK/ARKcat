@@ -22,7 +22,7 @@ import cProfile, pstats
 
 def call_experiment(args):
     #in case we want to debug the BO algorithms
-    #import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
     debug_mode = False
     if debug_mode:
         import random
@@ -209,7 +209,7 @@ def main(args):
     print("the time at the start: " + str(start_time))
     set_globals(args)
     if "spearmint" in args['algorithm']:
-        spearmint_main(num_models, model_types, search_space, max_iter, args, call_experiment)
+        spearmint_main(num_models, model_types, search_space, max_iter, args, call_experiment, model_dir)
     else:
         hyperopt_main(num_models, model_types, search_space, max_iter, args, call_experiment)
 
