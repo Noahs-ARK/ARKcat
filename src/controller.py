@@ -227,6 +227,7 @@ if __name__ == '__main__':
     group.add_argument('-b', nargs=3, type=str, dest='run_bayesopt',
                         help='model types, search space, number of iters')
     group.add_argument('-f', nargs=2, type=str, dest='load_file')
+    parser.add_argument('batch_size', type=int, help='the batch size for running BO algorithms')
     print vars(parser.parse_args(sys.argv[1:]))
     main(vars(parser.parse_args(sys.argv[1:])))
     

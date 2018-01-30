@@ -11,7 +11,8 @@ import Queue
 def spearmint_main(num_models, model_types, search_space, max_iter, args, call_experiment, model_dir):
     options = set_default_options(args)
     # convert search space to [0,1]^d hypercube
-    variables, hparams_to_return_template, transformer = spearmint_compatibility.get_spearmint_space.main(num_models, model_types, search_space)
+    variables, hparams_to_return_template, transformer = spearmint_compatibility.get_spearmint_space.main(num_models,
+                                                                                                          model_types, search_space)
 
     # init the chooser
     module  = importlib.import_module('chooser.' + options['chooser_module'], package='spearmint')
@@ -27,7 +28,8 @@ def spearmint_main(num_models, model_types, search_space, max_iter, args, call_e
 
         # to evaluate the batch of points selected
         while len(results['pending']) > 0:
-            cur_hparams_to_eval = make_hparams_to_return(results['pending'][0], copy.deepcopy(hparams_to_return_template), gmap, variables, transformer)
+            cur_hparams_to_eval = make_hparams_to_return(results['pending'][0], copy.deepcopy(hparams_to_return_template),
+                                                         gmap, variables, transformer)
             cur_hparams_result = call_experiment(cur_hparams_to_eval)
             update_results(cur_hparams_result, results, cur_hparams_to_eval)
 
@@ -37,16 +39,17 @@ def spearmint_main(num_models, model_types, search_space, max_iter, args, call_e
 
 
 def set_default_options(args):
+    
     options = {}
     options['chooser_module'] = 'GPEIOptChooser'
     options['chooser_args'] = ''
     options['grid_size'] = 1000
     options['grid_seed'] = 1
-
-    assert args['algorithm'] in ['spearmint_seq', 'spearmint_batch']
-    if args['algorithm'] == 'spearmint_batch':
-        options['batch_size'] = 3
     
+    options['batch_size'] = args['batch_size']
+
+    
+        
     return options
 
 def make_result_dict():
