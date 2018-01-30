@@ -36,7 +36,7 @@ bash train.sh ${SEARCH_TYPE} ${RAND_INIT} ${NUM_ITERS} ${BATCH_SIZE} ${NUM_FOLDS
 bash eval.sh ${SEARCH_TYPE} ${RAND_INIT} ${SAVE_BASE} ${SAVE_LOC} ${DATA_LOC} ${START_TIME}
 
 
-KEYPAIR_LOC=/home/jessedd/projects/jesse-key-pair-uswest2.pem
+KEYPAIR_LOC=/home/jessedd/jesse-key-pair-uswest2.pem
 AZURE_STORAGE_DIR=/home/jessedd/projects/ARKcat/output/archive_${RUN_INFO}/${SEARCH_TYPE}_${RAND_INIT}_$(date +%s)
 ssh -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no jessedd@${CUR_IP} "mkdir -p ${AZURE_STORAGE_DIR}"
 scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${CUR_IP}:$AZURE_STORAGE_DIR
