@@ -47,8 +47,6 @@ def set_default_options(args):
     options['grid_seed'] = 1
     
     options['batch_size'] = args['batch_size']
-
-    
         
     return options
 

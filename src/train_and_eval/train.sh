@@ -27,4 +27,3 @@ RUN_TIME=$(date +%s)
 echo "done with run.py."
 echo 'run time:'
 echo $(($RUN_TIME - $START_TIME))
-

@@ -20,16 +20,23 @@ MODEL_TYPE=cnn
 NUM_FOLDS=3
 SAVE_BASE=/home/jessedd/projects/ARKcat/output
     
-RUN_INFO=$DATASET,nmodels=$NUM_MODELS,mdl_tpe=$MODEL_TYPE,srch_tpe=$SEARCH_TYPE,spce=$SEARCH_SPACE,iters=$NUM_ITERS
+RUN_INFO=$DATASET,nmodels=$NUM_MODELS,mdl_tpe=$MODEL_TYPE,srch_tpe=$SEARCH_TYPE,spce=$SEARCH_SPACE,iters=$NUM_ITERS,batchsze=${BATCH_SIZE}
 SAVE_LOC=${SAVE_BASE}/${RUN_INFO},rand_init=${RAND_INIT}
 
-# this is a hack to get the dpp on the pythonpath
-export PYTHONPATH="${PYTHONPATH}:/home/jessedd/projects/dpp_mixed_mcmc"
+# this is a hack to get the dpp and spearmint on the pythonpath
+export PYTHONPATH="${PYTHONPATH}:/home/jessedd/projects/dpp_mixed_mcmc:/home/jessedd/projects/spearmint/spearmint-lite:/home/jessedd/projects/spearmint/spearmint"
 
 START_TIME=$(date +%s)
 
 
-bash train.sh ${SEARCH_TYPE} ${RAND_INIT} ${NUM_ITERS} ${BATCH_SIZE} ${NUM_FOLDS} ${SEARCH_SPACE} ${SAVE_LOC} ${DATA_LOC} ${W2V_LOC} ${MODEL_TYPE} ${START_TIME} 
+bash train.sh ${SEARCH_TYPE} ${RAND_INIT} ${NUM_ITERS} ${BATCH_SIZE} ${NUM_FOLDS} ${SEARCH_SPACE} ${SAVE_LOC} ${DATA_LOC} ${W2V_LOC} ${MODEL_TYPE} ${START_TIME}
+
+exit
+bash eval.sh ${SEARCH_TYPE} ${RAND_INIT} ${SAVE_BASE} ${SAVE_LOC} ${DATA_LOC} ${START_TIME}
 
 
-#bash eval.sh ${SEARCH_TYPE} ${RAND_INIT} ${SAVE_BASE} ${SAVE_LOC} ${DATA_LOC} ${START_TIME}
+KEYPAIR_LOC=/home/jessedd/projects/jesse-key-pair-uswest2.pem
+AZURE_STORAGE_DIR=/home/jessedd/projects/ARKcat/output/archive_${RUN_INFO}/${SEARCH_TYPE}_${RAND_INIT}_$(date +%s)
+ssh -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no jessedd@${CUR_IP} "mkdir -p ${AZURE_STORAGE_DIR}"
+scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${CUR_IP}:$AZURE_STORAGE_DIR
+scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/errfile.txt ec2-user@${CUR_IP}:$AZURE_STORAGE_DIR
