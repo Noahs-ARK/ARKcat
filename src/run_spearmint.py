@@ -98,7 +98,6 @@ def add_next_point_to_pending(chooser, options, variables, results, gmap):
         results['pending'] = np.matrix(candidate)
 
 
-    print candidate
     params = gmap.unit_to_list(candidate)
     return params
                                     
@@ -145,6 +144,8 @@ def update_results(cur_results, results, cur_hparams_evaluated):
     
     
 def printing_best_results(results):
+    print("all hparams tried:")
+    print results['complete']
     priority_q = Queue.PriorityQueue()
     losses = results['values']
     for i in range(len(losses)):
