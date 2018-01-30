@@ -5,9 +5,10 @@
 
 SEARCH_TYPE=${1}
 RAND_INIT=${2}
-NUM_ITERS=${3}
-BATCH_SIZE=${4}
-SEARCH_SPACE=${5}
+CU_IP=${3}
+NUM_ITERS=${4}
+BATCH_SIZE=${5}
+SEARCH_SPACE=${6}
 
 
 DATA_BASE=/home/jessedd/data/text_cat
@@ -31,7 +32,7 @@ START_TIME=$(date +%s)
 
 bash train.sh ${SEARCH_TYPE} ${RAND_INIT} ${NUM_ITERS} ${BATCH_SIZE} ${NUM_FOLDS} ${SEARCH_SPACE} ${SAVE_LOC} ${DATA_LOC} ${W2V_LOC} ${MODEL_TYPE} ${START_TIME}
 
-exit
+
 bash eval.sh ${SEARCH_TYPE} ${RAND_INIT} ${SAVE_BASE} ${SAVE_LOC} ${DATA_LOC} ${START_TIME}
 
 
