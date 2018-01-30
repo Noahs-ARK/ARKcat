@@ -5,7 +5,7 @@
 
 SEARCH_TYPE=${1}
 RAND_INIT=${2}
-CU_IP=${3}
+CUR_IP=${3}
 NUM_ITERS=${4}
 BATCH_SIZE=${5}
 SEARCH_SPACE=${6}
@@ -39,5 +39,5 @@ bash eval.sh ${SEARCH_TYPE} ${RAND_INIT} ${SAVE_BASE} ${SAVE_LOC} ${DATA_LOC} ${
 KEYPAIR_LOC=/home/jessedd/jesse-key-pair-uswest2.pem
 AZURE_STORAGE_DIR=/home/jessedd/projects/ARKcat/output/archive_${RUN_INFO}/${SEARCH_TYPE}_${RAND_INIT}_$(date +%s)
 ssh -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no jessedd@${CUR_IP} "mkdir -p ${AZURE_STORAGE_DIR}"
-scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt ec2-user@${CUR_IP}:$AZURE_STORAGE_DIR
-scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/errfile.txt ec2-user@${CUR_IP}:$AZURE_STORAGE_DIR
+scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/outfile.txt jessedd@${CUR_IP}:$AZURE_STORAGE_DIR
+scp -i ${KEYPAIR_LOC} -oStrictHostKeyChecking=no $SAVE_LOC/errfile.txt jessedd@${CUR_IP}:$AZURE_STORAGE_DIR
