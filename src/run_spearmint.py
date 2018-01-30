@@ -33,7 +33,7 @@ def spearmint_main(num_models, model_types, search_space, max_iter, args, call_e
             cur_hparams_result = call_experiment(cur_hparams_to_eval)
             update_results(cur_hparams_result, results, cur_hparams_to_eval)
 
-        
+    
     printing_best_results(results)
     return results
 
@@ -146,6 +146,8 @@ def update_results(cur_results, results, cur_hparams_evaluated):
 def printing_best_results(results):
     print("all hparams tried:")
     print results['complete']
+    print("durations:")
+    print results['durations']
     priority_q = Queue.PriorityQueue()
     losses = results['values']
     for i in range(len(losses)):
