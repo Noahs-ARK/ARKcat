@@ -1,12 +1,12 @@
 from hyperopt import fmin, tpe, hp, Trials, space_eval, rand, anneal
 from hyperopt import dpp, dpp_random, sample_hparam_space
-import Queue as queue
+import Queue
 import space_manager
 
 
 
 def printing_best(trials):
-    priority_q = queue.PriorityQueue()
+    priority_q = Queue.PriorityQueue()
     losses = trials.losses()
     for i in range(len(losses)):
         priority_q.put((losses[i], i))

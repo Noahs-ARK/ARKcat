@@ -6,6 +6,7 @@ import importlib
 from ExperimentGrid import GridMap
 import copy
 import hyperopt
+import Queue
 
 def spearmint_main(num_models, model_types, search_space, max_iter, args, call_experiment, model_dir):
     options = set_default_options(args)
@@ -23,19 +24,16 @@ def spearmint_main(num_models, model_types, search_space, max_iter, args, call_e
         for j in range(options['batch_size']):
             add_next_point_to_pending(chooser, options, variables, results, gmap)
 
-        
-        for j in range(len(results['pending'])):
-            cur_hparams_to_eval = make_hparams_to_return(results['pending'][j], copy.deepcopy(hparams_to_return_template), gmap, variables, transformer)
+
+        # to evaluate the batch of points selected
+        while len(results['pending']) > 0:
+            cur_hparams_to_eval = make_hparams_to_return(results['pending'][0], copy.deepcopy(hparams_to_return_template), gmap, variables, transformer)
             cur_hparams_result = call_experiment(cur_hparams_to_eval)
-            
-            
+            update_results(cur_hparams_result, results, cur_hparams_to_eval)
+
         
-
-
-    #  for assignment in batch:
-    #   convert from [0,1]^d to hyperparameters
-    #   call_experiment(assignment)
-    # return final object which has all times and accuracies stored
+    printing_best_results(results)
+    return results
 
 
 def set_default_options(args):
@@ -45,9 +43,9 @@ def set_default_options(args):
     options['grid_size'] = 1000
     options['grid_seed'] = 1
 
-    assert args['algorithm'] in ['spearmint_seq']
-    if args['algorithm'] == 'spearmint_seq':
-        options['batch_size'] = 2
+    assert args['algorithm'] in ['spearmint_seq', 'spearmint_batch']
+    if args['algorithm'] == 'spearmint_batch':
+        options['batch_size'] = 3
     
     return options
 
@@ -122,3 +120,37 @@ def make_hparams_to_return(cur_point, hparams_to_return, gmap, variables, transf
     return final_to_return
     
 
+def update_results(cur_results, results, cur_hparams_evaluated):
+    #import pdb; pdb.set_trace()
+
+    val = cur_results['loss']
+    dur = cur_results['duration']
+    variables = results['pending'][0]
+    
+    # to update the completed section
+    if results['complete'].shape[0] > 0:
+        results['values'] = np.vstack((results['values'], float(val)))
+        results['complete'] = np.vstack((results['complete'], variables))
+        results['durations'] = np.vstack((results['durations'], float(dur)))
+        results['hparams_evaluated'].append(cur_hparams_evaluated)
+    else:
+        results['values'] = float(val)
+        results['complete'] = variables
+        results['durations'] = float(dur)
+        results['hparams_evaluated'] = [cur_hparams_evaluated]
+
+    # to update the 'pending' section by removing the no-longer-pending assignment
+    results['pending'] = np.delete(results['pending'], 0, axis=0)
+    
+    
+def printing_best_results(results):
+    priority_q = Queue.PriorityQueue()
+    losses = results['values']
+    for i in range(len(losses)):
+        priority_q.put((losses[i],i))
+    print('top losses and settings: ')
+    for i in range(0, min(3, len(losses))):
+        index = priority_q.get()[1]
+        print(losses[index])
+        print(results['hparams_evaluated'][index])
+        print("")

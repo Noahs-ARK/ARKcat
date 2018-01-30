@@ -22,14 +22,14 @@ import cProfile, pstats
 
 def call_experiment(args):
     #in case we want to debug the BO algorithms
-    import pdb; pdb.set_trace()
-    debug_mode = False
+    #import pdb; pdb.set_trace()
+    debug_mode = True
     if debug_mode:
         import random
         from hyperopt import STATUS_OK
-        return {'loss':random.random(), 'status': STATUS_OK}
+        return {'loss':random.random(), 'status': STATUS_OK, 'duration': 10}
 
-    
+    start_time = time.time()
     global trial_num
     trial_num = trial_num + 1
     print model_dir
@@ -60,6 +60,7 @@ def call_experiment(args):
     save_model(result)
 
     print("\nFinished iteration " + str(trial_num) + ".\n\n\n")
+    result['duration'] = time.time() - start_time
     sys.stdout.flush()
     return result
 
