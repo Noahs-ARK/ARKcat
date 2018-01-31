@@ -7,6 +7,7 @@ from ExperimentGrid import GridMap
 import copy
 import hyperopt
 import Queue
+import time
 
 def spearmint_main(num_models, model_types, search_space, max_iter, args, call_experiment, model_dir):
     options = set_default_options(args)
