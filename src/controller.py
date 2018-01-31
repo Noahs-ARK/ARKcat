@@ -23,7 +23,7 @@ import cProfile, pstats
 def call_experiment(args):
     #in case we want to debug the BO algorithms
     #import pdb; pdb.set_trace()
-    debug_mode = False
+    debug_mode = True
     if debug_mode:
         import random
         from hyperopt import STATUS_OK
