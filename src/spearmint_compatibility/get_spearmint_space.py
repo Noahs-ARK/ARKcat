@@ -23,14 +23,23 @@ def main(num_models, model_types, search_space):
 def make_variables(us):
     variables = []
     for i in range(len(us.index_names)):
-        assert isinstance(us.dists[i], hyperopt.hparam_distribution_sampler.QUniform) or isinstance(us.dists[i], hyperopt.hparam_distribution_sampler.Uniform)
+        assert isinstance(us.dists[i], hyperopt.hparam_distribution_sampler.QUniform) or isinstance(
+            us.dists[i], hyperopt.hparam_distribution_sampler.Uniform) or isinstance(us.dists[i],
+                                                    hyperopt.hparam_distribution_sampler.LogUniform)
+        
         cur_name = us.index_names[i]
+
+        cur_min = us.dists[i].a
+        cur_max = us.dists[i].b
+        
         if isinstance(us.dists[i], hyperopt.hparam_distribution_sampler.QUniform):
             cur_type = "int"
         elif isinstance(us.dists[i], hyperopt.hparam_distribution_sampler.Uniform):
             cur_type = "float"
-        cur_min = us.dists[i].a
-        cur_max = us.dists[i].b
+        elif isinstance(us.dists[i], hyperopt.hparam_distribution_sampler.LogUniform):
+            cur_type = "float"
+
+        
         variables.append(OrderedDict([('name',cur_name), ('type', cur_type), ('min', cur_min), ('max', cur_max), ('size', 1)]))
         
     for v in variables:

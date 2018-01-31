@@ -8,6 +8,7 @@ import copy
 import hyperopt
 import Queue
 import time
+from hyperopt.unif_hparam_sample import Unif_Sampler
 
 def spearmint_main(num_models, model_types, search_space, max_iter, args, call_experiment, model_dir):
     options = set_default_options(args)
@@ -106,19 +107,26 @@ def add_next_point_to_pending(chooser, options, variables, results, gmap):
                                     
 def make_hparams_to_return(cur_point, hparams_to_return, gmap, variables, transformer):
 
+    
     cur_point_correct_shape = np.squeeze(np.array(cur_point))
     cur_hparams = gmap.unit_to_list(cur_point_correct_shape)
     for i in range(len(variables)):
         hparams_to_return[variables[i]['name']] = [cur_hparams[i]]
 
     for k in hparams_to_return.keys():
-        hparams_to_return[k] = hparams_to_return[k][0]
+        hparams_to_return[k] = hparams_to_return[k][0]                
 
+    # to get the nodes which need to be transformed into logspace:
+    us = Unif_Sampler(transformer.expr)
+    for i in range(len(us.index_names)):
+        if isinstance(us.dists[i], hyperopt.hparam_distribution_sampler.LogUniform):
+            hparams_to_return[us.index_names[i]] = np.exp(hparams_to_return[us.index_names[i]])
+            
+        
     
     # this is gross, but necessary to get the right format, including 'features' and other variables we aren't searching over
     memo = transformer.memo_from_config(hparams_to_return)
     final_to_return = hyperopt.pyll.rec_eval(transformer.expr, memo=memo, print_node_on_error=False)
-
 
     return final_to_return
     
@@ -149,12 +157,15 @@ def update_results(cur_results, results, cur_hparams_evaluated):
 def printing_best_results(results):
     print("all hparams tried:")
     print results['complete']
-    print("durations:")
-    print results['durations']
+    print("durations for training each model:")
+    print results['durations'].tolist()
     print("the amount of time it took for spearmint to select the next example:")
     print results['durations_spearmint']
     priority_q = Queue.PriorityQueue()
-    losses = results['values']
+    if isinstance(results['values'], float):
+        losses = [results['values']]
+    else:
+        losses = results['values']
     for i in range(len(losses)):
         priority_q.put((losses[i],i))
     print('top losses and settings: ')

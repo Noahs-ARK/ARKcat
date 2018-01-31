@@ -2,16 +2,22 @@ from hyperopt import fmin, tpe, hp, Trials, space_eval, rand, anneal
 from hyperopt import dpp, dpp_random, sample_hparam_space
 import Queue
 import space_manager
+import time
 
 
 
 def printing_best(trials):
+    print("durations for training each model:")
+    durations = []
+    for result in trials.results:
+        durations.append([result['duration']])
+    print durations
     priority_q = Queue.PriorityQueue()
     losses = trials.losses()
     for i in range(len(losses)):
         priority_q.put((losses[i], i))
     print('top losses and settings: ')
-    for i in range(0,min(3,max_iter)):
+    for i in range(0,min(3,len(losses))):
         index = priority_q.get()[1]
         print(losses[index])
         print(trials.trials[index]['misc']['vals'])
@@ -28,13 +34,15 @@ def set_discretize_num(trials, search_space):
         trials.discretize_num = None
     elif 'default' in search_space:
         trials.discretize_num = 5
+    elif 'dropl2learn' in search_space:
+        trials.discretize_num = 15
     else:
         raise ValueError("you tried to use " + search_space + " as a search space, but we don't know how many "+
                          "values we should discretize to (for the dpp)")
 
 
 def hyperopt_main(num_models, model_types, search_space, max_iter, args, call_experiment):
-
+    start_time = time.time()
     trials = Trials()
     trials.discretize_space = True
 

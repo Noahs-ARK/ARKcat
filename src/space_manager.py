@@ -89,9 +89,13 @@ def get_cnn_model(model_num, search_space):
     elif 'half_lr' in search_space:
         lr_lower_bound = -5
         lr_upper_bound = -1
+    elif 'good_lr' in search_space:
+        lr_lower_bound = -5
+        lr_upper_bound = -3
     else:
         lr_lower_bound = -10
         lr_upper_bound = -3
+        
     search_space = search_space.split('_')[0]
 
     space = cnn_space(search_space)

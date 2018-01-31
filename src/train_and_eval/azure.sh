@@ -1,7 +1,7 @@
 # usage:
-# bash azure.sh SEARCH_TYPE RAND_INIT NUM_ITERS BATCH_SIZE SEARCH_SPACE
+# bash azure.sh SEARCH_TYPE RAND_INIT CUR_IP NUM_ITERS BATCH_SIZE SEARCH_SPACE
 # example: 
-# bash azure.sh spearmint_seq 999 1 3 arch
+# bash azure.sh spearmint_seq 999 0 1 3 arch
 
 SEARCH_TYPE=${1}
 RAND_INIT=${2}
@@ -32,6 +32,7 @@ START_TIME=$(date +%s)
 
 bash train.sh ${SEARCH_TYPE} ${RAND_INIT} ${NUM_ITERS} ${BATCH_SIZE} ${NUM_FOLDS} ${SEARCH_SPACE} ${SAVE_LOC} ${DATA_LOC} ${W2V_LOC} ${MODEL_TYPE} ${START_TIME}
 
+exit
 
 bash eval.sh ${SEARCH_TYPE} ${RAND_INIT} ${SAVE_BASE} ${SAVE_LOC} ${DATA_LOC} ${START_TIME}
 
