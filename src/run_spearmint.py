@@ -95,6 +95,13 @@ def add_next_point_to_pending(chooser, options, variables, results, gmap):
     else:
         candidate = grid[job_id,:]
 
+    try:
+        if results['values'].shape[0] == 0:
+            candidate += np.random.random_sample(candidate.shape)
+            candidate -= np.floor(candidate)
+    except:
+        pass
+        
     if results['pending'].shape[0] > 0:
         results['pending'] = np.vstack((results['pending'], candidate))
     else:

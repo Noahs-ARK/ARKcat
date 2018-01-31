@@ -23,11 +23,11 @@ import cProfile, pstats
 def call_experiment(args):
     #in case we want to debug the BO algorithms
     #import pdb; pdb.set_trace()
-    debug_mode = False
+    debug_mode = True
     if debug_mode:
         import random
         from hyperopt import STATUS_OK
-        return {'loss':random.random(), 'status': STATUS_OK, 'duration': 10}
+        return {'loss':.8 + random.random()/10, 'status': STATUS_OK, 'duration': 10}
 
     start_time = time.time()
     global trial_num
