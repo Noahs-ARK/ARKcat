@@ -56,11 +56,12 @@ def make_result_dict():
     results['complete'] = np.array([])
     results['pending'] = np.array([])
     results['durations'] = np.array([])
+    results['durations_spearmint'] = []
     return results                                    
 
 def add_next_point_to_pending(chooser, options, variables, results, gmap):
     
-
+    start_time = time.time()
     # Now lets get the next job to run
     # First throw out a set of candidates on the unit hypercube
     # Increment by the number of observed so we don't take the
@@ -99,6 +100,7 @@ def add_next_point_to_pending(chooser, options, variables, results, gmap):
 
 
     params = gmap.unit_to_list(candidate)
+    results['durations_spearmint'].append(time.time() - start_time)
     return params
                                     
 def make_hparams_to_return(cur_point, hparams_to_return, gmap, variables, transformer):
@@ -148,6 +150,8 @@ def printing_best_results(results):
     print results['complete']
     print("durations:")
     print results['durations']
+    print("the amount of time it took for spearmint to select the next example:")
+    print results['durations_spearmint']
     priority_q = Queue.PriorityQueue()
     losses = results['values']
     for i in range(len(losses)):
