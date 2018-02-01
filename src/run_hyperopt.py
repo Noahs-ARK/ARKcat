@@ -36,6 +36,8 @@ def set_discretize_num(trials, search_space):
         trials.discretize_num = 5
     elif 'dropl2learn' in search_space:
         trials.discretize_num = 15
+    elif 'bigcube' in search_space:
+        trials.discretize_num = 3
     else:
         raise ValueError("you tried to use " + search_space + " as a search space, but we don't know how many "+
                          "values we should discretize to (for the dpp)")
