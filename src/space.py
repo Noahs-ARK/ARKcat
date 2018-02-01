@@ -63,20 +63,20 @@ def cnn_space(search_space):
                 'search_lr': False,
                 'grid': [1,2,2,2,2,2,2,2,2,3,2,2]
         }
-    elif search_space == 'big':
+    elif search_space == 'bigcube':
         return {'model_type_': 'CNN',
                 'delta_': [False],#not implemented
                 'flex_amt_': (0.0,0.3),
-                'filters_': (100,600),
+                'filters_': (50,300),
                 'kernel_size_': (2,5),
-                'kernel_increment_': (0,5),
-                'kernel_num_': (1,8),
-                'dropout_': (0,1),
-                'batch_size_': (10,200),
-                'activation_fn_': ['iden', 'relu', 'elu', 'tanh', 'sigmoid'],
-                'l2_': (-8.0,-2.0),
+                'kernel_increment_': (0,3),
+                'kernel_num_': (1,5),
+                'dropout_': (0,.75),
+                'batch_size_': (10,100),
+                'activation_fn_': ['tanh'],
+                'l2_': (-5.0,-1.0),
                 #'l2_clip_': (2.0,10.0), #not implemented correctly
-                'no_reg': True,
+                'no_reg': False,
                 'search_lr': True,
                 'grid': [1,2,2,2,2,2,2,2,2,5,2,2]}
     if search_space == 'dropl2learn':
