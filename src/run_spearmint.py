@@ -26,17 +26,17 @@ def spearmint_main(num_models, model_types, search_space, max_iter, args, call_e
         #  get batch of points to evaluate (in [0,1]^d)
         for j in range(options['batch_size']):
             add_next_point_to_pending(chooser, options, variables, results, gmap)
-
+            
 
         # to evaluate the batch of points selected
         while len(results['pending']) > 0:
             cur_hparams_to_eval = make_hparams_to_return(results['pending'][0], copy.deepcopy(hparams_to_return_template),
-                                                         gmap, variables, transformer)
+                                                         gmap, variables, transformer)                
             cur_hparams_result = call_experiment(cur_hparams_to_eval)
             update_results(cur_hparams_result, results, cur_hparams_to_eval)
 
     
-    printing_best_results(results)
+    printing_best_results(results, variables)
     return results
 
 
@@ -48,6 +48,8 @@ def set_default_options(args, max_iter):
     options['grid_size'] = 1000
     options['grid_seed'] = 1
 
+    assert args['algorithm'] == 'spearmint_seq' or args['algorithm'] == 'spearmint_kover2' or args['algorithm'] == 'sobol_noise', "invalid search algo"
+    
     if args['algorithm'] == 'spearmint_seq':
         options['batch_size'] = 1
         options['num_iters'] = max_iter
@@ -111,16 +113,24 @@ def add_next_point_to_pending(chooser, options, variables, results, gmap):
             candidate -= np.floor(candidate)
     except:
         pass
-        
+
+    # apparently spearmint will occasionally return points *outside* of the [0,1]^d hypercube
+    # due to machine precision errors. this causes problems.
+    for i in range(len(candidate)):
+        assert candidate[i] > -0.001 and candidate[i] < 1.001
+        if candidate[i] < 0:
+            candidate[i] = 0
+        if candidate[i] > 1:
+            candidate[i] = 1
+
+    
     if results['pending'].shape[0] > 0:
         results['pending'] = np.vstack((results['pending'], candidate))
     else:
         results['pending'] = np.matrix(candidate)
 
 
-    params = gmap.unit_to_list(candidate)
     results['durations_spearmint'].append(time.time() - start_time)
-    return params
                                     
 def make_hparams_to_return(cur_point, hparams_to_return, gmap, variables, transformer):
 
@@ -171,16 +181,24 @@ def update_results(cur_results, results, cur_hparams_evaluated):
     results['pending'] = np.delete(results['pending'], 0, axis=0)
     
     
-def printing_best_results(results):
+def printing_best_results(results, variables):
     print("all hparams tried:")
-    print results['complete']
+    #print results['complete']
+    for i in range(len(results['complete'])):
+        print i, results['complete'][i]
     print("durations for training each model:")
     print results['durations'].tolist()
     print("the amount of time it took for spearmint to select the next example:")
     print results['durations_spearmint']
+    print("variables:")
+    for var in variables:
+        print var['name']
     print("all hparams (in hparam space):")
-    for result in results['hparams_evaluated']:
-        print result
+    for i in range(len(results['hparams_evaluated'])):
+        print i, results['hparams_evaluated'][i]
+
+    print ("number of points evaluated: {}".format(len(results['hparams_evaluated'])))
+
     priority_q = Queue.PriorityQueue()
     if isinstance(results['values'], float):
         losses = [results['values']]
