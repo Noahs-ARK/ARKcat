@@ -11,7 +11,7 @@ import time
 from hyperopt.unif_hparam_sample import Unif_Sampler
 
 def spearmint_main(num_models, model_types, search_space, max_iter, args, call_experiment, model_dir):
-    options = set_default_options(args)
+    options = set_default_options(args, max_iter)
     # convert search space to [0,1]^d hypercube
     variables, hparams_to_return_template, transformer = spearmint_compatibility.get_spearmint_space.main(num_models,
                                                                                                           model_types, search_space)
@@ -22,7 +22,7 @@ def spearmint_main(num_models, model_types, search_space, max_iter, args, call_e
     gmap = GridMap(variables, options['grid_size'])
 
     results = make_result_dict()
-    for i in range(max_iter):
+    for i in range(options['num_iters']):
         #  get batch of points to evaluate (in [0,1]^d)
         for j in range(options['batch_size']):
             add_next_point_to_pending(chooser, options, variables, results, gmap)
@@ -40,15 +40,25 @@ def spearmint_main(num_models, model_types, search_space, max_iter, args, call_e
     return results
 
 
-def set_default_options(args):
+def set_default_options(args, max_iter):
     
     options = {}
     options['chooser_module'] = 'GPEIOptChooser'
     options['chooser_args'] = ''
     options['grid_size'] = 1000
     options['grid_seed'] = 1
+
+    if args['algorithm'] == 'spearmint_seq':
+        options['batch_size'] = 1
+        options['num_iters'] = max_iter
+    elif args['algorithm'] == 'spearmint_kover2':
+        assert max_iter % 2 == 0
+        options['batch_size'] = int(max_iter / 2)
+        options['num_iters'] = 2
+    elif args['algorithm'] == 'sobol_noise':
+        options['batch_size'] = max_iter
+        options['num_iters'] = 1
     
-    options['batch_size'] = args['batch_size']
         
     return options
 
@@ -168,6 +178,9 @@ def printing_best_results(results):
     print results['durations'].tolist()
     print("the amount of time it took for spearmint to select the next example:")
     print results['durations_spearmint']
+    print("all hparams (in hparam space):")
+    for result in results['hparams_evaluated']:
+        print result
     priority_q = Queue.PriorityQueue()
     if isinstance(results['values'], float):
         losses = [results['values']]

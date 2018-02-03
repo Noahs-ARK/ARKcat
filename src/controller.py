@@ -23,11 +23,11 @@ import cProfile, pstats
 def call_experiment(args):
     #in case we want to debug the BO algorithms
     #import pdb; pdb.set_trace()
-    debug_mode = False
+    debug_mode = True
     if debug_mode:
         import random
         from hyperopt import STATUS_OK
-        return {'loss':.8 + random.random()/10, 'status': STATUS_OK, 'duration': 10}
+        return {'loss':.7 + random.random()/10, 'status': STATUS_OK, 'duration': 10}
 
     start_time = time.time()
     global trial_num
@@ -209,7 +209,7 @@ def main(args):
     start_time = time.time()
     print("the time at the start: " + str(start_time))
     set_globals(args)
-    if "spearmint" in args['algorithm']:
+    if "spearmint" in args['algorithm'] or 'sobol' in args['algorithm']:
         spearmint_main(num_models, model_types, search_space, max_iter, args, call_experiment, model_dir)
     else:
         hyperopt_main(num_models, model_types, search_space, max_iter, args, call_experiment)
@@ -227,7 +227,6 @@ if __name__ == '__main__':
     group.add_argument('-b', nargs=3, type=str, dest='run_bayesopt',
                         help='model types, search space, number of iters')
     group.add_argument('-f', nargs=2, type=str, dest='load_file')
-    parser.add_argument('batch_size', type=int, help='the batch size for running BO algorithms')
     print vars(parser.parse_args(sys.argv[1:]))
     main(vars(parser.parse_args(sys.argv[1:])))
     
