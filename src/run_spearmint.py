@@ -48,11 +48,16 @@ def set_default_options(args, max_iter):
     options['grid_size'] = 1000
     options['grid_seed'] = 1
 
-    assert args['algorithm'] == 'spearmint_seq' or args['algorithm'] == 'spearmint_kover2' or args['algorithm'] == 'sobol_noise', "invalid search algo"
+    assert (args['algorithm'] == 'spearmint_seq' or args['algorithm'] == 'spearmint_kover2'
+            or args['algorithm'] == 'sobol_noise' or args['algorithm'] == 'spearmint_2'), "invalid search algo"
     
     if args['algorithm'] == 'spearmint_seq':
         options['batch_size'] = 1
         options['num_iters'] = max_iter
+    elif args['algorithm'] == 'spearmint_2':
+        assert max_iter % 2 == 0
+        options['batch_size'] = 2
+        options['num_iters'] = int(max_iter / 2)
     elif args['algorithm'] == 'spearmint_kover2':
         assert max_iter % 2 == 0
         options['batch_size'] = int(max_iter / 2)
